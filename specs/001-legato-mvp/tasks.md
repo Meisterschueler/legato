@@ -49,17 +49,17 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 ### Spike S1: MIDI auf iOS und Android
 
-- [ ] T016 C-Schnittstelle laut [contracts/native-midi.md](contracts/native-midi.md) in `engine/src/ffi.rs` als Stub implementieren (Ereignisse mit `time_us` protokollieren); Header mit `engine/cbindgen.toml` nach `engine/include/legato_midi.h` erzeugen
-- [ ] T017 [P] USB-MIDI über CoreMIDI in `native/apple/LegatoMidi/Sources/LegatoMidi/CoreMidiTransport.swift`: Geräte-Benachrichtigungen (hinzu/weg), Quelle verbinden, Nachrichten mit `MIDITimeStamp` in µs an `legato_midi_message` weiterreichen
-- [ ] T018 [P] Bluetooth-MIDI über CoreBluetooth in `native/apple/LegatoMidi/Sources/LegatoMidi/BluetoothMidiTransport.swift`: Suche nach dem BLE-MIDI-Dienst, Verbinden, Kennung speichern, dauerhafte Verbindungsanfrage nach Abbruch
-- [ ] T019 Spike-App `spikes/s1-midi-ios/` (SwiftUI, linkt `LegatoMidi` und die Engine als statische Bibliothek): zeigt Ereignisse, misst Erkennungszeit der Trennung, Wiederverbinden, Latenz und Jitter, exportiert ein Protokoll
+- [x] T016 C-Schnittstelle laut [contracts/native-midi.md](contracts/native-midi.md) in `engine/src/ffi.rs` als Stub implementieren (Ereignisse mit `time_us` protokollieren); Header mit `engine/cbindgen.toml` nach `engine/include/legato_midi.h` erzeugen
+- [x] T017 [P] USB-MIDI über CoreMIDI in `native/apple/LegatoMidi/Sources/LegatoMidi/CoreMidiTransport.swift`: Geräte-Benachrichtigungen (hinzu/weg), Quelle verbinden, Nachrichten mit `MIDITimeStamp` in µs an `legato_midi_message` weiterreichen
+- [x] T018 [P] Bluetooth-MIDI über CoreBluetooth in `native/apple/LegatoMidi/Sources/LegatoMidi/BluetoothMidiTransport.swift`: Suche nach dem BLE-MIDI-Dienst, Verbinden, Kennung speichern, dauerhafte Verbindungsanfrage nach Abbruch
+- [x] T019 Spike-App `spikes/s1-midi-ios/` (SwiftUI, linkt `LegatoMidi` und die Engine als statische Bibliothek): zeigt Ereignisse, misst Erkennungszeit der Trennung, Wiederverbinden, Latenz und Jitter, exportiert ein Protokoll
 - [ ] T020 S1 auf dem iPad messen (USB und Bluetooth, mit vorhandenem Piano bzw. Adapter); Ergebnisse und Folgerungen als „Spike-Ergebnis S1“ in `specs/001-legato-mvp/research.md` (R4) eintragen
 - [ ] T021 [P] Android-MIDI in `native/android/legato-midi/src/main/kotlin/io/github/meisterschueler/legato/midi/LegatoMidi.kt`: `MidiManager.DeviceCallback`, BLE-Suche, `openBluetoothDevice`, Berechtigungen `BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT`; JNI-Exporte in `engine/src/ffi/android.rs`
 - [ ] T022 Spike-App `spikes/s1-midi-android/`; auf mindestens zwei Geräten verschiedener Hersteller messen und in `specs/001-legato-mvp/research.md` (R4) eintragen, einschließlich Weitergabe der Instrument-Zeitstempel
 
 ### Spike S2: Notenblatt im WebView
 
-- [ ] T023 [P] Nachrichtenschnittstelle (`load`, `position`, `mark`, `reset`; Rückmeldungen `ready`, `frame_shown`) laut [contracts/engine-schnittstelle.md](contracts/engine-schnittstelle.md#nachrichten-an-score-view-web) in `score-view-web/src/protocol.ts` und Rendering von `hanon-01.musicxml` mit OSMD in `score-view-web/src/main.ts`
+- [x] T023 [P] Nachrichtenschnittstelle (`load`, `position`, `mark`, `reset`; Rückmeldungen `ready`, `frame_shown`) laut [contracts/engine-schnittstelle.md](contracts/engine-schnittstelle.md#nachrichten-an-score-view-web) in `score-view-web/src/protocol.ts` und Rendering von `hanon-01.musicxml` mit OSMD in `score-view-web/src/main.ts`
 - [ ] T024 Spike-Seite `app/lib/spike/score_view_spike.dart`: WebView mit `score-view-web`, synthetische Positionen mit 16 Tönen/s; Bildrate und Nachrichtenlatenz auf iPad und Android messen; Ergebnis in `specs/001-legato-mvp/research.md` (R7) eintragen
 
 **Checkpoint**: S1 und S2 ausgewertet. Bei negativem Ergebnis Plan anpassen, bevor Phase 4 beginnt.
