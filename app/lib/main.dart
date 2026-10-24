@@ -17,7 +17,9 @@ class LegatoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Legato',
-      home: _spikeS2 ? ScoreViewSpike() : Scaffold(body: Center(child: Text('Legato'))),
+      home: _spikeS2
+          ? ScoreViewSpike()
+          : Scaffold(body: Center(child: Text('Legato'))),
     );
   }
 }

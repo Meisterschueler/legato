@@ -34,7 +34,9 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel('LegatoHost', onMessageReceived: _onMessage)
-      ..setNavigationDelegate(NavigationDelegate(onPageFinished: (_) => _load()))
+      ..setNavigationDelegate(
+        NavigationDelegate(onPageFinished: (_) => _load()),
+      )
       ..loadFlutterAsset('assets/score-view-web/index.html');
   }
 
@@ -45,12 +47,16 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
   }
 
   Future<void> _load() async {
-    final musicxml = await rootBundle.loadString('assets/pieces/hanon-01.musicxml');
+    final musicxml = await rootBundle.loadString(
+      'assets/pieces/hanon-01.musicxml',
+    );
     await _send({'type': 'load', 'musicxml': musicxml});
   }
 
   Future<void> _send(Map<String, Object?> message) {
-    return _controller.runJavaScript('legatoReceive(${jsonEncode(jsonEncode(message))})');
+    return _controller.runJavaScript(
+      'legatoReceive(${jsonEncode(jsonEncode(message))})',
+    );
   }
 
   void _onMessage(JavaScriptMessage message) {
@@ -65,7 +71,10 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
       case 'frame_stats':
         if (_timer != null) {
           _fps.add((data['fps'] as num).toDouble());
-          _maxFrameMs = max(_maxFrameMs, (data['max_frame_ms'] as num).toDouble());
+          _maxFrameMs = max(
+            _maxFrameMs,
+            (data['max_frame_ms'] as num).toDouble(),
+          );
           setState(() {});
         }
       case 'error':
@@ -115,8 +124,12 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
   String get _summary {
     final latency = [..._latenciesMs]..sort();
     String ms(double v) => v.toStringAsFixed(1);
-    final mean = latency.isEmpty ? 0.0 : latency.reduce((a, b) => a + b) / latency.length;
-    final p95 = latency.isEmpty ? 0.0 : latency[min(latency.length - 1, (latency.length * 0.95).floor())];
+    final mean = latency.isEmpty
+        ? 0.0
+        : latency.reduce((a, b) => a + b) / latency.length;
+    final p95 = latency.isEmpty
+        ? 0.0
+        : latency[min(latency.length - 1, (latency.length * 0.95).floor())];
     final fps = _fps.isEmpty ? 0.0 : _fps.reduce((a, b) => a + b) / _fps.length;
     final minFps = _fps.isEmpty ? 0.0 : _fps.reduce(min);
     return 'Positionen: ${latency.length}\n'
@@ -134,7 +147,9 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
           IconButton(
             tooltip: 'Messwerte kopieren',
             icon: const Icon(Icons.copy),
-            onPressed: () => Clipboard.setData(ClipboardData(text: 'Legato Spike S2\n$_summary')),
+            onPressed: () => Clipboard.setData(
+              ClipboardData(text: 'Legato Spike S2\n$_summary'),
+            ),
           ),
         ],
       ),
@@ -143,7 +158,10 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
           Expanded(child: WebViewWidget(controller: _controller)),
           Padding(
             padding: const EdgeInsets.all(8),
-            child: Text('$_status\n$_summary', style: const TextStyle(fontFamily: 'monospace')),
+            child: Text(
+              '$_status\n$_summary',
+              style: const TextStyle(fontFamily: 'monospace'),
+            ),
           ),
         ],
       ),

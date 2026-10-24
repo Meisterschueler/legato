@@ -106,7 +106,9 @@ impl Worker {
                 device,
                 time_us,
                 data,
-            } => log(json!({ "kind": "message", "device": device, "time_us": time_us, "data": data })),
+            } => log(
+                json!({ "kind": "message", "device": device, "time_us": time_us, "data": data }),
+            ),
             Input::DeviceAdded {
                 device,
                 name,
