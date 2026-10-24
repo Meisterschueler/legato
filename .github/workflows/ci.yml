@@ -57,12 +57,22 @@ jobs:
             flutter_rust_bridge_codegen integrate --rust-crate-name legato_app \
               --rust-crate-dir rust --no-write-lib --no-integration-test
           fi
+      - name: flutter_rust_bridge bindings unchanged?
+        id: frb-stamp
+        uses: actions/cache@v6
+        with:
+          path: ~/.frb-stamp
+          key: frb-${{ env.FRB_VERSION }}-${{ hashFiles('app/rust/src/api/**', 'app/flutter_rust_bridge.yaml', 'Cargo.lock') }}
+      - if: steps.frb-stamp.outputs.cache-hit != 'true'
+        uses: Swatinem/rust-cache@v2
       - name: flutter_rust_bridge bindings
+        if: steps.frb-stamp.outputs.cache-hit != 'true'
         working-directory: app
         run: |
           if [ -f flutter_rust_bridge.yaml ]; then
             flutter_rust_bridge_codegen generate
           fi
+          touch ~/.frb-stamp
       - name: Lock files
         run: |
           cargo metadata --format-version 1 > /dev/null
@@ -186,12 +196,25 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: gradle
+          cache-dependency-path: |
+            app/android/**/*.gradle.kts
+            app/android/gradle/wrapper/gradle-wrapper.properties
+            native/android/**/*.gradle.kts
       - run: rustup toolchain install
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
       - run: flutter pub get --enforce-lockfile
+      # cargokit builds Rust outside target/, so Swatinem/rust-cache does not apply.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            app/build/legato_app/build
+          key: android-cargo-${{ hashFiles('Cargo.lock') }}-${{ hashFiles('**/*.rs') }}
+          restore-keys: android-cargo-${{ hashFiles('Cargo.lock') }}-
       - run: flutter build apk --debug --target-platform android-arm64
       - run: mv build/app/outputs/flutter-apk/app-debug.apk legato-android-arm64-debug.apk
       - uses: actions/upload-artifact@v7
