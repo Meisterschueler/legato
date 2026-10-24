@@ -180,7 +180,7 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 - **FR-061**: Das System MUSS angemeldeten Pianisten den zeitlichen Verlauf ihrer übertragenen Durchläufe (Bewertung, Tempo) als Diagramm und als Tabelle anzeigen (siehe User Story 13). Das Diagramm MUSS standardmäßig den gesamten Zeitraum zeigen und das Zoomen erlauben. Diagramm und Tabelle MÜSSEN sich gemeinsam nach Stück, Variation und Tonart filtern lassen.
 - **FR-062**: Das System MUSS das Spielniveau des Pianisten, seine Vertrautheit mit einem Stück und den Schwierigkeitsgrad eines Stücks in Abhängigkeit von Variation, Tonart und Tempo unter Berücksichtigung der Tagesform schätzen (siehe User Story 14). Die Ergebnisse DÜRFEN NUR angemeldeten Pianisten angezeigt werden.
 - **FR-063**: Auswertungen DÜRFEN KEINE Rekorde oder Serien hervorheben und KEINE Aufforderungen zum Üben enthalten. Die Highscore-Liste (FR-065) ist keine Auswertung und davon ausgenommen.
-- **FR-064**: Bewertet das Backend einen Durchlauf, MUSS das Ergebnis mit der Bewertung in der App identisch sein (FR-036).
+- **FR-064**: Bewertet das Backend einen Durchlauf, MUSS das Ergebnis mit der Bewertung in der App im Rahmen der festgelegten Toleranzen identisch sein (FR-036).
 
 **Highscore-Liste**
 

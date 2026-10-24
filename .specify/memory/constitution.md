@@ -40,7 +40,7 @@ Legato ist eine stille Jury: Sie hört fortgeschrittenen Pianisten konzentriert 
 
 ### VI. Nachvollziehbare Bewertung
 
-- Bewertungen sind deterministisch: Dieselbe Eingabe ergibt dieselbe Bewertung.
+- Bewertungen sind deterministisch: Dieselbe Eingabe ergibt auf derselben Plattform dieselbe Bewertung, plattformübergreifend im Rahmen festgelegter Toleranzen (siehe VIII).
 - Jede Bewertung und jede erkannte Schwäche muss sich auf konkrete Stellen im Spiel zurückführen lassen (welche Note, welche Hand und, sofern der Notentext einen Fingersatz enthält, welcher Finger).
 
 ### VII. Datensparsamkeit und Kontrolle
@@ -53,7 +53,8 @@ Legato ist eine stille Jury: Sie hört fortgeschrittenen Pianisten konzentriert 
 ### VIII. Plattformübergreifende Konsistenz
 
 - Legato läuft auf iOS, Android, Windows, macOS und Linux sowie als Web-App im Browser.
-- Kernverhalten und Bewertung sind auf allen Plattformen identisch. Plattformunterschiede betreffen nur die Bedienung, nicht die Ergebnisse.
+- Kernverhalten und Bewertung sind auf allen Plattformen (einschließlich Backend) identisch, im Rahmen festgelegter Toleranzen. Plattformunterschiede betreffen nur die Bedienung, nicht die Ergebnisse.
+- Toleranzen gleichen nur unvermeidbare numerische Unterschiede aus (z. B. Fließkommarechnung). Sie werden im Plan festgelegt und durch plattformübergreifende Tests geprüft.
 
 ## Entwicklungsprinzipien
 
@@ -90,4 +91,4 @@ Legato ist eine stille Jury: Sie hört fortgeschrittenen Pianisten konzentriert 
   - PATCH: Präzisierungen und Formulierungen.
 - Jeder Plan enthält einen Abschnitt „Constitution Check“, der die Vereinbarkeit mit allen Grundprinzipien bestätigt oder Abweichungen begründet.
 
-**Version**: 1.0.0 | **Ratifiziert**: 2026-10-24
+**Version**: 1.0.1 | **Ratifiziert**: 2026-10-24 | **Zuletzt geändert**: 2026-10-24
