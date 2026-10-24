@@ -24,8 +24,8 @@ Spielt der Pianist lange, ohne dass die MIDI-Verbindung besteht, geht sein gesam
 
 **Akzeptanzszenarien**:
 
-1. **Angenommen** eine MIDI-Verbindung besteht, **wenn** sie getrennt wird, **dann** gibt die App sofort eine Warnung über den Lautsprecher des Geräts aus und zeigt den Verbindungsverlust deutlich an.
-2. **Angenommen** die Verbindung ist getrennt, **wenn** sie nicht wiederhergestellt wird, **dann** wiederholt die App die Warnung in Abständen, bis die Verbindung wiederhergestellt ist oder der Pianist die Warnung bestätigt.
+1. **Angenommen** eine MIDI-Verbindung besteht, **wenn** sie getrennt wird, **dann** gibt die App sofort eine Warnung über den Lautsprecher des Geräts aus, auf Geräten mit Vibrationsmotor zusätzlich per Vibration, und zeigt den Verbindungsverlust deutlich an.
+2. **Angenommen** die Verbindung ist getrennt, **wenn** sie nicht wiederhergestellt wird, **dann** wiederholt die App die Warnung nach 10 s und nach 30 s, sofern die Verbindung nicht wiederhergestellt oder die Warnung bestätigt ist. Danach bleibt nur die deutliche Anzeige des Symbols.
 3. **Angenommen** die Verbindung ist getrennt, **wenn** das MIDI-Gerät wieder verfügbar ist, **dann** verbindet sich die App selbständig, ohne dass der Pianist mit der App interagieren muss, und sendet das Verbindungssignal (User Story 4).
 4. **Angenommen** ein Durchlauf läuft, **wenn** die Verbindung getrennt wird, **dann** wird dieser Durchlauf verworfen. Bereits abgeschlossene Durchläufe bleiben erhalten.
 5. **Angenommen** die App läuft, **wenn** eine Ansicht (Notenblatt oder, sofern User Story 8 aus [004](../004-performance-wurm/spec.md) umgesetzt ist, Performance-Wurm) geöffnet ist, **dann** zeigt ein Symbol den Zustand der Eingabe: nicht verbunden, MIDI verbunden, Audio verbunden (sofern User Story 10 aus [006](../006-audio-eingabe/spec.md) umgesetzt ist) oder Verbindung abgebrochen.
@@ -38,7 +38,7 @@ Spielt der Pianist lange, ohne dass die MIDI-Verbindung besteht, geht sein gesam
 12. **Angenommen** der Pianist hat einmal eine Eingabe gewählt, **wenn** er die App erneut startet, **dann** stellt die App diese Eingabe selbständig wieder her (dasselbe MIDI-Gerät bzw. das Mikrofon).
 13. **Angenommen** ein Durchlauf läuft, **wenn** der Pianist die Eingabe wechselt, **dann** wird der Durchlauf verworfen.
 14. **Angenommen** mehrere MIDI-Geräte sind verfügbar, **wenn** der Pianist eines davon wählt, **dann** gehen auch die akustischen Signale (User Story 4) standardmäßig an dieses Gerät.
-15. **Angenommen** die Verbindung ist getrennt und lässt sich auf der Plattform nicht ohne Zutun des Pianisten wiederherstellen (z. B. Bluetooth-MIDI), **wenn** das MIDI-Gerät wieder verfügbar ist, **dann** kann der Pianist die Verbindung über das Symbol mit möglichst wenigen Schritten neu aufbauen.
+15. **Angenommen** die Verbindung ist getrennt und lässt sich auf der Plattform nicht ohne Zutun des Pianisten wiederherstellen (z. B. Bluetooth-MIDI), **wenn** das MIDI-Gerät wieder verfügbar ist, **dann** kann der Pianist die Verbindung über das Symbol mit höchstens 2 Tippaktionen neu aufbauen.
 
 ---
 
@@ -154,8 +154,8 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 - **FR-002**: Die Eingabeart und das MIDI-Gerät MUSS der Pianist ausdrücklich wählen; die App DARF NICHT selbständig zwischen MIDI und Audio wechseln. Die App MUSS die zuletzt gewählte Eingabe beim Start wiederherstellen. Ein Wechsel der Eingabe während eines Durchlaufs verwirft diesen.
 - **FR-003**: Das Sustain-Pedal DARF NICHT für Zuordnung und Abweichungen ausgewertet werden. Die Steuerung per Pedal im Playlist-Modus regelt FR-082 in [009](../009-playlist/spec.md).
 - **FR-004**: Wird die Eingabe (MIDI-Gerät oder Mikrofon) während eines Durchlaufs getrennt, MUSS die App den Durchlauf verwerfen.
-- **FR-005**: Wird eine bestehende MIDI-Verbindung getrennt, MUSS die App sofort über den Lautsprecher des Geräts warnen und die Warnung in Abständen wiederholen, bis die Verbindung wiederhergestellt oder die Warnung bestätigt ist.
-- **FR-006**: Die App MUSS eine getrennte MIDI-Verbindung selbständig wiederherstellen, sobald das Gerät wieder verfügbar ist. Ist das auf einer Plattform nicht möglich, MUSS der Pianist die Verbindung über das Symbol (FR-007) mit möglichst wenigen Schritten neu aufbauen können.
+- **FR-005**: Wird eine bestehende MIDI-Verbindung getrennt, MUSS die App sofort über den Lautsprecher des Geräts warnen, auf Geräten mit Vibrationsmotor zusätzlich per Vibration. Sie MUSS die Warnung nach 10 s und nach 30 s wiederholen, sofern die Verbindung bis dahin nicht wiederhergestellt oder die Warnung bestätigt ist; danach DARF sie NICHT weiter akustisch warnen.
+- **FR-006**: Die App MUSS eine getrennte MIDI-Verbindung selbständig wiederherstellen, sobald das Gerät wieder verfügbar ist. Ist das auf einer Plattform nicht möglich, MUSS der Pianist die Verbindung über das Symbol (FR-007) mit höchstens 2 Tippaktionen neu aufbauen können.
 - **FR-007**: Die App MUSS in jeder Ansicht (FR-022) per Symbol anzeigen, ob die Eingabe nicht verbunden, per MIDI verbunden, per Audio verbunden (sofern User Story 10 umgesetzt ist) oder abgebrochen ist. Das Symbol MUSS unauffällig sein, solange die Eingabe verbunden ist, und sich in der Form je Zustand unterscheiden. Antippen MUSS eine Auswahl der Eingabe öffnen, in der der Pianist auch die Warnung bei Verbindungsverlust bestätigen kann. Ohne gewählte Eingabeart findet keine Zuordnung statt.
 
 **Noten**
@@ -181,7 +181,7 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 **Darstellung**
 
 - **FR-022**: Die App MUSS die Ansicht „Notenblatt“ anbieten. Gibt es weitere Ansichten (Performance-Wurm, FR-046), MUSS der Pianist zwischen ihnen wählen können.
-- **FR-023**: Alle Bewegungen und Farbwechsel MÜSSEN fließend erfolgen, nie sprung- oder ruckhaft.
+- **FR-023**: Alle Bewegungen und Farbwechsel MÜSSEN fließend erfolgen, nie sprung- oder ruckhaft: Positions-, Scroll- und Farbänderungen werden animiert (Richtwert 150–400 ms) und nie sofort gesetzt; Scrollen läuft auf einem iPad der aktuellen Generation ohne sichtbares Ruckeln. Ist am Gerät „Bewegung reduzieren“ eingestellt, wird überblendet statt bewegt.
 - **FR-024**: Während eines Durchlaufs DARF die App KEINE Meldungen, Töne, Belohnungsanimationen oder Aufforderungen ausgeben. Ausgenommen sind die Ansichten selbst (FR-022), die dezente Fehlermarkierung (FR-025), die akustischen Signale (FR-027 bis FR-029) und die Warnung bei Verbindungsverlust (FR-005).
 - **FR-025**: Der Pianist MUSS getrennt einstellen können, ob Auslassungen, falsche Töne und Zusatztöne im Notenblatt während und/oder nach dem Durchlauf dezent markiert werden. Die Fehlermarkierung MUSS auf der Zuordnung während des Spiels beruhen.
 - **FR-026**: Die App DARF KEINE Mechanismen zur Bindung des Nutzers einsetzen, insbesondere keine Push-Benachrichtigungen zum Üben.
@@ -203,7 +203,7 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 - **NFR-001**: Die App MUSS auf iOS, Android, Windows, macOS und Linux laufen.
 - **NFR-002**: Die Grundfunktionalität (siehe [Produktübersicht](../../docs/produkt.md#bestandteile)) MUSS ohne Onlineverbindung funktionieren, in dieser Spec also alle Anforderungen. Das gilt nicht für die Web-App ([008](../008-web-app/spec.md)).
 - **NFR-003**: Die Latenz zwischen Anschlag und Anzeige DARF NICHT als störend wahrnehmbar sein: Bei mindestens 95 % der Anschläge MUSS sie höchstens 50 ms betragen, bei keinem Anschlag mehr als 100 ms.
-- **NFR-004**: Die Oberfläche setzt musikalisches Fachwissen voraus und erklärt keine Grundlagen.
+- **NFR-004**: Die Oberfläche setzt musikalisches Fachwissen voraus und erklärt keine Grundlagen. Akzeptanz: Ein Review aller Oberflächentexte findet keine Erklärung musikalischer Grundbegriffe (z. B. was Fingersatz, Tonart oder Wiederholung bedeuten).
 - **NFR-005**: Während einer Übeeinheit MUSS die App im Vordergrund aktiv bleiben und die automatische Bildschirmsperre verhindern. Gelangt sie trotzdem in den Hintergrund, MUSS ein laufender Durchlauf verworfen werden.
 - **NFR-006**: Die App MUSS mehrsprachig sein. Die Sprache MUSS sich nach der Regionseinstellung des Geräts richten. Wird die dort eingestellte Sprache nicht unterstützt, MUSS Englisch verwendet werden. Zunächst MÜSSEN Englisch und Deutsch unterstützt werden. Akzeptanz: **Angenommen** die Regionseinstellung des Geräts ist `de-AT` bzw. `fr-FR`, **wenn** der Pianist die App startet, **dann** erscheint die Oberfläche auf Deutsch bzw. Englisch.
 

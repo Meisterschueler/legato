@@ -23,7 +23,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 **Zweck**: Repository-Struktur laut [plan.md](plan.md#quellcode-repository-wurzel)
 
-- [ ] T001 Cargo-Workspace mit den Mitgliedern `core`, `engine`, `app/rust` in `Cargo.toml` anlegen; `rust-toolchain.toml` (stable), Edition 2024
+- [ ] T001 Cargo-Workspace mit den Mitgliedern `core`, `engine`, `app/rust` in `Cargo.toml` anlegen; `rust-toolchain.toml` (stable), Edition 2024; `license = "MIT OR Apache-2.0"` für alle Crates
 - [ ] T002 [P] Crate `legato-core` in `core/Cargo.toml` und `core/src/lib.rs` anlegen; erlaubte Abhängigkeiten nur `quick-xml`, `zip`, `serde` (kein I/O, keine Uhr, kein Zufall)
 - [ ] T003 [P] Crate `legato-engine` in `engine/Cargo.toml` und `engine/src/lib.rs` anlegen; Abhängigkeiten `legato-core`, `rodio`, `serde_json`, `midir` (nur für Windows- und Linux-Ziele; macOS nutzt das Swift-Package laut contracts/native-midi.md)
 - [ ] T004 [P] Flutter-App in `app/` anlegen (Plattformen ios, android, macos, windows, linux); in `app/pubspec.yaml` `webview_flutter`, `wakelock_plus`, `path_provider`, `flutter_localizations`, `file_selector` aufnehmen; Lizenz jeder Abhängigkeit prüfen und in `app/LICENSES.md` vermerken
@@ -123,7 +123,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 ### Tests für User Story 1
 
-- [ ] T054 [P] [US1] Tests in `engine/tests/input_state.rs` mit simuliertem Port: Trennung → `DisconnectWarning` sofort und wiederholt bis Wiederverbindung oder Bestätigung; Warnung binnen 2 s nach Meldung des Betriebssystems (SC-003); automatisches Wiederverbinden; laufender Durchlauf wird bei Trennung, Eingabewechsel und Hintergrund verworfen; kein Wechsel zu Audio; ohne gewählte Eingabe keine Zuordnung und keine Warnung; Wiederherstellen der zuletzt gewählten Eingabe beim Start
+- [ ] T054 [P] [US1] Tests in `engine/tests/input_state.rs` mit simuliertem Port: Trennung → `DisconnectWarning` sofort sowie nach 10 s und 30 s, sofern nicht wiederverbunden oder bestätigt, danach keine weitere akustische Warnung; `vibrate` wird mit jeder Warnung aufgerufen; Warnung binnen 2 s nach Meldung des Betriebssystems (SC-003); automatisches Wiederverbinden; laufender Durchlauf wird bei Trennung, Eingabewechsel und Hintergrund verworfen; kein Wechsel zu Audio; ohne gewählte Eingabe keine Zuordnung und keine Warnung; Wiederherstellen der zuletzt gewählten Eingabe beim Start
 - [ ] T055 [P] [US1] Widget-Tests in `app/test/input_symbol_test.dart`: Zustände unterscheiden sich in der Form; klein bei verbunden, deutlich bei nicht verbunden/abgebrochen; gleiche Position in allen Ansichten; Antippen öffnet die Auswahl
 
 ### Implementierung für User Story 1
@@ -132,9 +132,9 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T057 [US1] Geräteverwaltung in `engine/src/input/registry.rs`: Geräte aus FFI bzw. `midir`, `list_inputs`, `select_input`, `reconnect`, `scan_bluetooth`; gewählte Eingabe in `Settings` speichern und beim Start wiederherstellen (FR-002)
 - [ ] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
 - [ ] T059 [US1] C-Schnittstelle vollständig umsetzen (Stub aus T016 ersetzen) in `engine/src/ffi.rs` und `engine/src/ffi/android.rs`
-- [ ] T060 [US1] Warnung über den Lautsprecher mit `rodio` in `engine/src/warning.rs`: spielt `warning.wav` sofort, wiederholt in Abständen, endet bei Wiederverbindung oder `acknowledge_warning` (FR-005)
-- [ ] T061 [US1] `LegatoMidi` in `app/ios/Runner/AppDelegate.swift` und `app/macos/Runner/AppDelegate.swift` registrieren; Audio-Session `playback` + `mixWithOthers`; `NSBluetoothAlwaysUsageDescription` in `app/ios/Runner/Info.plist`
-- [ ] T062 [US1] `legato-midi` in `app/android/app/src/main/kotlin/.../MainActivity.kt` registrieren; Berechtigungen in `app/android/app/src/main/AndroidManifest.xml`
+- [ ] T060 [US1] Warnung über den Lautsprecher mit `rodio` in `engine/src/warning.rs`: spielt `warning.wav` sofort sowie nach 10 s und 30 s, ruft jeweils `vibrate` der nativen Schicht auf, endet bei Wiederverbindung oder `acknowledge_warning` (FR-005)
+- [ ] T061 [US1] `LegatoMidi` in `app/ios/Runner/AppDelegate.swift` und `app/macos/Runner/AppDelegate.swift` registrieren; Audio-Session `playback` + `mixWithOthers`; `vibrate` (iPhone: `kSystemSoundID_Vibrate`, iPad: ohne Wirkung); `NSBluetoothAlwaysUsageDescription` in `app/ios/Runner/Info.plist`
+- [ ] T062 [US1] `legato-midi` in `app/android/app/src/main/kotlin/.../MainActivity.kt` registrieren; `vibrate` über `Vibrator`; Berechtigungen (inkl. `VIBRATE`) in `app/android/app/src/main/AndroidManifest.xml`
 - [ ] T063 [P] [US1] Eingabe-Symbol in `app/lib/src/input/input_symbol.dart` (Zustände laut US 1 Szenario 10, fließende Übergänge)
 - [ ] T064 [US1] Eingabe-Auswahl in `app/lib/src/input/input_picker.dart`: verfügbare MIDI-Geräte, aktuelle Wahl, Anzeige ob Eingaben ankommen, Warnung bestätigen, neu verbinden, Bluetooth-Suche (US 1 Szenarien 11, 15)
 - [ ] T065 [P] [US1] Bildschirmsperre verhindern, solange eine Übeeinheit läuft (Ereignis `PracticeSessionChanged`), in `app/lib/src/platform/wakelock_adapter.dart` (NFR-005)
@@ -176,20 +176,22 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T072 [P] [US3] Generator für synthetische Durchläufe mit bekannter Zuordnung in `core/tests/support/synth.rs`: Tempo und Agogik variabel, eingestreute Auslassungen/falsche Töne/Zusatztöne, Pausen, Pedal, kurzzeitiger Tonartwechsel, einhändig, nahtlose Wiederholungen
 - [ ] T073 [US3] Echte Referenz-Durchläufe von Hanon Nr. 1 aufnehmen und von Hand zuordnen laut [contracts/referenzdaten.md](contracts/referenzdaten.md#mindestumfang) in `testdata/legato/hanon-01/`
 - [ ] T074 [P] [US3] Tests in `core/tests/recognition.rs`: richtiger Kandidat spätestens nach der Erkennungslänge (SC-002); Einschränkung (FR-018) wird beachtet; Töne vor der Erkennung gehören zum Durchlauf; ohne eindeutige Erkennung kein Durchlauf; nach `Completed` werden Wiederholung und Wechsel erkannt (US 3 Szenario 2)
-- [ ] T075 [P] [US3] Tests in `core/tests/performance_lifecycle.rs`: Abbruch nach `PauseLimit` außerhalb notierter Pausen; Warten bis `RestLimit` an notierten Pausen; Abbruch bei `AlignmentLoss` (< 30 % der letzten *n* Töne zugeordnet); kurzzeitiger Tonartwechsel ergibt Abweichungen, kein Wechsel des Kandidaten; Pedal (CC 64) ohne Einfluss; einhändig keine Auslassungen der anderen Hand
+- [ ] T075 [P] [US3] Tests in `core/tests/performance_lifecycle.rs`: Abbruch nach `PauseLimit` außerhalb notierter Pausen; Warten bis `RestLimit` an notierten Pausen; Abbruch bei `AlignmentLoss` (< 30 % der letzten *n* Töne zugeordnet); kurzzeitiger Tonartwechsel ergibt Abweichungen, kein Wechsel des Kandidaten; Pedal (CC 64) ohne Einfluss; einhändig keine Auslassungen der anderen Hand; dieselbe Zuordnung bei 0,5- bis 3-fachem Tempo und mit Agogik (FR-017)
 - [ ] T076 [P] [US3] Messung SC-001 in `core/tests/reference_sc001.rs` über alle Referenzdaten (synthetisch und echt); Ziel ≥ 99 %
-- [ ] T077 [P] [US3] Tests in `score-view-web/test/score_view.test.ts`: Positionsmarke folgt `position`; Fehlermarkierung über `mark`; Scrollen hält die nächste Zeile sichtbar; Wechsel der Anzeigevariante behält die Position
+- [ ] T077 [P] [US3] Tests in `score-view-web/test/score_view.test.ts`: Positionsmarke folgt `position`; Fehlermarkierung über `mark`; Scrollen hält die nächste Zeile sichtbar; Wechsel der Anzeigevariante behält die Position; Übergänge 150–400 ms, nie sofort gesetzt; bei `prefers-reduced-motion` Überblenden statt Bewegung (FR-023)
+- [ ] T102 [P] [US3] Benchmark in `core/benches/following.rs` (criterion): Kern ≤ 2 ms pro Ton bei 36 Kandidaten (plan.md „Leistungsziele“) auf Desktop und über den plattformübergreifenden Lauf (T045) auf iOS/Android
+- [ ] T103 [P] [US3] Test in `app/test/no_interruptions_test.dart`: während eines simulierten Durchlaufs erscheinen keine Meldungen, Dialoge oder Animationen außer den in FR-024 erlaubten (SC-004)
 
 ### Implementierung für User Story 3
 
 - [ ] T078 [US3] Wiederholungen als Kanten im Zustandsgraph (statt Auflösung) für alle drei Verfahren in `core/src/following/repeats.rs`
 - [ ] T079 [US3] Einordnung der Abweichungen (`Omission`, `Substitution`, `Addition` mit Note, Hand, Finger) in `core/src/following/deviations.rs`
 - [ ] T080 [US3] Pedal-Filter (CC 64 verwerfen) in `core/src/preprocessing.rs` (FR-003)
-- [ ] T081 [US3] Erkennung mit parallel verfolgten Kandidaten, Entscheidung über a-posteriori-Schwelle und Abstand zum Zweitbesten, spätestens nach der Erkennungslänge, in `core/src/recognition.rs`
+- [ ] T081 [US3] Erkennung mit parallel verfolgten Kandidaten, Entscheidung über a-posteriori-Schwelle und Abstand zum Zweitbesten mit den Startwerten aus research.md R8 (≥ 4 Töne je Hand, ≥ 0,95, ≥ 20 : 1; spätestens nach der Erkennungslänge bei ≥ 0,5), spätestens nach der Erkennungslänge, in `core/src/recognition.rs`
 - [ ] T082 [US3] Zustandsmaschine `PerformanceState` (`Recognizing`, `Running`, `Completed`, `Aborted`) mit `PauseLimit`, `RestLimit` und `AlignmentLoss` in `core/src/performance.rs` laut [data-model.md](data-model.md#performance-durchlauf)
 - [ ] T083 [US3] Anzeigevarianten für Hanon (komplett; erste und letzte zwei Takte je Teil mit *simile*; erster Takt von „Aufwärts“ und „Abwärts“ in getrennten Systemen; nur erster Takt von „Aufwärts“) in `core/src/score/musicxml_write.rs` (FR-011)
 - [ ] T084 [US3] Sitzung in `engine/src/session.rs`: MIDI-Ereignisse → Kern; Ereignisse `PerformanceRecognized`, `Position`, `DeviationDetected` (nur wenn Fehlermarkierung während des Spiels an), `PerformanceEnded`; Sperre aller anderen Meldungen während eines Durchlaufs (FR-024); Eingabe getrennt oder gewechselt sowie Wechsel in den Hintergrund brechen den laufenden Durchlauf ab (FR-002, FR-004, NFR-005); Übeeinheit beginnt mit dem ersten Ton und endet nach `session_idle_timeout_ms` ohne Ton, beim Beenden oder im Hintergrund (Ereignis `PracticeSessionChanged`)
-- [ ] T085 [US3] Positionsmarke und Scrollen mit `requestAnimationFrame`, fließende Farbwechsel, dezente Fehlermarkierung während bzw. nach dem Durchlauf in `score-view-web/src/markers.ts` und `score-view-web/src/scroll.ts` (FR-023, FR-025)
+- [ ] T085 [US3] Positionsmarke und Scrollen mit `requestAnimationFrame`, flüssige Farbwechsel (150–400 ms), Überblenden bei „Bewegung reduzieren“, dezente Fehlermarkierung während bzw. nach dem Durchlauf in `score-view-web/src/markers.ts` und `score-view-web/src/scroll.ts` (FR-023, FR-025)
 - [ ] T086 [US3] Ereignisse der Engine an `score-view-web` weiterreichen und Anzeigevariante wechseln in `app/lib/src/score_view/score_view.dart` (US 3 Szenario 18)
 - [ ] T087 [P] [US3] Einstellungen in `app/lib/src/settings/settings_screen.dart`: Grenzzeiten (FR-020), Fehlermarkierung während/nach je Abweichungsart (FR-025), Einschränkung der Erkennung (FR-018), Anzeigevariante (FR-011)
 - [ ] T088 [P] [US3] Experteneinstellungen mit Auswahl des Folgeverfahrens (`Pthmm`, `OuterHmm`, `Arzt`) in `app/lib/src/settings/expert_settings_screen.dart` (FR-032)
@@ -226,8 +228,9 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T096 [P] Latenzmessung in Entwicklungs-Builds: `driver_time_us` bis `frame_shown` protokollieren und auswerten in `app/lib/src/dev/latency_log.dart` und `score-view-web/src/latency.ts` (NFR-003: 95 % ≤ 50 ms, Maximum ≤ 100 ms)
 - [ ] T097 [P] Prüfen, dass die App keine Benachrichtigungen anfordert oder versendet (SC-005, FR-026): keine Push-Berechtigungen in `app/ios/Runner/Info.plist` und `app/android/app/src/main/AndroidManifest.xml`; Test in `app/test/no_notifications_test.dart`
 - [ ] T098 [P] Lizenzen aller Abhängigkeiten zusammenstellen und in der App anzeigen (`app/lib/src/about/licenses_screen.dart`, inkl. `NOTICE`)
-- [ ] T099 Projektlizenz festlegen und `LICENSE` anlegen (Entscheidung des Projektinhabers; Vereinbarkeit mit Apache-2.0 und BSD-3 prüfen)
+- [x] T099 Projektlizenz festlegen: „MIT OR Apache-2.0“ (`LICENSE-MIT`, `LICENSE-APACHE`; verträglich mit Apache-2.0 und BSD-3 der Abhängigkeiten)
 - [ ] T100 [P] `README.md` um Aufbau des Repositories, Build und Tests ergänzen (Verweis auf [quickstart.md](quickstart.md))
+- [ ] T104 [P] Offline-Fähigkeit prüfen (NFR-002): keine Netzwerkzugriffe in `core`, `engine` und `app/lib` (Review und Test `app/test/offline_test.dart`); im Release-Manifest `app/android/app/src/main/AndroidManifest.xml` keine `INTERNET`-Berechtigung; Abnahme im Flugmodus (quickstart.md Nr. 17)
 - [ ] T101 Manuelle Abnahme laut [quickstart.md](quickstart.md) auf iPad, Android (zwei Hersteller), macOS, Windows und Linux; Ergebnisse in `specs/001-legato-mvp/acceptance.md` festhalten
 
 ---

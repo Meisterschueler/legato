@@ -22,3 +22,7 @@ Das Projekt wird nach Spec-Driven Development entwickelt: Constitution → Spec 
   - [009-playlist](specs/009-playlist/spec.md)
 - [Werke](docs/werke/): Fachliche Beschreibung der unterstützten Werke
   - [Hanon](docs/werke/hanon.md)
+
+## Lizenz
+
+Lizenziert wahlweise unter der [MIT-Lizenz](LICENSE-MIT) oder der [Apache-Lizenz 2.0](LICENSE-APACHE) (`MIT OR Apache-2.0`). Herkunftshinweise für übernommenen Code stehen in `NOTICE`.

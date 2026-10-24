@@ -57,4 +57,7 @@ flutter run -d windows                     # bzw. macos, linux
 | 13 | 10 Minuten spielen ohne Gerät zu berühren | keine Bildschirmsperre | NFR-005 |
 | 14 | Latenzprotokoll (Entwicklungs-Build) auswerten | 95 % ≤ 50 ms, Maximum ≤ 100 ms | NFR-003 |
 | 15 | iPad mit Bluetooth-MIDI verbinden, Piano aus- und wieder einschalten | Warnung; nach dem Einschalten automatische Verbindung und Verbindungssignal ohne Interaktion | US 1/1–3, FR-006 |
-| 16 | Wie 15 auf Android (mind. 2 Hersteller) | wie 15, sonst manueller Weg über das Symbol in höchstens 2 Schritten | US 1/15 |
+| 16 | Wie 15 auf Android (mind. 2 Hersteller) | wie 15, sonst manueller Weg über das Symbol in höchstens 2 Tippaktionen | US 1/15 |
+| 17 | Gerät im Flugmodus: App starten, Datei laden, Hanon Nr. 1 spielen | alles funktioniert ohne Einschränkung | NFR-002, US 3/16 |
+| 18 | „Bewegung reduzieren“ am Gerät einschalten, spielen | Positionsmarke und Scrollen überblenden statt sich zu bewegen | FR-023 |
+| 19 | Verbindung trennen und nicht wiederherstellen | Warnung sofort, nach 10 s und nach 30 s (iPhone/Android zusätzlich Vibration), danach nur noch das Symbol | FR-005 |

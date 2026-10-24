@@ -27,6 +27,7 @@ typedef struct {
     void (*bluetooth_scan)(bool enabled);
     void (*bluetooth_connect)(const char* identifier); // pending connection request, never times out
     void (*prepare_audio_session)(void);              // iOS: playback + mixWithOthers
+    void (*vibrate)(void);                            // no-op without vibration motor (e.g. iPad)
 } LegatoMidiPlatform;
 
 void legato_midi_register(const LegatoMidiPlatform* platform);

@@ -81,7 +81,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 ## R5 – Warnung, Bildschirmsperre, Hintergrund
 
 **Entscheidung**:
-- Warnung über den Lautsprecher (FR-005): in der Engine mit [`rodio`](https://github.com/RustAudio/rodio) (MIT/Apache-2.0), mitgelieferte kurze Audiodatei. Unter iOS setzt die native Schicht die Audio-Session auf `playback` mit `mixWithOthers`. Kein Nutzer-Tippen nötig, framework-neutral.
+- Warnung über den Lautsprecher (FR-005): in der Engine mit [`rodio`](https://github.com/RustAudio/rodio) (MIT/Apache-2.0), mitgelieferte kurze Audiodatei, sofort sowie nach 10 s und 30 s (danach nur noch das Symbol). Auf Geräten mit Vibrationsmotor zusätzlich Vibration über die native Schicht (`vibrate`, [contracts/native-midi.md](contracts/native-midi.md)); das iPad hat keinen Vibrationsmotor. Unter iOS setzt die native Schicht die Audio-Session auf `playback` mit `mixWithOthers`. Kein Nutzer-Tippen nötig, framework-neutral.
 - Bildschirmsperre (NFR-005): Flutter-Adapter (`wakelock_plus`), aktiv solange eine Übeeinheit läuft. Die Übeeinheit beginnt mit dem ersten Ton und endet nach einer Ruhezeit ohne Ton (Startwert 10 min, einstellbar), beim Beenden der App oder im Hintergrund (Glossar „Übeeinheit“). Bei Tauri: `keepawake` bzw. kleines Plugin.
 - Hintergrund: Flutter `AppLifecycleListener` meldet an die Engine; ein laufender Durchlauf wird verworfen, beim Zurückkehren erscheint ein Hinweis.
 
@@ -126,6 +126,17 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 - Abbruch über Grenzzeiten und Zuordnungsverlust (FR-020, FR-021).
 
 **Startwerte** (laut Spec durch Ausprobieren anzupassen): Grenzzeit für Pausen 4 s, Obergrenze an notierten Pausen 10 s, Zuordnungsverlust unter 30 % der letzten *n* Töne. *n* ist die Erkennungslänge über alle gespielten Hände: bei Hanon 8 Töne je Hand, also beidhändig 16 und einhändig 8.
+
+**Startwerte der Erkennung** (üblich bei HMM-basierter Erkennung; mit Referenzdaten nachjustieren, T089):
+
+| Parameter | Startwert |
+|---|---|
+| Mindestzahl gespielter Töne vor einer Entscheidung | 4 je gespielter Hand (halbe Figur) |
+| A-posteriori-Wahrscheinlichkeit des besten Kandidaten | ≥ 0,95 |
+| Verhältnis zum zweitbesten Kandidaten | ≥ 20 : 1 |
+| Entscheidung spätestens nach der Erkennungslänge | bester Kandidat, wenn Wahrscheinlichkeit ≥ 0,5; sonst kein Durchlauf |
+
+**Darstellung** (FR-023): Übergänge 150–400 ms; bei „Bewegung reduzieren“ (iOS `UIAccessibility.isReduceMotionEnabled`, Android „Animationen entfernen“, Web `prefers-reduced-motion`) Überblenden statt Bewegung.
 
 **Lizenz**: Portierter Code trägt einen Herkunftshinweis; `NOTICE` mit Verweis auf Matchmaker (Apache-2.0).
 
