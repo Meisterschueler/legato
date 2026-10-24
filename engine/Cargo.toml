@@ -1,0 +1,17 @@
+[package]
+name = "legato-engine"
+description = "Runtime around legato-core: input state, signals, warning, storage, desktop MIDI"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+legato-core.workspace = true
+rodio.workspace = true
+serde_json.workspace = true
+
+# macOS, iOS and Android use the native MIDI layer (contracts/native-midi.md).
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+midir.workspace = true

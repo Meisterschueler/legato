@@ -1,0 +1,14 @@
+[package]
+name = "legato-core"
+description = "Score following, recognition and performance evaluation for Legato (no I/O)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# Only these dependencies are allowed: no I/O, no clock, no randomness (research.md R2).
+[dependencies]
+quick-xml.workspace = true
+zip.workspace = true
+serde.workspace = true

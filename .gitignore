@@ -1,0 +1,37 @@
+# OS, editors
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+.idea/
+*.iml
+*.log
+.env*
+
+# Rust
+/target/
+*.rs.bk
+
+# Flutter, Dart
+.dart_tool/
+.flutter-plugins-dependencies
+app/build/
+app/assets/score-view-web/
+
+# Node
+node_modules/
+score-view-web/dist/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Swift
+.build/
+.swiftpm/
+DerivedData/
+
+# Android, Gradle
+.gradle/
+local.properties

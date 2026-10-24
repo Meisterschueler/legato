@@ -1,0 +1,20 @@
+[workspace]
+resolver = "3"
+members = ["core", "engine", "app/rust"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Meisterschueler/legato"
+
+[workspace.dependencies]
+legato-core = { path = "core" }
+legato-engine = { path = "engine" }
+quick-xml = "0.42"
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rodio = { version = "0.23", default-features = false, features = ["playback", "wav"] }
+midir = "0.11"

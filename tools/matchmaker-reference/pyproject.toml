@@ -1,0 +1,14 @@
+[project]
+name = "matchmaker-reference"
+version = "0.1.0"
+description = "Generates expectation files from Matchmaker for the Rust port (contracts/matchmaker-referenz.md)"
+license = "MIT OR Apache-2.0"
+requires-python = ">=3.12"
+dependencies = [
+    # Fixed Matchmaker commit; update only together with the expectation files.
+    "pymatchmaker @ git+https://github.com/pymatchmaker/matchmaker@6c09490ba7e4b9125f6839cb534d6e150dd14d80",
+    "partitura",
+]
+
+[tool.uv]
+package = false

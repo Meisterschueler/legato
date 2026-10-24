@@ -1,0 +1,10 @@
+Legato
+Copyright 2026 Legato contributors
+
+This product includes software ported from Matchmaker
+(https://github.com/pymatchmaker/matchmaker), licensed under the
+Apache License, Version 2.0. Ported files carry a provenance comment that
+names the original Matchmaker file and the commit it was ported from.
+
+This product includes test data taken from Matchmaker; see
+testdata/matchmaker/PROVENANCE.md.

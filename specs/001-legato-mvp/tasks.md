@@ -21,12 +21,13 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 ## Phase 1: Setup
 
-**Zweck**: Repository-Struktur laut [plan.md](plan.md#quellcode-repository-wurzel)
+**Zweck**: Repository-Struktur laut [plan.md](plan.md#quellcode-repository-wurzel). Gebaut und getestet wird von Anfang an auf GitHub Actions (öffentliches Repo `Meisterschueler/legato`); lokale Werkzeuge sind nicht nötig.
 
+- [ ] T013 CI in `.github/workflows/ci.yml`, vor allen anderen Tasks dieser Phase. Job `generate` (ubuntu) erzeugt, was lokal nicht erzeugt werden kann, und committet es bei Push zurück (bei PR nur Prüfung): Plattform-Ordner per `flutter create`, `flutter_rust_bridge`-Integration und -Bindings, `Cargo.lock`, `pubspec.lock`, `package-lock.json`. Alle weiteren Jobs bauen diesen Stand: `rust` (ubuntu: `cargo fmt --check`, `clippy -D warnings`, `cargo test`, `wasm32`-Build von `legato-core`), `rust-windows` (Engine mit `midir`), `web` (Lint, Vitest, Build), `flutter` (ubuntu: `analyze`, `test`, `build linux`), `android` (`build apk`), `apple` (macos: Swift-Package für macOS und iOS, `flutter build ios --no-codesign`, `build macos`), `windows` (`flutter build windows`)
 - [ ] T001 Cargo-Workspace mit den Mitgliedern `core`, `engine`, `app/rust` in `Cargo.toml` anlegen; `rust-toolchain.toml` (stable), Edition 2024; `license = "MIT OR Apache-2.0"` für alle Crates
 - [ ] T002 [P] Crate `legato-core` in `core/Cargo.toml` und `core/src/lib.rs` anlegen; erlaubte Abhängigkeiten nur `quick-xml`, `zip`, `serde` (kein I/O, keine Uhr, kein Zufall)
 - [ ] T003 [P] Crate `legato-engine` in `engine/Cargo.toml` und `engine/src/lib.rs` anlegen; Abhängigkeiten `legato-core`, `rodio`, `serde_json`, `midir` (nur für Windows- und Linux-Ziele; macOS nutzt das Swift-Package laut contracts/native-midi.md)
-- [ ] T004 [P] Flutter-App in `app/` anlegen (Plattformen ios, android, macos, windows, linux); in `app/pubspec.yaml` `webview_flutter`, `wakelock_plus`, `path_provider`, `flutter_localizations`, `file_selector` aufnehmen; Lizenz jeder Abhängigkeit prüfen und in `app/LICENSES.md` vermerken
+- [ ] T004 [P] Flutter-App in `app/` anlegen (Plattformen ios, android, macos, windows, linux; Org `io.github.meisterschueler`, Bundle-ID `io.github.meisterschueler.legato`; Plattform-Ordner erzeugt der CI-Job `generate`); in `app/pubspec.yaml` `webview_flutter`, `wakelock_plus`, `path_provider`, `flutter_localizations`, `file_selector` aufnehmen; Lizenz jeder Abhängigkeit prüfen und in `app/LICENSES.md` vermerken
 - [ ] T005 `flutter_rust_bridge` einrichten: Crate `app/rust/` (abhängig von `legato-engine`), `app/flutter_rust_bridge.yaml`, generierte Dart-Bindings in `app/lib/src/rust/`
 - [ ] T006 [P] Web-Bundle `score-view-web/` anlegen (Vite, TypeScript, `opensheetmusicdisplay`, Vitest); Build-Ausgabe nach `app/assets/score-view-web/`
 - [ ] T007 [P] Swift-Package `native/apple/LegatoMidi/Package.swift` anlegen (iOS 16, macOS 12) mit C-Target für den Engine-Header
@@ -35,7 +36,6 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T010 [P] `NOTICE` mit Herkunftshinweis für Matchmaker (Apache-2.0) und `testdata/matchmaker/PROVENANCE.md` anlegen
 - [ ] T011 [P] Formatierung und Linting: `rustfmt.toml`; `core/clippy.toml` mit `disallowed-types` für `std::collections::HashMap`/`HashSet` (research.md R2); `app/analysis_options.yaml`; ESLint/Prettier in `score-view-web/`
 - [ ] T012 [P] `.gitignore` für Rust, Flutter, Node und Python ergänzen
-- [ ] T013 CI in `.github/workflows/ci.yml`: `cargo fmt --check`, `cargo clippy`, `cargo test`, `flutter test`, `npm --prefix score-view-web test`
 - [ ] T014 [P] Hanon Nr. 1 als MusicXML in `app/assets/pieces/hanon-01.musicxml` erstellen (gemeinfrei; beide Hände auf zwei Systemen, Fingersatz, Wiederholungszeichen um „Aufwärts“ und „Abwärts“, Schlusston „Ende“; Metadaten `<creator type="composer">Hanon</creator>`, `<movement-number>1</movement-number>`) laut [docs/werke/hanon.md](../../docs/werke/hanon.md)
 - [ ] T015 [P] Kurzen Warnton als `app/assets/warning.wav` erstellen (gemeinfrei oder selbst erzeugt)
 
@@ -54,7 +54,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T018 [P] Bluetooth-MIDI über CoreBluetooth in `native/apple/LegatoMidi/Sources/LegatoMidi/BluetoothMidiTransport.swift`: Suche nach dem BLE-MIDI-Dienst, Verbinden, Kennung speichern, dauerhafte Verbindungsanfrage nach Abbruch
 - [ ] T019 Spike-App `spikes/s1-midi-ios/` (SwiftUI, linkt `LegatoMidi` und die Engine als statische Bibliothek): zeigt Ereignisse, misst Erkennungszeit der Trennung, Wiederverbinden, Latenz und Jitter, exportiert ein Protokoll
 - [ ] T020 S1 auf dem iPad messen (USB und Bluetooth, mit vorhandenem Piano bzw. Adapter); Ergebnisse und Folgerungen als „Spike-Ergebnis S1“ in `specs/001-legato-mvp/research.md` (R4) eintragen
-- [ ] T021 [P] Android-MIDI in `native/android/legato-midi/src/main/kotlin/org/legato/midi/LegatoMidi.kt`: `MidiManager.DeviceCallback`, BLE-Suche, `openBluetoothDevice`, Berechtigungen `BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT`; JNI-Exporte in `engine/src/ffi/android.rs`
+- [ ] T021 [P] Android-MIDI in `native/android/legato-midi/src/main/kotlin/io/github/meisterschueler/legato/midi/LegatoMidi.kt`: `MidiManager.DeviceCallback`, BLE-Suche, `openBluetoothDevice`, Berechtigungen `BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT`; JNI-Exporte in `engine/src/ffi/android.rs`
 - [ ] T022 Spike-App `spikes/s1-midi-android/`; auf mindestens zwei Geräten verschiedener Hersteller messen und in `specs/001-legato-mvp/research.md` (R4) eintragen, einschließlich Weitergabe der Instrument-Zeitstempel
 
 ### Spike S2: Notenblatt im WebView
