@@ -231,12 +231,4 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 - Digitalpianos mit MIDI-Eingang geben empfangene Töne mit ihrem eigenen Klang wieder.
 - Das Gerät, auf dem die App läuft, hat einen Lautsprecher.
 
-## Hinweise für die Planung (nicht normativ)
-
-Die folgenden Hinweise sind Entscheidungen über das *Wie* und gehören in den Plan, nicht in die Spec. Sobald der Plan existiert, werden sie dorthin übernommen und hier entfernt:
-
-- **Notendateien**: z. B. MusicXML.
-- **Sprache**: Aus der Regionseinstellung des Geräts (z. B. `de-AT` → Deutsch, `fr-CH` → Französisch). Texte in Ressourcendateien je Sprache, Englisch als Fallback auch für einzelne fehlende Texte.
-- **Zuordnung während des Spiels**: Online-Verfahren (*score following*), an [Matchmaker](https://github.com/pymatchmaker/matchmaker) orientiert ([Park et al., 2025](../../docs/literatur.md)): Pipeline `Stream` → `Processor` → `OnlineAlignment`, Verfahren als austauschbare Plugins (FR-032). Kandidaten für MIDI: Pitch-HMM, HMM nach Cancino-Chacón et al., Outer-Product-HMM ([Nakamura et al., 2014](../../docs/literatur.md)), Online Time Warping nach Dixon bzw. Arzt. Matchmaker ist Python und folgt einer bekannten Partitur; für die App ist es daher nur Vorbild (Portierung nötig), und die Erkennung (FR-016) erfordert mehrere parallel verfolgte Kandidaten (Stück, Variation, Tonart), vgl. `arzt_multi_fold`.
-- **Bluetooth-MIDI**: Prüfen, ob sich Bluetooth-MIDI-Verbindungen (insbesondere unter iOS) ohne Zutun des Pianisten wiederherstellen lassen (FR-006).
-- **Repositories**: Aufteilung des Projekts auf mehrere GitHub-Repositories.
+**Plan**: [plan.md](plan.md)
