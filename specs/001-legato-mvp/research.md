@@ -25,7 +25,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 
 ## R2 – Gemeinsamer Kern in Rust
 
-**Entscheidung**: Zuordnung, Erkennung, Werkregeln, Notentext und Durchlauf-Steuerung liegen in einem Rust-Crate ohne I/O (`legato-core`). Dasselbe Crate läuft in der App (nativ), im Backend (nativ als Rust-Bibliothek oder in Python über PyO3; Entscheidung in [007](../007-konto-backend/spec.md)) und in der Web-App (WebAssembly).
+**Entscheidung**: Zuordnung, Erkennung, Werkregeln, Notentext und Durchlauf-Steuerung liegen in einem Rust-Crate ohne I/O (`legato-core`). Dasselbe Crate läuft in der App (nativ), im Backend (Rust, bindet das Crate direkt ein; siehe [007](../007-konto-backend/spec.md)) und in der Web-App (WebAssembly).
 
 **Konsistenz über Plattformen** (Constitution VI, VIII): Bitgenauigkeit wird nicht verlangt. Große Abweichungen werden konstruktiv verhindert, kleine numerische Unterschiede durch Toleranzen aufgefangen:
 - kein Zufall, keine Uhr im Kern; Zeit nur aus Ereignis-Zeitstempeln;
