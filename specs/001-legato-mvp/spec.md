@@ -1,6 +1,6 @@
 # Feature-Spezifikation: Legato MVP
 
-**Status**: Entwurf | **Erstellt**: 2026-10-22 | **Constitution**: [1.0.0](../../.specify/memory/constitution.md) | **Werkspezifikationen**: [hanon.md](../../docs/werke/hanon.md)
+**Status**: Freigegeben | **Erstellt**: 2026-10-22 | **Constitution**: [1.0.0](../../.specify/memory/constitution.md) | **Werkspezifikationen**: [hanon.md](../../docs/werke/hanon.md)
 
 **Produktübersicht**: [produkt.md](../../docs/produkt.md) | **Glossar**: [glossar.md](../../docs/glossar.md)
 
@@ -202,7 +202,7 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 
 - **NFR-001**: Die App MUSS auf iOS, Android, Windows, macOS und Linux laufen.
 - **NFR-002**: Die Grundfunktionalität (siehe [Produktübersicht](../../docs/produkt.md#bestandteile)) MUSS ohne Onlineverbindung funktionieren, in dieser Spec also alle Anforderungen. Das gilt nicht für die Web-App ([008](../008-web-app/spec.md)).
-- **NFR-003**: Die Latenz zwischen Anschlag und Anzeige DARF NICHT als störend wahrnehmbar sein. [NEEDS CLARIFICATION: Zielwert in ms]
+- **NFR-003**: Die Latenz zwischen Anschlag und Anzeige DARF NICHT als störend wahrnehmbar sein: Bei mindestens 95 % der Anschläge MUSS sie höchstens 50 ms betragen, bei keinem Anschlag mehr als 100 ms.
 - **NFR-004**: Die Oberfläche setzt musikalisches Fachwissen voraus und erklärt keine Grundlagen.
 - **NFR-005**: Während einer Übeeinheit MUSS die App im Vordergrund aktiv bleiben und die automatische Bildschirmsperre verhindern. Gelangt sie trotzdem in den Hintergrund, MUSS ein laufender Durchlauf verworfen werden.
 - **NFR-006**: Die App MUSS mehrsprachig sein. Die Sprache MUSS sich nach der Regionseinstellung des Geräts richten. Wird die dort eingestellte Sprache nicht unterstützt, MUSS Englisch verwendet werden. Zunächst MÜSSEN Englisch und Deutsch unterstützt werden. Akzeptanz: **Angenommen** die Regionseinstellung des Geräts ist `de-AT` bzw. `fr-FR`, **wenn** der Pianist die App startet, **dann** erscheint die Oberfläche auf Deutsch bzw. Englisch.
@@ -218,9 +218,9 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 
 ## Erfolgskriterien
 
-- **SC-001**: Bei MIDI-Eingabe werden mindestens [NEEDS CLARIFICATION: Zielwert, z. B. 99 %] der Töne in Referenz-Durchläufen korrekt zugeordnet.
+- **SC-001**: Bei MIDI-Eingabe werden mindestens 99 % der Töne in Referenz-Durchläufen (einschließlich absichtlicher Abweichungen) korrekt zugeordnet, gemessen an einer manuell erstellten Referenz-Zuordnung.
 - **SC-002**: Bei MIDI-Eingabe erkennt die App Stück, Variation und Tonart in Referenz-Durchläufen zu Beginn jedes Durchlaufs innerhalb der Erkennungslänge korrekt (z. B. 8 Töne je Hand bei Hanon Nr. 1), sofern sich die zugelassenen Stücke, Variationen und Tonarten innerhalb dieser Länge unterscheiden.
-- **SC-003**: Nach der Trennung einer MIDI-Verbindung ertönt die Warnung innerhalb von [NEEDS CLARIFICATION: Zielwert, z. B. 2 s].
+- **SC-003**: Nach der Trennung einer MIDI-Verbindung ertönt die Warnung innerhalb von 2 s. Bei kabellosen Verbindungen (z. B. Bluetooth-MIDI) gilt die Frist ab dem Zeitpunkt, zu dem das Betriebssystem die Trennung meldet.
 - **SC-004**: Während eines Durchlaufs erscheint keinerlei unaufgeforderte Meldung.
 - **SC-005**: Die App versendet keine Benachrichtigungen außerhalb der laufenden App.
 
