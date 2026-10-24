@@ -23,21 +23,21 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 **Zweck**: Repository-Struktur laut [plan.md](plan.md#quellcode-repository-wurzel). Gebaut und getestet wird von Anfang an auf GitHub Actions (öffentliches Repo `Meisterschueler/legato`); lokale Werkzeuge sind nicht nötig.
 
-- [ ] T013 CI in `.github/workflows/ci.yml`, vor allen anderen Tasks dieser Phase. Job `generate` (ubuntu) erzeugt, was lokal nicht erzeugt werden kann, und committet es bei Push zurück (bei PR nur Prüfung): Plattform-Ordner per `flutter create`, `flutter_rust_bridge`-Integration und -Bindings, `Cargo.lock`, `pubspec.lock`, `package-lock.json`. Alle weiteren Jobs bauen diesen Stand: `rust` (ubuntu: `cargo fmt --check`, `clippy -D warnings`, `cargo test`, `wasm32`-Build von `legato-core`), `rust-windows` (Engine mit `midir`), `web` (Lint, Vitest, Build), `flutter` (ubuntu: `analyze`, `test`, `build linux`), `android` (`build apk`), `apple` (macos: Swift-Package für macOS und iOS, `flutter build ios --no-codesign`, `build macos`), `windows` (`flutter build windows`)
-- [ ] T001 Cargo-Workspace mit den Mitgliedern `core`, `engine`, `app/rust` in `Cargo.toml` anlegen; `rust-toolchain.toml` (stable), Edition 2024; `license = "MIT OR Apache-2.0"` für alle Crates
-- [ ] T002 [P] Crate `legato-core` in `core/Cargo.toml` und `core/src/lib.rs` anlegen; erlaubte Abhängigkeiten nur `quick-xml`, `zip`, `serde` (kein I/O, keine Uhr, kein Zufall)
-- [ ] T003 [P] Crate `legato-engine` in `engine/Cargo.toml` und `engine/src/lib.rs` anlegen; Abhängigkeiten `legato-core`, `rodio`, `serde_json`, `midir` (nur für Windows- und Linux-Ziele; macOS nutzt das Swift-Package laut contracts/native-midi.md)
-- [ ] T004 [P] Flutter-App in `app/` anlegen (Plattformen ios, android, macos, windows, linux; Org `io.github.meisterschueler`, Bundle-ID `io.github.meisterschueler.legato`; Plattform-Ordner erzeugt der CI-Job `generate`); in `app/pubspec.yaml` `webview_flutter`, `wakelock_plus`, `path_provider`, `flutter_localizations`, `file_selector` aufnehmen; Lizenz jeder Abhängigkeit prüfen und in `app/LICENSES.md` vermerken
-- [ ] T005 `flutter_rust_bridge` einrichten: Crate `app/rust/` (abhängig von `legato-engine`), `app/flutter_rust_bridge.yaml`, generierte Dart-Bindings in `app/lib/src/rust/`
-- [ ] T006 [P] Web-Bundle `score-view-web/` anlegen (Vite, TypeScript, `opensheetmusicdisplay`, Vitest); Build-Ausgabe nach `app/assets/score-view-web/`
-- [ ] T007 [P] Swift-Package `native/apple/LegatoMidi/Package.swift` anlegen (iOS 16, macOS 12) mit C-Target für den Engine-Header
-- [ ] T008 [P] Kotlin-Bibliothek `native/android/legato-midi/` anlegen (`build.gradle.kts`, minSdk 28) und in `app/android/settings.gradle` einbinden
-- [ ] T009 [P] Python-Werkzeug `tools/matchmaker-reference/` mit `pyproject.toml` (pymatchmaker auf festem Commit, partitura; uv) und `README.md` anlegen
-- [ ] T010 [P] `NOTICE` mit Herkunftshinweis für Matchmaker (Apache-2.0) und `testdata/matchmaker/PROVENANCE.md` anlegen
-- [ ] T011 [P] Formatierung und Linting: `rustfmt.toml`; `core/clippy.toml` mit `disallowed-types` für `std::collections::HashMap`/`HashSet` (research.md R2); `app/analysis_options.yaml`; ESLint/Prettier in `score-view-web/`
-- [ ] T012 [P] `.gitignore` für Rust, Flutter, Node und Python ergänzen
-- [ ] T014 [P] Hanon Nr. 1 als MusicXML in `app/assets/pieces/hanon-01.musicxml` erstellen (gemeinfrei; beide Hände auf zwei Systemen, Fingersatz, Wiederholungszeichen um „Aufwärts“ und „Abwärts“, Schlusston „Ende“; Metadaten `<creator type="composer">Hanon</creator>`, `<movement-number>1</movement-number>`) laut [docs/werke/hanon.md](../../docs/werke/hanon.md)
-- [ ] T015 [P] Kurzen Warnton als `app/assets/warning.wav` erstellen (gemeinfrei oder selbst erzeugt)
+- [x] T013 CI in `.github/workflows/ci.yml`, vor allen anderen Tasks dieser Phase. Job `generate` (ubuntu) erzeugt, was lokal nicht erzeugt werden kann, und committet es bei Push zurück (bei PR nur Prüfung): Plattform-Ordner per `flutter create`, `flutter_rust_bridge`-Integration und -Bindings, `Cargo.lock`, `pubspec.lock`, `package-lock.json`. Alle weiteren Jobs bauen diesen Stand: `rust` (ubuntu: `cargo fmt --check`, `clippy -D warnings`, `cargo test`, `wasm32`-Build von `legato-core`), `rust-windows` (Engine mit `midir`), `web` (Lint, Vitest, Build), `flutter` (ubuntu: `analyze`, `test`, `build linux`), `android` (`build apk`), `apple` (macos: Swift-Package für macOS und iOS, `flutter build ios --no-codesign`, `build macos`), `windows` (`flutter build windows`)
+- [x] T001 Cargo-Workspace mit den Mitgliedern `core`, `engine`, `app/rust` in `Cargo.toml` anlegen; `rust-toolchain.toml` (stable), Edition 2024; `license = "MIT OR Apache-2.0"` für alle Crates
+- [x] T002 [P] Crate `legato-core` in `core/Cargo.toml` und `core/src/lib.rs` anlegen; erlaubte Abhängigkeiten nur `quick-xml`, `zip`, `serde` (kein I/O, keine Uhr, kein Zufall)
+- [x] T003 [P] Crate `legato-engine` in `engine/Cargo.toml` und `engine/src/lib.rs` anlegen; Abhängigkeiten `legato-core`, `rodio`, `serde_json`, `midir` (nur für Windows- und Linux-Ziele; macOS nutzt das Swift-Package laut contracts/native-midi.md)
+- [x] T004 [P] Flutter-App in `app/` anlegen (Plattformen ios, android, macos, windows, linux; Org `io.github.meisterschueler`, Bundle-ID `io.github.meisterschueler.legato`; Plattform-Ordner erzeugt der CI-Job `generate`); in `app/pubspec.yaml` `webview_flutter`, `wakelock_plus`, `path_provider`, `flutter_localizations`, `file_selector` aufnehmen; Lizenz jeder Abhängigkeit prüfen und in `app/LICENSES.md` vermerken
+- [x] T005 `flutter_rust_bridge` einrichten: Crate `app/rust/` (abhängig von `legato-engine`), `app/flutter_rust_bridge.yaml`, generierte Dart-Bindings in `app/lib/src/rust/`
+- [x] T006 [P] Web-Bundle `score-view-web/` anlegen (Vite, TypeScript, `opensheetmusicdisplay`, Vitest); Build-Ausgabe nach `app/assets/score-view-web/`
+- [x] T007 [P] Swift-Package `native/apple/LegatoMidi/Package.swift` anlegen (iOS 16, macOS 12) mit C-Target für den Engine-Header
+- [x] T008 [P] Kotlin-Bibliothek `native/android/legato-midi/` anlegen (`build.gradle.kts`, minSdk 28) und in `app/android/settings.gradle` einbinden
+- [x] T009 [P] Python-Werkzeug `tools/matchmaker-reference/` mit `pyproject.toml` (pymatchmaker auf festem Commit, partitura; uv) und `README.md` anlegen
+- [x] T010 [P] `NOTICE` mit Herkunftshinweis für Matchmaker (Apache-2.0) und `testdata/matchmaker/PROVENANCE.md` anlegen
+- [x] T011 [P] Formatierung und Linting: `rustfmt.toml`; `core/clippy.toml` mit `disallowed-types` für `std::collections::HashMap`/`HashSet` (research.md R2); `app/analysis_options.yaml`; ESLint/Prettier in `score-view-web/`
+- [x] T012 [P] `.gitignore` für Rust, Flutter, Node und Python ergänzen
+- [x] T014 [P] Hanon Nr. 1 als MusicXML in `app/assets/pieces/hanon-01.musicxml` erstellen (gemeinfrei; beide Hände auf zwei Systemen, Fingersatz, Wiederholungszeichen um „Aufwärts“ und „Abwärts“, Schlusston „Ende“; Metadaten `<creator type="composer">Hanon</creator>`, `<movement-number>1</movement-number>`) laut [docs/werke/hanon.md](../../docs/werke/hanon.md)
+- [x] T015 [P] Kurzen Warnton als `app/assets/warning.wav` erstellen (gemeinfrei oder selbst erzeugt)
 
 **Checkpoint**: Leere Crates, App, Bundle und native Pakete bauen; CI läuft grün.
 
