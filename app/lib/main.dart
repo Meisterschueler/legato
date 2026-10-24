@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:legato/src/rust/frb_generated.dart';
 
-void main() {
+Future<void> main() async {
+  await RustLib.init();
   runApp(const LegatoApp());
 }
 
