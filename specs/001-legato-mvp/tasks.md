@@ -25,7 +25,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 - [ ] T001 Cargo-Workspace mit den Mitgliedern `core`, `engine`, `app/rust` in `Cargo.toml` anlegen; `rust-toolchain.toml` (stable), Edition 2024
 - [ ] T002 [P] Crate `legato-core` in `core/Cargo.toml` und `core/src/lib.rs` anlegen; erlaubte Abhängigkeiten nur `quick-xml`, `zip`, `serde` (kein I/O, keine Uhr, kein Zufall)
-- [ ] T003 [P] Crate `legato-engine` in `engine/Cargo.toml` und `engine/src/lib.rs` anlegen; Abhängigkeiten `legato-core`, `rodio`, `serde_json`, `midir` (nur für Windows/Linux/macOS-Ziele)
+- [ ] T003 [P] Crate `legato-engine` in `engine/Cargo.toml` und `engine/src/lib.rs` anlegen; Abhängigkeiten `legato-core`, `rodio`, `serde_json`, `midir` (nur für Windows- und Linux-Ziele; macOS nutzt das Swift-Package laut contracts/native-midi.md)
 - [ ] T004 [P] Flutter-App in `app/` anlegen (Plattformen ios, android, macos, windows, linux); in `app/pubspec.yaml` `webview_flutter`, `wakelock_plus`, `path_provider`, `flutter_localizations`, `file_selector` aufnehmen; Lizenz jeder Abhängigkeit prüfen und in `app/LICENSES.md` vermerken
 - [ ] T005 `flutter_rust_bridge` einrichten: Crate `app/rust/` (abhängig von `legato-engine`), `app/flutter_rust_bridge.yaml`, generierte Dart-Bindings in `app/lib/src/rust/`
 - [ ] T006 [P] Web-Bundle `score-view-web/` anlegen (Vite, TypeScript, `opensheetmusicdisplay`, Vitest); Build-Ausgabe nach `app/assets/score-view-web/`
@@ -130,14 +130,14 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 - [ ] T056 [US1] Zustandsmaschine `InputState` (`Disconnected` → `MidiConnected` ↔ `ConnectionLost`, `warning_acknowledged`) in `engine/src/input/state.rs`
 - [ ] T057 [US1] Geräteverwaltung in `engine/src/input/registry.rs`: Geräte aus FFI bzw. `midir`, `list_inputs`, `select_input`, `reconnect`, `scan_bluetooth`; gewählte Eingabe in `Settings` speichern und beim Start wiederherstellen (FR-002)
-- [ ] T058 [P] [US1] Desktop-MIDI mit `midir` und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
+- [ ] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
 - [ ] T059 [US1] C-Schnittstelle vollständig umsetzen (Stub aus T016 ersetzen) in `engine/src/ffi.rs` und `engine/src/ffi/android.rs`
 - [ ] T060 [US1] Warnung über den Lautsprecher mit `rodio` in `engine/src/warning.rs`: spielt `warning.wav` sofort, wiederholt in Abständen, endet bei Wiederverbindung oder `acknowledge_warning` (FR-005)
 - [ ] T061 [US1] `LegatoMidi` in `app/ios/Runner/AppDelegate.swift` und `app/macos/Runner/AppDelegate.swift` registrieren; Audio-Session `playback` + `mixWithOthers`; `NSBluetoothAlwaysUsageDescription` in `app/ios/Runner/Info.plist`
 - [ ] T062 [US1] `legato-midi` in `app/android/app/src/main/kotlin/.../MainActivity.kt` registrieren; Berechtigungen in `app/android/app/src/main/AndroidManifest.xml`
 - [ ] T063 [P] [US1] Eingabe-Symbol in `app/lib/src/input/input_symbol.dart` (Zustände laut US 1 Szenario 10, fließende Übergänge)
 - [ ] T064 [US1] Eingabe-Auswahl in `app/lib/src/input/input_picker.dart`: verfügbare MIDI-Geräte, aktuelle Wahl, Anzeige ob Eingaben ankommen, Warnung bestätigen, neu verbinden, Bluetooth-Suche (US 1 Szenarien 11, 15)
-- [ ] T065 [P] [US1] Bildschirmsperre verhindern, solange eine Eingabe verbunden ist, in `app/lib/src/platform/wakelock_adapter.dart` (NFR-005)
+- [ ] T065 [P] [US1] Bildschirmsperre verhindern, solange eine Übeeinheit läuft (Ereignis `PracticeSessionChanged`), in `app/lib/src/platform/wakelock_adapter.dart` (NFR-005)
 - [ ] T066 [US1] Lebenszyklus an die Engine melden (`set_foreground`) und `BackgroundNotice` anzeigen in `app/lib/src/platform/lifecycle_adapter.dart` (US 1 Szenario 8)
 
 **Checkpoint**: Verbinden, Trennen, Warnen und Wiederverbinden funktionieren auf iPad und Android; Symbol zeigt den Zustand.
@@ -188,7 +188,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T081 [US3] Erkennung mit parallel verfolgten Kandidaten, Entscheidung über a-posteriori-Schwelle und Abstand zum Zweitbesten, spätestens nach der Erkennungslänge, in `core/src/recognition.rs`
 - [ ] T082 [US3] Zustandsmaschine `PerformanceState` (`Recognizing`, `Running`, `Completed`, `Aborted`) mit `PauseLimit`, `RestLimit` und `AlignmentLoss` in `core/src/performance.rs` laut [data-model.md](data-model.md#performance-durchlauf)
 - [ ] T083 [US3] Anzeigevarianten für Hanon (komplett; erste und letzte zwei Takte je Teil mit *simile*; erster Takt von „Aufwärts“ und „Abwärts“ in getrennten Systemen; nur erster Takt von „Aufwärts“) in `core/src/score/musicxml_write.rs` (FR-011)
-- [ ] T084 [US3] Sitzung in `engine/src/session.rs`: MIDI-Ereignisse → Kern; Ereignisse `PerformanceRecognized`, `Position`, `DeviationDetected` (nur wenn Fehlermarkierung während des Spiels an), `PerformanceEnded`; Sperre aller anderen Meldungen während eines Durchlaufs (FR-024)
+- [ ] T084 [US3] Sitzung in `engine/src/session.rs`: MIDI-Ereignisse → Kern; Ereignisse `PerformanceRecognized`, `Position`, `DeviationDetected` (nur wenn Fehlermarkierung während des Spiels an), `PerformanceEnded`; Sperre aller anderen Meldungen während eines Durchlaufs (FR-024); Eingabe getrennt oder gewechselt sowie Wechsel in den Hintergrund brechen den laufenden Durchlauf ab (FR-002, FR-004, NFR-005); Übeeinheit beginnt mit dem ersten Ton und endet nach `session_idle_timeout_ms` ohne Ton, beim Beenden oder im Hintergrund (Ereignis `PracticeSessionChanged`)
 - [ ] T085 [US3] Positionsmarke und Scrollen mit `requestAnimationFrame`, fließende Farbwechsel, dezente Fehlermarkierung während bzw. nach dem Durchlauf in `score-view-web/src/markers.ts` und `score-view-web/src/scroll.ts` (FR-023, FR-025)
 - [ ] T086 [US3] Ereignisse der Engine an `score-view-web` weiterreichen und Anzeigevariante wechseln in `app/lib/src/score_view/score_view.dart` (US 3 Szenario 18)
 - [ ] T087 [P] [US3] Einstellungen in `app/lib/src/settings/settings_screen.dart`: Grenzzeiten (FR-020), Fehlermarkierung während/nach je Abweichungsart (FR-025), Einschränkung der Erkennung (FR-018), Anzeigevariante (FR-011)

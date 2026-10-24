@@ -12,7 +12,7 @@ Das MVP ist eine plattformübergreifende App (Priorität iOS/iPad, dann Android,
 
 **Sprache/Version**: Rust (stable, Edition 2024) für Kern und Engine; Dart 3 / Flutter (stable) für die Oberfläche; Swift 5.9+ (iOS, macOS) und Kotlin (Android) für die MIDI-Schicht; TypeScript 5 für das Notenblatt-Bundle; Python 3.12 nur für das Referenz-Werkzeug
 
-**Wesentliche Abhängigkeiten**: `flutter_rust_bridge`, `quick-xml`, `zip`, `rodio`, `midir` (Desktop), `webview_flutter`, `wakelock_plus`, `path_provider`, OpenSheetMusicDisplay; Referenz: `pymatchmaker` (festgelegter Commit), `partitura`
+**Wesentliche Abhängigkeiten**: `flutter_rust_bridge`, `quick-xml`, `zip`, `rodio`, `midir` (Windows, Linux), `webview_flutter`, `wakelock_plus`, `path_provider`, `file_selector`, OpenSheetMusicDisplay; Referenz: `pymatchmaker` (festgelegter Commit), `partitura`
 
 **Speicherung**: Einstellungen als JSON und Kopien geladener Notendateien in einem App-Verzeichnis, verwaltet von der Engine. Keine Speicherung von Durchläufen (folgt in 003).
 
@@ -62,7 +62,7 @@ flowchart LR
     end
     subgraph Rust["Rust"]
         subgraph Engine["legato-engine"]
-            Desk["Desktop-MIDI (midir)"]
+            Desk["MIDI Windows/Linux (midir)"]
             Verb["Eingabezustand,<br/>Wiederverbinden"]
             Sig["Signalplan"]
             Warn["Warnung (rodio)"]
@@ -137,7 +137,7 @@ engine/                          # legato-engine
 ├── src/
 │   ├── api.rs                   # framework-neutrale Schnittstelle
 │   ├── ffi.rs                   # C-Schnittstelle für native MIDI-Schicht
-│   ├── input/                   # InputState, Wiederverbinden, midir (Desktop)
+│   ├── input/                   # InputState, Wiederverbinden, midir (Windows, Linux)
 │   ├── signals.rs
 │   ├── warning.rs
 │   └── storage.rs               # Settings, Repertoire

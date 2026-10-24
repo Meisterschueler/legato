@@ -74,6 +74,8 @@ Eine zulässige Kombination für die Erkennung.
 | `started_at` | Zeit | erster Ton nach Start bzw. nach Rückkehr in den Vordergrund |
 | `performances` | Liste von `Performance` | nur abgeschlossene |
 
+Die Übeeinheit endet nach `session_idle_timeout_ms` ohne Ton, beim Beenden der App oder im Hintergrund (Glossar „Übeeinheit“). Solange sie läuft, ist die Bildschirmsperre unterdrückt (NFR-005).
+
 ### `Performance` (Durchlauf)
 | Feld | Typ | Regel |
 |---|---|---|
@@ -117,7 +119,7 @@ Abgebrochene Durchläufe werden verworfen. Nach `Completed` läuft der bisherige
 ## Eingabe und Signale (Engine)
 
 ### `InputState` (Eingabezustand)
-`Disconnected` → `MidiConnected` ↔ `ConnectionLost`. Bei `ConnectionLost` gibt es zusätzlich `warning_acknowledged`. Der Wechsel `MidiConnected` → `ConnectionLost` startet die `DisconnectWarning` (FR-005), `ConnectionLost` → `MidiConnected` sendet das `ConnectSignal` (FR-027).
+`Disconnected` → `MidiConnected` ↔ `ConnectionLost`. Bei `ConnectionLost` gibt es zusätzlich `warning_acknowledged`. Der Wechsel `MidiConnected` → `ConnectionLost` startet die `DisconnectWarning` (FR-005), `ConnectionLost` → `MidiConnected` sendet das `ConnectSignal` (FR-027). Der Zustand `AudioConnected` (US 1 Szenario 5) folgt mit der Audio-Eingabe in [006](../006-audio-eingabe/spec.md).
 
 ### `SignalPlanner` (Signalplan)
 Die Ereignisse `PerformanceCompleted`, `PerformanceAborted`, `Stopped` und `Connected` werden gemäß Einstellungen in MIDI-Tonfolgen (`ConnectSignal`, `OkSignal`, `AbortSignal`) übersetzt. Für „wenn der Pianist aufgehört hat“ merkt sich der Planer, ob seit dem letzten `OkSignal` ein Durchlauf abgeschlossen wurde (US 4, Szenarien 2 und 3).
@@ -131,6 +133,7 @@ Die Ereignisse `PerformanceCompleted`, `PerformanceAborted`, `Stopped` und `Conn
 | Erkennung | `recognition_filter` (Stücke, Variationen, Tonarten) | keiner |
 | Zuordnung | `pause_limit_ms` | 4000 |
 | Zuordnung | `rest_limit_ms` | 10000 |
+| Übeeinheit | `session_idle_timeout_ms` (Ruhezeit) | 600000 |
 | Zuordnung | `score_follower` | nach Spike S3 (`Pthmm` oder `OuterHmm`); Alternative `Arzt` |
 | Anzeige | `display_variant` je Werk | `Full` |
 | Anzeige | `error_marking_during` je Abweichungsart | aus |

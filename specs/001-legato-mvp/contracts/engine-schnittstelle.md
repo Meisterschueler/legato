@@ -37,6 +37,7 @@ Framework-neutrale Schnittstelle von `legato-engine` (`engine/src/api.rs`). Flut
 | `DeviationDetected` | `{ kind, note_id?, pitch? }` | FR-025, nur wenn Fehlermarkierung während des Spiels an |
 | `PerformanceEnded` | `{ outcome: Completed \| Aborted, reason?, deviations: [..] }` | FR-025, US 4 |
 | `BackgroundNotice` | `{ performance_discarded }` | US 1/8 |
+| `PracticeSessionChanged` | `{ active }` | NFR-005 (Bildschirmsperre) |
 
 ## Nachrichten an `score-view-web`
 

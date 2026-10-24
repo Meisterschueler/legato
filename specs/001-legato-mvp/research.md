@@ -82,7 +82,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 
 **Entscheidung**:
 - Warnung über den Lautsprecher (FR-005): in der Engine mit [`rodio`](https://github.com/RustAudio/rodio) (MIT/Apache-2.0), mitgelieferte kurze Audiodatei. Unter iOS setzt die native Schicht die Audio-Session auf `playback` mit `mixWithOthers`. Kein Nutzer-Tippen nötig, framework-neutral.
-- Bildschirmsperre (NFR-005): Flutter-Adapter (`wakelock_plus`), aktiv solange eine Eingabe verbunden ist. Bei Tauri: `keepawake` bzw. kleines Plugin.
+- Bildschirmsperre (NFR-005): Flutter-Adapter (`wakelock_plus`), aktiv solange eine Übeeinheit läuft. Die Übeeinheit beginnt mit dem ersten Ton und endet nach einer Ruhezeit ohne Ton (Startwert 10 min, einstellbar), beim Beenden der App oder im Hintergrund (Glossar „Übeeinheit“). Bei Tauri: `keepawake` bzw. kleines Plugin.
 - Hintergrund: Flutter `AppLifecycleListener` meldet an die Engine; ein laufender Durchlauf wird verworfen, beim Zurückkehren erscheint ein Hinweis.
 
 ## R6 – Notendateien
@@ -125,7 +125,7 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 - Verwerfen von Pedal (FR-003) und Echo eigener Signaltöne (FR-030, 300-ms-Fenster);
 - Abbruch über Grenzzeiten und Zuordnungsverlust (FR-020, FR-021).
 
-**Startwerte** (laut Spec durch Ausprobieren anzupassen): Grenzzeit für Pausen 4 s, Obergrenze an notierten Pausen 10 s, Zuordnungsverlust unter 30 % der letzten *n* Töne (*n* = Erkennungslänge).
+**Startwerte** (laut Spec durch Ausprobieren anzupassen): Grenzzeit für Pausen 4 s, Obergrenze an notierten Pausen 10 s, Zuordnungsverlust unter 30 % der letzten *n* Töne. *n* ist die Erkennungslänge über alle gespielten Hände: bei Hanon 8 Töne je Hand, also beidhändig 16 und einhändig 8.
 
 **Lizenz**: Portierter Code trägt einen Herkunftshinweis; `NOTICE` mit Verweis auf Matchmaker (Apache-2.0).
 
