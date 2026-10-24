@@ -42,7 +42,7 @@ jobs:
           node-version: 22
       - uses: taiki-e/install-action@v2
         with:
-          tool: flutter_rust_bridge_codegen@${{ env.FRB_VERSION }}
+          tool: flutter_rust_bridge_codegen@${{ env.FRB_VERSION }},cbindgen@0.29.4
       - name: Flutter platform folders
         working-directory: app
         run: |
@@ -73,6 +73,15 @@ jobs:
             flutter_rust_bridge_codegen generate
           fi
           touch ~/.frb-stamp
+      - name: C header of the native MIDI interface
+        run: |
+          (cd engine && cbindgen --config cbindgen.toml --output include/legato_midi.h)
+          cp engine/include/legato_midi.h native/apple/LegatoMidi/Sources/LegatoEngineC/include/
+      # No local Rust/Dart toolchain: formatting happens here (on pull requests it is only checked).
+      - name: Format
+        run: |
+          cargo fmt --all
+          (cd app && dart format lib test)
       - name: Lock files
         run: |
           cargo metadata --format-version 1 > /dev/null
@@ -151,7 +160,7 @@ jobs:
           retention-days: 14
 
   flutter:
-    needs: generate
+    needs: [generate, web]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -160,6 +169,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.generate.outputs.sha }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: score-view-web
+          path: app/assets/score-view-web
       - run: |
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libasound2-dev
@@ -183,7 +196,7 @@ jobs:
           retention-days: 14
 
   android:
-    needs: generate
+    needs: [generate, web]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -192,6 +205,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.generate.outputs.sha }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: score-view-web
+          path: app/assets/score-view-web
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -225,12 +242,16 @@ jobs:
           retention-days: 14
 
   apple:
-    needs: generate
+    needs: [generate, web]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.generate.outputs.sha }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: score-view-web
+          path: app/assets/score-view-web
       - run: rustup toolchain install
       - uses: subosito/flutter-action@v2
         with:
@@ -242,11 +263,21 @@ jobs:
       - name: Swift package (iOS)
         working-directory: native/apple/LegatoMidi
         run: xcodebuild build -scheme LegatoMidi -destination 'generic/platform=iOS'
-      - name: Flutter iOS
+      # Profile build with the S2 spike page (debug builds do not start on iOS without a debugger).
+      - name: Flutter iOS (spike S2)
         working-directory: app
         run: |
           flutter pub get --enforce-lockfile
-          flutter build ios --debug --no-codesign
+          flutter build ios --profile --no-codesign --dart-define=SPIKE_S2=true
+          mkdir Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qr legato-s2-ios-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v7
+        with:
+          path: app/legato-s2-ios-unsigned.ipa
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
       - name: Flutter macOS
         working-directory: app
         run: |
@@ -259,8 +290,37 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  windows:
+  # Spike S1 (iOS): unsigned IPA, to be signed and installed with e.g. Sideloadly.
+  spike-ios:
     needs: generate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.generate.outputs.sha }}
+      - run: rustup toolchain install && rustup target add aarch64-apple-ios
+      - uses: Swatinem/rust-cache@v2
+      - name: Engine as static library
+        run: cargo rustc -p legato-engine --release --locked --target aarch64-apple-ios --crate-type staticlib
+      - run: brew install xcodegen
+      - name: Build app
+        working-directory: spikes/s1-midi-ios
+        run: |
+          xcodegen generate
+          xcodebuild build -project LegatoS1.xcodeproj -scheme LegatoS1 -configuration Release \
+            -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/LegatoS1.app Payload/
+          zip -qr legato-s1-ios-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v7
+        with:
+          path: spikes/s1-midi-ios/legato-s1-ios-unsigned.ipa
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+  windows:
+    needs: [generate, web]
     runs-on: windows-latest
     defaults:
       run:
@@ -274,6 +334,10 @@ jobs:
         with:
           channel: stable
           cache: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: score-view-web
+          path: app/assets/score-view-web
       - run: flutter pub get --enforce-lockfile
       - run: flutter build windows --debug
       - uses: actions/upload-artifact@v7

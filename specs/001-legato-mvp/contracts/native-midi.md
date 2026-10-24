@@ -42,6 +42,16 @@ void legato_midi_register(const LegatoMidiPlatform* platform);
 | Gerät kehrt zurück | `legato_midi_device_added`; die Engine verbindet und sendet das `ConnectSignal` | FR-006, FR-027 |
 | Wiederverbinden nicht möglich | Schicht meldet nichts; die Oberfläche bietet den manuellen Weg über das Symbol | FR-006, US 1/15 |
 
+## Diagnose (Spike-Apps)
+
+Für native Testprogramme ohne Flutter (Spike S1) bietet die Engine zusätzlich:
+
+```c
+void legato_debug_scan_bluetooth(bool enabled);            // like engine command scan_bluetooth
+void legato_debug_select_bluetooth(const char* identifier); // like select_input for a Bluetooth device
+size_t legato_debug_drain(uint8_t* buffer, size_t capacity); // logged events as JSON lines
+```
+
 ## Desktop
 
 Windows und Linux verwenden `midir` innerhalb der Engine; die C-Schnittstelle wird dort nicht benötigt. macOS nutzt das Swift-Package (Bluetooth über CoreBluetooth).

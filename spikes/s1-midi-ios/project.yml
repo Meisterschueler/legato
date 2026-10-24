@@ -1,0 +1,34 @@
+name: LegatoS1
+options:
+  bundleIdPrefix: io.github.meisterschueler
+  deploymentTarget:
+    iOS: "16.0"
+packages:
+  LegatoMidi:
+    path: ../../native/apple/LegatoMidi
+targets:
+  LegatoS1:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    dependencies:
+      - package: LegatoMidi
+      - sdk: CoreMIDI.framework
+      - sdk: CoreBluetooth.framework
+      - sdk: AudioToolbox.framework
+      - sdk: AVFoundation.framework
+    info:
+      path: Generated/Info.plist
+      properties:
+        CFBundleDisplayName: Legato S1
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSBluetoothAlwaysUsageDescription: Legato S1 verbindet sich mit Bluetooth-MIDI-Instrumenten.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.meisterschueler.legato.s1
+        TARGETED_DEVICE_FAMILY: "1,2"
+        # Engine as static library, built by the CI job spike-ios (cargo rustc --crate-type staticlib).
+        LIBRARY_SEARCH_PATHS: $(SRCROOT)/../../target/aarch64-apple-ios/release
+        OTHER_LDFLAGS: -llegato_engine
+    scheme: {}
