@@ -5,7 +5,7 @@ Referenzdaten machen Zuordnung und Erkennung reproduzierbar testbar (Constitutio
 ## Ablage
 
 ```text
-tests/referenz/
+testdaten/legato/
 └── hanon-01/
     ├── stueck.musicxml              # Notentext (identisch mit der mitgelieferten Ressource)
     ├── c-dur-beidhaendig-3x.mid     # aufgezeichneter Durchlauf (Standard-MIDI-Datei, Typ 0)

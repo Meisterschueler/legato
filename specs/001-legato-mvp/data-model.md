@@ -11,7 +11,7 @@ Alle Entitäten liegen im Kern (`core/`), sofern nicht anders angegeben. Zeiten 
 |---|---|---|
 | `id` | String | z. B. `hanon` |
 | `komponist`, `titel` | String | aus MusicXML-Metadaten |
-| `regel` | `Werkregel` | Modul je Werkspezifikation, sonst allgemeine Regel ([research.md R9](research.md#r9--werkregeln-fr-009)) |
+| `regel` | `Werkregel` | Modul je Werkspezifikation, sonst allgemeine Regel ([research.md R10](research.md#r10--werkregeln-fr-009)) |
 
 ### Stück
 | Feld | Typ | Regel |
@@ -114,7 +114,7 @@ Abgebrochene Durchläufe werden verworfen. Nach `Abgeschlossen` läuft der bishe
 | `ton` | Ton? | nicht bei Auslassung |
 | `hand`, `finger` | aus der Note bzw. der nächstgelegenen Position | Constitution VI |
 
-## Eingabe und Signale (Backend)
+## Eingabe und Signale (Engine)
 
 ### Eingabezustand
 `NichtVerbunden` → `MidiVerbunden` ↔ `Abgebrochen`. Bei `Abgebrochen` gibt es zusätzlich das Merkmal `warnung_bestaetigt`. Der Wechsel `MidiVerbunden` → `Abgebrochen` startet die Warnung (FR-005), `Abgebrochen` → `MidiVerbunden` sendet das Verbindungssignal (FR-027).
@@ -126,12 +126,12 @@ Ereignisse `DurchlaufAbgeschlossen`, `DurchlaufAbgebrochen`, `Aufgehoert`, `Verb
 
 | Bereich | Feld | Standard |
 |---|---|---|
-| Eingabe | `midi_geraet` (Name) | keins |
+| Eingabe | `midi_geraet` (Name, Art USB/Bluetooth, Bluetooth-Kennung) | keins |
 | Eingabe | `signal_geraet` (Name) | = `midi_geraet` (US 1, Szenario 14) |
 | Erkennung | `einschraenkung` (Stücke, Variationen, Tonarten) | keine |
 | Zuordnung | `grenzzeit_pause_ms` | 4000 |
 | Zuordnung | `obergrenze_notierte_pause_ms` | 10000 |
-| Zuordnung | `folgeverfahren` | `Hmm` |
+| Zuordnung | `folgeverfahren` | nach Spike S3 (`Pthmm` oder `Outerhmm`); Alternative `Arzt` |
 | Anzeige | `anzeigevariante` je Werk | `komplett` |
 | Anzeige | `fehlermarkierung_waehrend` je Art | aus |
 | Anzeige | `fehlermarkierung_nach` je Art | aus |

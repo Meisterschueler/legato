@@ -4,29 +4,38 @@
 
 ## Voraussetzungen
 
-- Rust (stable) mit `cargo`
-- Node.js (LTS) mit `npm`
-- Systemvoraussetzungen von Tauri 2 je Plattform (Windows: WebView2 und MSVC Build Tools; macOS/iOS: Xcode; Android: Android Studio mit NDK; Linux: WebKitGTK und ALSA-Entwicklungspakete)
-- Für manuelle Abnahme: Digitalpiano mit MIDI-Ein- und -Ausgang (USB, optional Bluetooth)
+- Rust (stable) mit `cargo`, Ziele für iOS und Android (`rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-linux-android`)
+- Flutter (stable) mit `flutter_rust_bridge_codegen`
+- Node.js (LTS) für `notenblatt-web`
+- Xcode (iOS, macOS; nur auf macOS), Android Studio mit NDK
+- Nur zum Neuerzeugen der Matchmaker-Erwartungsdateien: `uv`
+- Für manuelle Abnahme: Digitalpiano mit MIDI-Ein- und -Ausgang (USB, optional Bluetooth), iPad
 
 ## Automatische Prüfungen
 
 ```powershell
-cargo test -p legato-core          # Zuordnung, Erkennung, Werkregeln, Referenzdaten (SC-001, SC-002)
-cargo test -p legato-app           # Verbindungsüberwachung mit simuliertem MIDI-Port (SC-003), Signale, Echo
-npm --prefix app test              # Oberfläche (Vitest)
-npm --prefix app run test:e2e      # Ansichten und Eingabe-Symbol (Playwright, simuliertes Backend)
+cargo test -p legato-core                  # Matchmaker-Vergleich, Werkregeln, Referenzdaten (SC-001, SC-002)
+cargo test -p legato-engine                # simulierter MIDI-Port: Trennen, Wiederverbinden, Echo, Signale (SC-003)
+npm --prefix notenblatt-web test           # Notenblatt (Vitest)
+flutter test app                           # Bildschirme, Adapter
 ```
 
-Erwartet: Alle Tests grün; der Bericht von `legato-core` weist für SC-001 ≥ 99 % aus.
+Erwartet: Alle Tests grün; der Bericht von `legato-core` weist für SC-001 ≥ 99 % aus. Plattformübergreifend läuft derselbe Kern-Testsatz in der CI auf iOS-Simulator, Android-Emulator, Linux und WebAssembly (Toleranzen laut [research.md R2](research.md#r2--gemeinsamer-kern-in-rust)).
+
+Matchmaker-Erwartungsdateien neu erzeugen (nur nach Änderung des Commits):
+
+```powershell
+uv run --project tools/matchmaker-referenz tools/matchmaker-referenz/erzeugen.py
+```
 
 ## App starten
 
 ```powershell
-npm --prefix app install
-npm --prefix app run tauri dev                  # Desktop
-npm --prefix app run tauri android dev          # Android-Gerät/Emulator
-npm --prefix app run tauri ios dev              # iOS (nur auf macOS)
+npm --prefix notenblatt-web run build      # Bundle nach app/assets
+cd app
+flutter run -d ipad                        # iOS (nur auf macOS)
+flutter run -d android
+flutter run -d windows                     # bzw. macos, linux
 ```
 
 ## Manuelle Abnahme
@@ -47,3 +56,5 @@ npm --prefix app run tauri ios dev              # iOS (nur auf macOS)
 | 12 | Gerätesprache `de-AT` bzw. `fr-FR` | Oberfläche Deutsch bzw. Englisch | NFR-006 |
 | 13 | 10 Minuten spielen ohne Gerät zu berühren | keine Bildschirmsperre | NFR-005 |
 | 14 | Latenzprotokoll (Entwicklungs-Build) auswerten | 95 % ≤ 50 ms, Maximum ≤ 100 ms | NFR-003 |
+| 15 | iPad mit Bluetooth-MIDI verbinden, Piano aus- und wieder einschalten | Warnung; nach dem Einschalten automatische Verbindung und Verbindungssignal ohne Interaktion | US 1/1–3, FR-006 |
+| 16 | Wie 15 auf Android (mind. 2 Hersteller) | wie 15, sonst manueller Weg über das Symbol in höchstens 2 Schritten | US 1/15 |
