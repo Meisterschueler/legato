@@ -3,7 +3,14 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - lib/src/rust/**
+    - build/**
+    - android/**
+    - ios/**
+    - windows/**
+    - macos/**
+    - linux/**
 
+    - rust_builder/cargokit/**
 linter:
   rules:
     prefer_single_quotes: true
