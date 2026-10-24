@@ -1,143 +1,143 @@
 # Datenmodell: Legato MVP
 
-**Plan**: [plan.md](plan.md) | **Spec**: [spec.md](spec.md) | **Glossar**: [glossar.md](../../docs/glossar.md)
+**Plan**: [plan.md](plan.md) | **Spec**: [spec.md](spec.md) | **Glossar**: [glossar.md](../../docs/glossar.md#bezeichner-im-code)
 
-Alle Entitäten liegen im Kern (`core/`), sofern nicht anders angegeben. Zeiten sind Mikrosekunden (`u64`) seit Start der Übeeinheit, gemessen am Zeitstempel des MIDI-Treibers.
+Bezeichner sind englisch und folgen dem [Glossar](../../docs/glossar.md#bezeichner-im-code); Beschreibungen sind deutsch. Alle Entitäten liegen im Kern (`core/`), sofern nicht anders angegeben. Zeiten sind Mikrosekunden (`u64`) seit Beginn der Übeeinheit, gemessen am Zeitstempel des MIDI-Treibers.
 
 ## Noten
 
-### Werk
+### `Work` (Werk)
 | Feld | Typ | Regel |
 |---|---|---|
 | `id` | String | z. B. `hanon` |
-| `komponist`, `titel` | String | aus MusicXML-Metadaten |
-| `regel` | `Werkregel` | Modul je Werkspezifikation, sonst allgemeine Regel ([research.md R10](research.md#r10--werkregeln-fr-009)) |
+| `composer`, `title` | String | aus MusicXML-Metadaten |
+| `rules` | `WorkRules` | Modul je Werkspezifikation, sonst allgemeine Regeln ([research.md R10](research.md#r10--werkregeln-fr-009)) |
 
-### Stück
+### `Piece` (Stück)
 | Feld | Typ | Regel |
 |---|---|---|
 | `id` | String | Hash des Dateiinhalts (stabil über Neustarts) |
-| `werk` | → Werk | |
-| `nummer` | String? | z. B. `1` |
-| `quelle` | `Mitgeliefert` \| `Datei` | Mitgeliefert nur Hanon Nr. 1 (FR-010) |
-| `notentext` | Notentext | |
-| `hat_fingersatz` | bool | `true`, wenn jede Note einen Fingersatz hat; sonst sind fingersatzabhängige Analysen gekennzeichnet (US 2, Szenario 3) |
+| `work` | → `Work` | |
+| `number` | String? | z. B. `1` |
+| `source` | `Bundled` \| `File` | `Bundled` nur Hanon Nr. 1 (FR-010) |
+| `score` | `Score` | |
+| `has_fingering` | bool | `true`, wenn jede Note einen Fingersatz hat; sonst sind fingersatzabhängige Analysen gekennzeichnet (US 2, Szenario 3) |
 
-### Notentext
+### `Score` (Notentext)
 | Feld | Typ | Regel |
 |---|---|---|
-| `positionen` | Liste von Position | zeitlich geordnet |
-| `abschnitte` | Liste von Abschnitt | aus Wiederholungszeichen |
-| `pausen` | Menge von Positions-Indizes | Positionen, vor denen eine notierte Pause liegt (FR-020) |
-| `takte` | Liste von Takt | für Anzeige und Noten-IDs |
+| `onsets` | Liste von `Onset` | zeitlich geordnet |
+| `sections` | Liste von `Section` | aus Wiederholungszeichen |
+| `rests_before` | Menge von Onset-Indizes | Anschlagszeitpunkte, vor denen eine notierte Pause liegt (FR-020) |
+| `measures` | Liste von `Measure` | für Anzeige und Noten-IDs |
 
-### Position
-Ein Anschlagszeitpunkt im Notentext (alle gleichzeitig zu spielenden Noten).
+### `Onset` (Anschlagszeitpunkt)
+Alle gleichzeitig zu spielenden Noten.
 
 | Feld | Typ | Regel |
 |---|---|---|
 | `index` | u32 | |
-| `noten` | Liste von Note | mindestens eine |
-| `nachfolger` | Liste von Positions-Index | normal `index + 1`; am Ende eines Wiederholungsabschnitts zusätzlich dessen Anfang (FR-014) |
+| `notes` | Liste von `Note` | mindestens eine |
+| `successors` | Liste von Onset-Indizes | normal `index + 1`; am Ende eines Wiederholungsabschnitts zusätzlich dessen Anfang (FR-014) |
 
-### Note
+### `Note`
 | Feld | Typ | Regel |
 |---|---|---|
-| `id` | NotenId | `(takt, stimme, index)`; stabil, wird in erzeugtes MusicXML geschrieben |
-| `tonhoehe` | u8 | MIDI-Notennummer, in C-Dur wie notiert |
-| `hand` | `Links` \| `Rechts` | aus Notensystem (unteres = links) |
+| `id` | `NoteId` | `(measure, voice, index)`; stabil, wird in erzeugtes MusicXML geschrieben |
+| `pitch` | u8 | MIDI-Notennummer, in C-Dur wie notiert |
+| `hand` | `Left` \| `Right` | aus Notensystem (unteres = links) |
 | `finger` | u8? | 1–5 |
 
-### Abschnitt
+### `Section` (Abschnitt)
 | Feld | Typ | Regel |
 |---|---|---|
-| `art` | `Wiederholung` \| `Ende` | |
-| `von`, `bis` | Positions-Index | |
-| `teile` | Liste benannter Bereiche | Hanon: `Aufwärts`, `Abwärts` (erste/zweite Hälfte der Takte) |
+| `kind` | `Repeat` \| `Ending` | |
+| `start`, `end` | Onset-Index | |
+| `parts` | Liste benannter Bereiche | Hanon: `Ascending`, `Descending` (Aufwärts, Abwärts; erste/zweite Hälfte der Takte) |
 
-### Kandidat
+### `Candidate` (Kandidat)
 Eine zulässige Kombination für die Erkennung.
 
 | Feld | Typ | Regel |
 |---|---|---|
-| `stueck` | → Stück | |
-| `variation` | `Beidhändig` \| `NurLinks` \| `NurRechts` | |
+| `piece` | → `Piece` | |
+| `variation` | `BothHands` \| `LeftHandOnly` \| `RightHandOnly` | |
 | `transposition` | i8 | Halbtöne; Hanon 0–11 (FR-015) |
 
-Die Werkregel liefert die zulässigen Kandidaten; die Einschränkung (FR-018) filtert sie.
+`WorkRules` liefert die zulässigen Kandidaten; der `RecognitionFilter` (FR-018) filtert sie.
 
 ## Üben
 
-### Übeeinheit
+### `PracticeSession` (Übeeinheit)
 | Feld | Typ | Regel |
 |---|---|---|
-| `beginn` | Zeit | erster Ton nach Start bzw. nach Rückkehr in den Vordergrund |
-| `durchlaeufe` | Liste von Durchlauf | nur abgeschlossene |
+| `started_at` | Zeit | erster Ton nach Start bzw. nach Rückkehr in den Vordergrund |
+| `performances` | Liste von `Performance` | nur abgeschlossene |
 
-### Durchlauf
+### `Performance` (Durchlauf)
 | Feld | Typ | Regel |
 |---|---|---|
-| `kandidat` | Kandidat | steht ab Beginn fest (FR-016) |
-| `eingabe` | `Midi` | Audio folgt in [006](../006-audio-eingabe/spec.md) |
-| `toene` | Liste von Ton | inkl. der Töne vor eindeutiger Erkennung |
-| `zuordnung` | Liste von (Ton → NotenId \| Abweichung) | während des Spiels |
-| `abweichungen` | Liste von Abweichung | |
-| `zustand` | siehe Zustandsübergänge | |
+| `candidate` | `Candidate` | steht ab Beginn fest (FR-016) |
+| `input` | `Midi` | Audio folgt in [006](../006-audio-eingabe/spec.md) |
+| `played_notes` | Liste von `PlayedNote` | inkl. der Töne vor eindeutiger Erkennung |
+| `alignment` | Liste von (`PlayedNote` → `NoteId` \| `Deviation`) | während des Spiels |
+| `deviations` | Liste von `Deviation` | |
+| `state` | `PerformanceState` | siehe Zustandsübergänge |
 
-**Zustandsübergänge**:
+**Zustandsübergänge** (`PerformanceState`):
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Erkennung: erster Ton
-    Erkennung --> Laufend: Kandidat eindeutig
-    Erkennung --> [*]: Stille > Grenzzeit (kein Abbruch)
-    Laufend --> Abgeschlossen: letzte Position des Durchlaufs erreicht
-    Laufend --> Abgebrochen: Grenzzeit / Zuordnungsverlust / Eingabe getrennt oder gewechselt / Hintergrund
-    Abgeschlossen --> Erkennung: nächster Ton
-    Abgebrochen --> Erkennung: nächster Ton
+    [*] --> Recognizing: erster Ton
+    Recognizing --> Running: Kandidat eindeutig
+    Recognizing --> [*]: Stille > PauseLimit (kein Abbruch)
+    Running --> Completed: letzter Anschlagszeitpunkt des Durchlaufs erreicht
+    Running --> Aborted: PauseLimit / AlignmentLoss / Eingabe getrennt oder gewechselt / Hintergrund
+    Completed --> Recognizing: nächster Ton
+    Aborted --> Recognizing: nächster Ton
 ```
 
-Abgebrochene Durchläufe werden verworfen. Nach `Abgeschlossen` läuft der bisherige Kandidat als einer unter allen zugelassenen weiter, sodass nahtloses Wiederholen ebenso erkannt wird wie ein Wechsel (US 3, Szenario 2).
+Abgebrochene Durchläufe werden verworfen. Nach `Completed` läuft der bisherige Kandidat als einer unter allen zugelassenen weiter, sodass nahtloses Wiederholen ebenso erkannt wird wie ein Wechsel (US 3, Szenario 2).
 
-### Ton
+### `PlayedNote` (gespielter Ton)
 | Feld | Typ | Regel |
 |---|---|---|
-| `tonhoehe` | u8 | |
-| `anschlag` | u8 | Velocity |
-| `beginn`, `ende` | Zeit, Zeit? | `ende` nach Note-Off |
+| `pitch` | u8 | |
+| `velocity` | u8 | |
+| `onset`, `offset` | Zeit, Zeit? | `offset` nach Note-Off |
 
-### Abweichung
+### `Deviation` (Abweichung)
 | Feld | Typ | Regel |
 |---|---|---|
-| `art` | `Auslassung` \| `FalscherTon` \| `Zusatzton` | Ungleichmäßigkeiten folgen in 002 |
-| `note` | NotenId? | nicht bei Zusatzton |
-| `ton` | Ton? | nicht bei Auslassung |
-| `hand`, `finger` | aus der Note bzw. der nächstgelegenen Position | Constitution VI |
+| `kind` | `Omission` \| `Substitution` \| `Addition` | Ungleichmäßigkeiten (`Unevenness`) folgen in 002 |
+| `note` | `NoteId`? | nicht bei `Addition` |
+| `played` | `PlayedNote`? | nicht bei `Omission` |
+| `hand`, `finger` | aus der Note bzw. dem nächstgelegenen Anschlagszeitpunkt | Constitution VI |
 
 ## Eingabe und Signale (Engine)
 
-### Eingabezustand
-`NichtVerbunden` → `MidiVerbunden` ↔ `Abgebrochen`. Bei `Abgebrochen` gibt es zusätzlich das Merkmal `warnung_bestaetigt`. Der Wechsel `MidiVerbunden` → `Abgebrochen` startet die Warnung (FR-005), `Abgebrochen` → `MidiVerbunden` sendet das Verbindungssignal (FR-027).
+### `InputState` (Eingabezustand)
+`Disconnected` → `MidiConnected` ↔ `ConnectionLost`. Bei `ConnectionLost` gibt es zusätzlich `warning_acknowledged`. Der Wechsel `MidiConnected` → `ConnectionLost` startet die `DisconnectWarning` (FR-005), `ConnectionLost` → `MidiConnected` sendet das `ConnectSignal` (FR-027).
 
-### Signalplan
-Ereignisse `DurchlaufAbgeschlossen`, `DurchlaufAbgebrochen`, `Aufgehoert`, `Verbunden` werden gemäß Einstellungen in MIDI-Tonfolgen übersetzt. Für „wenn der Pianist aufgehört hat“ zählt ein Merker, ob seit dem letzten OK-Signal ein Durchlauf abgeschlossen wurde (US 4, Szenarien 2 und 3).
+### `SignalPlanner` (Signalplan)
+Die Ereignisse `PerformanceCompleted`, `PerformanceAborted`, `Stopped` und `Connected` werden gemäß Einstellungen in MIDI-Tonfolgen (`ConnectSignal`, `OkSignal`, `AbortSignal`) übersetzt. Für „wenn der Pianist aufgehört hat“ merkt sich der Planer, ob seit dem letzten `OkSignal` ein Durchlauf abgeschlossen wurde (US 4, Szenarien 2 und 3).
 
-## Einstellungen (persistiert)
+## `Settings` (Einstellungen, persistiert)
 
 | Bereich | Feld | Standard |
 |---|---|---|
-| Eingabe | `midi_geraet` (Name, Art USB/Bluetooth, Bluetooth-Kennung) | keins |
-| Eingabe | `signal_geraet` (Name) | = `midi_geraet` (US 1, Szenario 14) |
-| Erkennung | `einschraenkung` (Stücke, Variationen, Tonarten) | keine |
-| Zuordnung | `grenzzeit_pause_ms` | 4000 |
-| Zuordnung | `obergrenze_notierte_pause_ms` | 10000 |
-| Zuordnung | `folgeverfahren` | nach Spike S3 (`Pthmm` oder `Outerhmm`); Alternative `Arzt` |
-| Anzeige | `anzeigevariante` je Werk | `komplett` |
-| Anzeige | `fehlermarkierung_waehrend` je Art | aus |
-| Anzeige | `fehlermarkierung_nach` je Art | aus |
-| Signale | `verbindung` | an |
-| Signale | `ok` | `wenn_aufgehoert` |
-| Signale | `abbruch` | `sofort` |
+| Eingabe | `midi_device` (Name, Art USB/Bluetooth, Bluetooth-Kennung) | keins |
+| Eingabe | `signal_device` | = `midi_device` (US 1, Szenario 14) |
+| Erkennung | `recognition_filter` (Stücke, Variationen, Tonarten) | keiner |
+| Zuordnung | `pause_limit_ms` | 4000 |
+| Zuordnung | `rest_limit_ms` | 10000 |
+| Zuordnung | `score_follower` | nach Spike S3 (`Pthmm` oder `OuterHmm`); Alternative `Arzt` |
+| Anzeige | `display_variant` je Werk | `Full` |
+| Anzeige | `error_marking_during` je Abweichungsart | aus |
+| Anzeige | `error_marking_after` je Abweichungsart | aus |
+| Signale | `connect_signal` | `On` |
+| Signale | `ok_signal` | `WhenStopped` (Alternativen `EveryPerformance`, `Off`) |
+| Signale | `abort_signal` | `Immediately` (Alternative `Off`) |
 | Signale | Tonfolgen, Lautstärke | höchstens 2 Töne, leise (Velocity 30), hohe Lage (C7/E7) |
 
 Änderungen gelten ab dem nächsten Durchlauf (FR-032, US 3 Szenario 14, US 4 Szenario 7).

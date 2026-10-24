@@ -69,3 +69,61 @@ Die Schlüsselwörter sind in Anlehnung an RFC 2119 zu verstehen: **MUSS/MÜSSEN
 | Begriff | Bedeutung |
 |---|---|
 | **Nutzername** | Öffentlicher Name eines angemeldeten Pianisten, unter dem er in der Highscore-Liste erscheint. Wird bei der ersten Anmeldung aus zufälligen Vorschlägen gewählt (z. B. „Allegro-Chopin-42“), ist eindeutig und kann jederzeit geändert werden. Steht in keinem Bezug zum Konto beim Identitätsanbieter. |
+
+## Bezeichner im Code
+
+Bezeichner im Code sind englisch (Constitution, Entwicklungsprinzipien). Für Begriffe dieses Glossars sind die folgenden Bezeichner verbindlich; die Schreibweise folgt der Konvention der jeweiligen Sprache (z. B. `Performance`, `performance`, `PERFORMANCE`). Neue Fachbegriffe werden hier ergänzt, bevor sie im Code verwendet werden.
+
+| Begriff | Code |
+|---|---|
+| Werk | `Work` |
+| Stück | `Piece` |
+| Notentext | `Score` |
+| Figur | `Figure` |
+| Fingersatz | `Fingering` |
+| Transposition | `Transposition` |
+| Variation („beidhändig“, „nur linke Hand“, „nur rechte Hand“) | `Variation` (`BothHands`, `LeftHandOnly`, `RightHandOnly`) |
+| Katalog | `Catalog` |
+| Repertoire | `Repertoire` |
+| Durchlauf | `Performance` |
+| Abbruch | `Abort` |
+| Übeeinheit | `PracticeSession` |
+| Aufhören | `Stop` |
+| Übezeit | `PracticeTime` |
+| Tempo | `Tempo` |
+| Ansicht / Notenblatt | `View` / `ScoreView` |
+| Erkennungsmodus | `RecognitionMode` |
+| Playlist / Playlist-Modus | `Playlist` / `PlaylistMode` |
+| Andeutung | `Preview` |
+| Performance-Wurm | `PerformanceWorm` |
+| Zuordnung (während des Spiels / nachträglich) | `Alignment` (`ScoreFollowing` / `OfflineAlignment`) |
+| Folgeverfahren | `ScoreFollower` |
+| Erkennung | `Recognition` |
+| Erkennungslänge | `RecognitionLength` |
+| Zuordnungsverlust | `AlignmentLoss` |
+| Abweichung | `Deviation` |
+| Auslassung | `Omission` |
+| Falscher Ton | `Substitution` |
+| Zusatzton | `Addition` |
+| Ungleichmäßigkeit | `Unevenness` |
+| Artikulation | `Articulation` |
+| Agogik / Dynamik | `Agogics` / `Dynamics` |
+| Schwäche | `Weakness` |
+| Bewertung | `Rating` |
+| Spielniveau | `SkillLevel` |
+| Schwierigkeitsgrad | `Difficulty` |
+| Vertrautheit | `Familiarity` |
+| Tagesform | `DailyForm` |
+| Auswertung | `Analysis` |
+| Nutzername | `Username` |
+| Werkregel (Umsetzung einer Werkspezifikation) | `WorkRules` |
+| Kandidat (Stück, Variation, Tonart) | `Candidate` |
+| Anschlagszeitpunkt im Notentext | `Onset` |
+| Gespielter Ton | `PlayedNote` |
+| Eingabe / Eingabezustand | `Input` / `InputState` |
+| Warnung bei Verbindungsverlust | `DisconnectWarning` |
+| Verbindungs-, OK-, Abbruch-Signal | `ConnectSignal`, `OkSignal`, `AbortSignal` |
+| Grenzzeit für Pausen / Obergrenze an notierten Pausen | `PauseLimit` / `RestLimit` |
+| Anzeigevariante | `DisplayVariant` |
+| Fehlermarkierung | `ErrorMarking` |
+| Einschränkung der Erkennung | `RecognitionFilter` |

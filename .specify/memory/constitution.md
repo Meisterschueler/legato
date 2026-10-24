@@ -82,6 +82,12 @@ Legato ist eine stille Jury: Sie hört fortgeschrittenen Pianisten konzentriert 
 - Abstraktionen, Abhängigkeiten und Features werden nur eingeführt, wenn eine Spec sie erfordert.
 - Fremdbibliotheken müssen lizenzrechtlich mit dem Projekt vereinbar sein.
 
+### Sprache
+
+- Dokumentation (Constitution, Specs, Pläne, Werkspezifikationen) ist deutsch.
+- Bezeichner und Kommentare im Code sind englisch. Fachbegriffe folgen den verbindlichen Bezeichnern im [Glossar](../../docs/glossar.md#bezeichner-im-code).
+- Texte der Oberfläche stehen in Sprachdateien (NFR-006).
+
 ## Governance
 
 - Änderungen an der Constitution erfordern eine Begründung und eine Prüfung, welche Specs und Pläne davon betroffen sind.
@@ -91,4 +97,4 @@ Legato ist eine stille Jury: Sie hört fortgeschrittenen Pianisten konzentriert 
   - PATCH: Präzisierungen und Formulierungen.
 - Jeder Plan enthält einen Abschnitt „Constitution Check“, der die Vereinbarkeit mit allen Grundprinzipien bestätigt oder Abweichungen begründet.
 
-**Version**: 1.0.1 | **Ratifiziert**: 2026-10-24 | **Zuletzt geändert**: 2026-10-24
+**Version**: 1.1.0 | **Ratifiziert**: 2026-10-24 | **Zuletzt geändert**: 2026-10-24

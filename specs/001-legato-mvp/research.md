@@ -1,6 +1,6 @@
 # Research: Legato MVP
 
-**Plan**: [plan.md](plan.md) | **Spec**: [spec.md](spec.md) | **Constitution**: [1.0.1](../../.specify/memory/constitution.md)
+**Plan**: [plan.md](plan.md) | **Spec**: [spec.md](spec.md) | **Constitution**: [1.1.0](../../.specify/memory/constitution.md)
 
 Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alternativen. Punkte, die vor der Implementierung mit einem kurzen Prototyp (Spike) bestätigt werden müssen, sind als **Spike** gekennzeichnet; sie stehen am Anfang von `tasks.md`.
 
@@ -45,7 +45,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 | Kern (`legato-core`) | Rust | unverändert |
 | Engine (`legato-engine`): Sitzung, Eingabezustand, Signale, Warnung, Einstellungen, Repertoire, Desktop-MIDI | Rust | unverändert |
 | Native MIDI-Schicht (iOS/macOS, Android) | Swift-Package, Kotlin-Bibliothek; ruft die Engine direkt über eine C-Schnittstelle auf ([contracts/native-midi.md](contracts/native-midi.md)) | unverändert; nur das Starten wird neu verdrahtet |
-| Notenblatt (OSMD, Markierungen, Scrollen) | eigenständiges Web-Bundle (`notenblatt-web/`, TypeScript), in Flutter per WebView eingebettet | unverändert, läuft direkt im Tauri-Webview |
+| Notenblatt (OSMD, Markierungen, Scrollen) | eigenständiges Web-Bundle (`score-view-web/`, TypeScript), in Flutter per WebView eingebettet | unverändert, läuft direkt im Tauri-Webview |
 | Texte (i18n) | ARB-Dateien (JSON) | weiterverwendbar |
 | Flutter-Oberfläche (Dart) | nur Darstellung und Bedienung | neu zu schreiben |
 | Adapter: `flutter_rust_bridge`, Bildschirmsperre, Lebenszyklus | Flutter | neu zu schreiben (klein) |
@@ -93,7 +93,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 
 ## R7 – Notendarstellung
 
-**Entscheidung**: Eigenständiges Web-Bundle `notenblatt-web/` (TypeScript) mit [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org) (BSD-3-Clause), in Flutter über `webview_flutter` eingebettet (iOS, Android, macOS).
+**Entscheidung**: Eigenständiges Web-Bundle `score-view-web/` (TypeScript) mit [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org) (BSD-3-Clause), in Flutter über `webview_flutter` eingebettet (iOS, Android, macOS).
 - Der Kern erzeugt für jede Kombination aus Tonart und Anzeigevariante ein MusicXML mit stabilen Noten-IDs; OSMD rendert nur.
 - Markierungen als SVG-Ebene über dem Notenbild; Positionsmarke und Scrollen mit `requestAnimationFrame`, Farbwechsel mit CSS-Übergängen (FR-023).
 - Kommunikation Dart ↔ Web-Bundle über eine kleine Nachrichtenschnittstelle (`postMessage`); dieselbe Schnittstelle nutzt später Tauri.
@@ -116,7 +116,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 
 Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wird nach Spike S3 festgelegt (FR-032).
 
-**Pipeline** wie bei Matchmaker: `Ereignisstrom` → `Vorverarbeitung` (Processor) → `Folgeverfahren` (OnlineAlignment), Verfahren austauschbar über den Trait `Folgeverfahren`.
+**Pipeline** wie bei Matchmaker: Ereignisstrom → Vorverarbeitung (`Preprocessor`, bei Matchmaker `Processor`) → Folgeverfahren (Trait `ScoreFollower`, bei Matchmaker `OnlineAlignment`); Verfahren austauschbar.
 
 **Kompatibler Modus und Erweiterungen**: Jedes portierte Verfahren hat einen kompatiblen Modus, der Matchmaker nachbildet (Wiederholungen aufgelöst, eine Partitur). Darauf bauen die Legato-Erweiterungen auf:
 - Erkennung über parallel verfolgte Kandidaten aus Stück, Variation und Tonart (FR-016, FR-018); Hanon Nr. 1: 36 Kandidaten;
@@ -148,7 +148,7 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 
 ## R10 – Werkregeln (FR-009)
 
-**Entscheidung**: Werkregeln sind Rust-Code im Kern (Trait `Werkregel`), je Werkspezifikation ein Modul (`werke::hanon`). Das Werk ergibt sich aus den MusicXML-Metadaten (`<creator type="composer">`, `<work-title>`, `<movement-number>`). Unbekannte Werke erhalten allgemeine Regeln: keine Transposition, Durchlauf = gesamtes Stück, Erkennungslänge 8 Töne je Hand, nur Anzeigevariante „komplett“.
+**Entscheidung**: Werkregeln sind Rust-Code im Kern (Trait `WorkRules`), je Werkspezifikation ein Modul (`works::hanon`). Das Werk ergibt sich aus den MusicXML-Metadaten (`<creator type="composer">`, `<work-title>`, `<movement-number>`). Unbekannte Werke erhalten allgemeine Regeln: keine Transposition, Durchlauf = gesamtes Stück, Erkennungslänge 8 Töne je Hand, nur Anzeigevariante „komplett“.
 
 ## R11 – Persistenz
 
@@ -162,7 +162,7 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 
 **Matchmaker-Referenz (Verfahren 3)**:
 - Testdaten aus Matchmaker übernehmen (`EXAMPLE_MATCH`, `EXAMPLE_PIECES`: u. a. `simple_mozart`, `bach_fugue`; Apache-2.0, mit Herkunftsangabe).
-- Ein Python-Werkzeug (`tools/matchmaker-referenz/`, festgelegter Matchmaker-Commit, `uv`) erzeugt Erwartungsdateien: `note_array` von partitura, Zwischenwerte (Beobachtungswahrscheinlichkeiten, Übergangsmatrix) und Position je Eingabeereignis ([contracts/matchmaker-referenz.md](contracts/matchmaker-referenz.md)).
+- Ein Python-Werkzeug (`tools/matchmaker-reference/`, festgelegter Matchmaker-Commit, `uv`) erzeugt Erwartungsdateien: `note_array` von partitura, Zwischenwerte (Beobachtungswahrscheinlichkeiten, Übergangsmatrix) und Position je Eingabeereignis ([contracts/matchmaker-referenz.md](contracts/matchmaker-referenz.md)).
 - Die MIDI-Tests von Matchmaker (`test_prob_hmm.py`, `test_prob_outer_product_hmm.py`, `test_oltw_arzt.py`) werden 1:1 nach Rust übertragen (gleiche Namen und Prüfungen).
 - Rust-Tests lesen die `note_array` aus der Erwartungsdatei, damit Unterschiede im MusicXML-Parser den Vergleich nicht stören; der Parser wird separat gegen partitura getestet.
 - Vergleich im kompatiblen Modus: Zwischenwerte relativ 1e-6; Positionen ≥ 99 % identisch, Abweichung höchstens eine Position.
@@ -172,7 +172,7 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 
 **Plattformübergreifend**: Derselbe Testsatz läuft auf iOS-Simulator, Android-Emulator, Linux und WebAssembly; Vergleich mit den Toleranzen aus R2.
 
-**Weitere Ebenen**: Engine mit simuliertem MIDI-Port (Trennen, Wiederverbinden, Echo, SC-003); `flutter test` für Widgets; Vitest für `notenblatt-web`; manuelle Abnahme laut [quickstart.md](quickstart.md).
+**Weitere Ebenen**: Engine mit simuliertem MIDI-Port (Trennen, Wiederverbinden, Echo, SC-003); `flutter test` für Widgets; Vitest für `score-view-web`; manuelle Abnahme laut [quickstart.md](quickstart.md).
 
 ## R14 – Repositories
 

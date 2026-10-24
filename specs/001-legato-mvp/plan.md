@@ -1,6 +1,6 @@
 # Implementierungsplan: Legato MVP
 
-**Branch**: `001-legato-mvp` | **Datum**: 2026-10-24 | **Spec**: [spec.md](spec.md) | **Constitution**: [1.0.1](../../.specify/memory/constitution.md)
+**Branch**: `001-legato-mvp` | **Datum**: 2026-10-24 | **Spec**: [spec.md](spec.md) | **Constitution**: [1.1.0](../../.specify/memory/constitution.md)
 
 **Eingabe**: Feature-Spezifikation aus [specs/001-legato-mvp/spec.md](spec.md)
 
@@ -45,6 +45,7 @@ Das MVP ist eine plattformübergreifende App (Priorität iOS/iPad, dann Android,
 | Testbarkeit | Referenzdaten aus Matchmaker und eigene Referenz-Durchläufe; Tests vor bzw. mit der Implementierung | ✅ |
 | Einfachheit | Monorepo; Werkregeln als Code; drei Folgeverfahren (FR-032 verlangt mehrere). Zusätzliche Schichten (Engine, native MIDI, Web-Bundle) sind begründet, siehe Komplexitätsnachweis | ✅ |
 | Lizenzen | Flutter BSD-3, `flutter_rust_bridge` MIT, OSMD BSD-3, Matchmaker Apache-2.0 (Herkunftshinweis, `NOTICE`); Lizenz jeder weiteren Abhängigkeit wird vor Aufnahme geprüft | ✅ |
+| Sprache | Bezeichner, Pfade und Schlüssel in Datenmodell und Contracts englisch laut [Glossar](../../docs/glossar.md#bezeichner-im-code); Dokumentation deutsch | ✅ |
 
 **Nach Phase 1**: Datenmodell und Contracts führen keine weiteren Abhängigkeiten ein. Keine Verstöße.
 
@@ -79,7 +80,7 @@ flowchart LR
         UI["Bildschirme (Dart)"]
         WV["WebView"]
     end
-    Web["notenblatt-web<br/>(TS, OSMD)"]
+    Web["score-view-web<br/>(TS, OSMD)"]
     Piano -- MIDI --> Swift & Kotlin -- "C-Schnittstelle" --> Verb
     Piano -- MIDI --> Desk --> Verb
     Verb --> Vor --> Erk --> Folge --> Dl
@@ -93,7 +94,7 @@ flowchart LR
 - **`legato-core`**: reine Logik ohne I/O; läuft identisch in App, Backend (007) und Web-App (008).
 - **`legato-engine`**: Laufzeit um den Kern: Eingabezustand und Wiederverbinden, Zeitgeber, Signale, Warnung, Persistenz, Desktop-MIDI. Öffentliche, framework-neutrale Schnittstelle ([contracts/engine-schnittstelle.md](contracts/engine-schnittstelle.md)) und C-Schnittstelle für die native MIDI-Schicht ([contracts/native-midi.md](contracts/native-midi.md)).
 - **Native MIDI-Schicht**: Swift-Package und Kotlin-Bibliothek ohne Flutter-Abhängigkeit; Gerätesuche, Verbinden, Wiederverbinden, Treiber-Zeitstempel.
-- **`notenblatt-web`**: eigenständiges Web-Bundle für Notenbild, Markierungen und Scrollen.
+- **`score-view-web`**: eigenständiges Web-Bundle für Notenbild, Markierungen und Scrollen.
 - **Flutter-Hülle**: Bildschirme, Adapter (`flutter_rust_bridge`, Bildschirmsperre, Lebenszyklus). Einziger Teil, der bei einem Wechsel zu Tauri neu entsteht.
 
 ## Projektstruktur
@@ -123,41 +124,43 @@ Cargo.toml                       # Cargo-Workspace: core, engine, app/rust
 NOTICE                           # Herkunft portierter Matchmaker-Teile
 core/                            # legato-core
 ├── src/
-│   ├── notentext/               # Modell, MusicXML lesen und erzeugen
-│   ├── werke/                   # Werkregel-Trait, allgemein.rs, hanon.rs
-│   ├── vorverarbeitung.rs       # Pedal, Echo
-│   ├── folge/                   # Folgeverfahren-Trait, pthmm.rs, outerhmm.rs, arzt.rs
-│   ├── erkennung.rs             # Kandidaten, Entscheidung
-│   └── durchlauf.rs             # Zustände, Abbruch, Abweichungen
+│   ├── score/                   # Score model, MusicXML read/write
+│   ├── works/                   # WorkRules trait, generic.rs, hanon.rs
+│   ├── preprocessing.rs         # pedal, echo
+│   ├── following/               # ScoreFollower trait, pthmm.rs, outer_hmm.rs, arzt.rs
+│   ├── recognition.rs           # candidates, decision
+│   └── performance.rs           # states, abort, deviations
 └── tests/
     ├── matchmaker/              # 1:1 übertragene Tests, Vergleich mit Erwartungsdateien
-    └── referenz/                # eigene Referenz-Durchläufe (SC-001, SC-002)
+    └── reference/               # eigene Referenz-Durchläufe (SC-001, SC-002)
 engine/                          # legato-engine
 ├── src/
 │   ├── api.rs                   # framework-neutrale Schnittstelle
 │   ├── ffi.rs                   # C-Schnittstelle für native MIDI-Schicht
-│   ├── eingabe/                 # Eingabezustand, Wiederverbinden, midir (Desktop)
-│   ├── signale.rs
-│   ├── warnung.rs
-│   └── speicher.rs              # Einstellungen, Repertoire
+│   ├── input/                   # InputState, Wiederverbinden, midir (Desktop)
+│   ├── signals.rs
+│   ├── warning.rs
+│   └── storage.rs               # Settings, Repertoire
 └── tests/                       # simulierter MIDI-Port, SC-003
 native/
 ├── apple/LegatoMidi/            # Swift-Package (iOS, macOS)
 └── android/legato-midi/         # Kotlin-Bibliothek
-notenblatt-web/                  # TypeScript, OSMD, Vitest
+score-view-web/                  # TypeScript, OSMD, Vitest
 app/                             # Flutter-Hülle
 ├── lib/                         # Bildschirme, Adapter
 ├── l10n/                        # app_en.arb, app_de.arb
 ├── rust/                        # flutter_rust_bridge-Anbindung an engine
-├── assets/                      # hanon-01.musicxml, warnung.wav, notenblatt-web (Build)
+├── assets/                      # hanon-01.musicxml, warning.wav, score-view-web (Build)
 ├── ios/ android/ macos/ windows/ linux/
 └── test/
 tools/
-└── matchmaker-referenz/         # Python (uv): erzeugt Erwartungsdateien
-testdaten/
+└── matchmaker-reference/        # Python (uv): erzeugt Erwartungsdateien
+testdata/
 ├── matchmaker/                  # übernommene Matchmaker-Daten und Erwartungsdateien
 └── legato/                      # eigene Referenz-Durchläufe
 ```
+
+Verzeichnis-, Datei- und Typnamen sind englisch ([Glossar](../../docs/glossar.md#bezeichner-im-code), Constitution „Sprache“).
 
 **Strukturentscheidung**: Monorepo. Kern und Engine sind eigene Crates, damit sie unabhängig vom Framework getestet und in Backend und Web-App wiederverwendet werden. Die native MIDI-Schicht und das Notenblatt-Bundle sind bewusst von Flutter getrennt (R3).
 
@@ -167,7 +170,7 @@ testdaten/
 |---|---|---|
 | **S1** (zuerst) | Native MIDI-Schicht auf iOS, dann Android: Trennung und Wiederkehr rechtzeitig erkannt? Bluetooth selbständig wiederverbunden? Latenz, Jitter, Instrument-Zeitstempel? | Manuellen Weg laut FR-006 umsetzen; Grenzen je Plattform dokumentieren; Auswirkung auf 002 bewerten |
 | **S3** | Portierte `pthmm`/`outerhmm` stimmen mit Matchmaker überein; mit Erweiterungen SC-001 (≥ 99 %) und SC-002 erreicht? | Fehlermodell anpassen; `arzt` als Standard prüfen |
-| **S2** | `notenblatt-web` im WebView auf iPad und Android flüssig (60 fps) und mit geringer Nachrichtenlatenz? | Markierung nativ in Flutter über dem WebView; letzte Option Tauri |
+| **S2** | `score-view-web` im WebView auf iPad und Android flüssig (60 fps) und mit geringer Nachrichtenlatenz? | Markierung nativ in Flutter über dem WebView; letzte Option Tauri |
 
 S1 und S3 sind unabhängig vom Framework und können parallel laufen.
 

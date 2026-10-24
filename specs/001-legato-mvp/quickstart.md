@@ -6,7 +6,7 @@
 
 - Rust (stable) mit `cargo`, Ziele für iOS und Android (`rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-linux-android`)
 - Flutter (stable) mit `flutter_rust_bridge_codegen`
-- Node.js (LTS) für `notenblatt-web`
+- Node.js (LTS) für `score-view-web`
 - Xcode (iOS, macOS; nur auf macOS), Android Studio mit NDK
 - Nur zum Neuerzeugen der Matchmaker-Erwartungsdateien: `uv`
 - Für manuelle Abnahme: Digitalpiano mit MIDI-Ein- und -Ausgang (USB, optional Bluetooth), iPad
@@ -16,7 +16,7 @@
 ```powershell
 cargo test -p legato-core                  # Matchmaker-Vergleich, Werkregeln, Referenzdaten (SC-001, SC-002)
 cargo test -p legato-engine                # simulierter MIDI-Port: Trennen, Wiederverbinden, Echo, Signale (SC-003)
-npm --prefix notenblatt-web test           # Notenblatt (Vitest)
+npm --prefix score-view-web test           # Notenblatt (Vitest)
 flutter test app                           # Bildschirme, Adapter
 ```
 
@@ -25,13 +25,13 @@ Erwartet: Alle Tests grün; der Bericht von `legato-core` weist für SC-001 ≥ 
 Matchmaker-Erwartungsdateien neu erzeugen (nur nach Änderung des Commits):
 
 ```powershell
-uv run --project tools/matchmaker-referenz tools/matchmaker-referenz/erzeugen.py
+uv run --project tools/matchmaker-reference tools/matchmaker-reference/generate.py
 ```
 
 ## App starten
 
 ```powershell
-npm --prefix notenblatt-web run build      # Bundle nach app/assets
+npm --prefix score-view-web run build      # Bundle nach app/assets
 cd app
 flutter run -d ipad                        # iOS (nur auf macOS)
 flutter run -d android

@@ -1,15 +1,15 @@
 # Contract: Referenzdaten für Tests
 
-Referenzdaten machen Zuordnung und Erkennung reproduzierbar testbar (Constitution, Testbarkeit; SC-001, SC-002).
+Referenzdaten machen Zuordnung und Erkennung reproduzierbar testbar (Constitution, Testbarkeit; SC-001, SC-002). Schlüssel und Werte sind englisch ([Glossar](../../../docs/glossar.md#bezeichner-im-code)).
 
 ## Ablage
 
 ```text
-testdaten/legato/
+testdata/legato/
 └── hanon-01/
-    ├── stueck.musicxml              # Notentext (identisch mit der mitgelieferten Ressource)
-    ├── c-dur-beidhaendig-3x.mid     # aufgezeichneter Durchlauf (Standard-MIDI-Datei, Typ 0)
-    ├── c-dur-beidhaendig-3x.json    # Referenz-Zuordnung
+    ├── score.musicxml                 # Notentext (identisch mit der mitgelieferten Ressource)
+    ├── c-major-both-hands-3x.mid      # aufgezeichnete Durchläufe (Standard-MIDI-Datei, Typ 0)
+    ├── c-major-both-hands-3x.json     # Referenz-Zuordnung
     └── …
 ```
 
@@ -17,25 +17,25 @@ testdaten/legato/
 
 ```json
 {
-  "stueck": "hanon-01",
-  "kandidat": { "variation": "Beidhaendig", "transposition": 0 },
-  "erwartet": [
-    { "durchlauf": 1, "ergebnis": "Abgeschlossen" },
-    { "durchlauf": 2, "ergebnis": "Abgeschlossen" },
-    { "durchlauf": 3, "ergebnis": "Abgebrochen", "grund": "Zuordnungsverlust" }
+  "piece": "hanon-01",
+  "candidate": { "variation": "BothHands", "transposition": 0 },
+  "expected": [
+    { "performance": 1, "outcome": "Completed" },
+    { "performance": 2, "outcome": "Completed" },
+    { "performance": 3, "outcome": "Aborted", "reason": "AlignmentLoss" }
   ],
-  "toene": [
-    { "i": 0, "note": "t1-v1-n0" },
-    { "i": 1, "note": "t1-v5-n0" },
-    { "i": 17, "abweichung": "Zusatzton" },
-    { "i": 23, "abweichung": "FalscherTon", "note": "t3-v1-n4" }
+  "played_notes": [
+    { "i": 0, "note": "m1-v1-n0" },
+    { "i": 1, "note": "m1-v5-n0" },
+    { "i": 17, "deviation": "Addition" },
+    { "i": 23, "deviation": "Substitution", "note": "m3-v1-n4" }
   ],
-  "auslassungen": ["t5-v5-n2"]
+  "omissions": ["m5-v5-n2"]
 }
 ```
 
 - `i` ist der Index des Note-On-Ereignisses in der MIDI-Datei (Pedal und andere Controller zählen nicht).
-- Jeder Ton ist genau einmal aufgeführt.
+- Jeder gespielte Ton ist genau einmal aufgeführt.
 
 ## Messgrößen
 

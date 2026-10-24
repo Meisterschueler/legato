@@ -1,55 +1,55 @@
 # Contract: Engine-Schnittstelle
 
-Framework-neutrale Schnittstelle von `legato-engine` (`engine/src/api.rs`). Flutter bindet sie über `flutter_rust_bridge` an; ein späterer Tauri-Adapter bildet dieselben Funktionen auf Tauri-Befehle und -Ereignisse ab. Alle Typen sind serialisierbar (serde). Die Hülle enthält keine Fachlogik.
+Framework-neutrale Schnittstelle von `legato-engine` (`engine/src/api.rs`). Flutter bindet sie über `flutter_rust_bridge` an; ein späterer Tauri-Adapter bildet dieselben Funktionen auf Tauri-Befehle und -Ereignisse ab. Alle Typen sind serialisierbar (serde). Die Hülle enthält keine Fachlogik. Bezeichner laut [Glossar](../../../docs/glossar.md#bezeichner-im-code).
 
 ## Lebenszyklus
 
 | Funktion | Parameter | Anforderung |
 |---|---|---|
-| `start` | `{ datenverzeichnis, ressourcenverzeichnis, sprache }` | Einstellungen laden, zuletzt gewählte Eingabe wiederherstellen (FR-002) |
-| `lebenszyklus` | `{ vordergrund: bool }` | NFR-005: verwirft laufenden Durchlauf beim Wechsel in den Hintergrund |
-| `ereignisse` | – → Strom von `Ereignis` | siehe unten |
+| `start` | `{ data_dir, resource_dir, locale }` | Einstellungen laden, zuletzt gewählte Eingabe wiederherstellen (FR-002) |
+| `set_foreground` | `{ foreground: bool }` | NFR-005: verwirft laufenden Durchlauf beim Wechsel in den Hintergrund |
+| `events` | – → Strom von `Event` | siehe unten |
 
 ## Befehle
 
 | Funktion | Parameter | Antwort | Anforderung |
 |---|---|---|---|
-| `eingaben_auflisten` | – | `{ midi: [{ id, name, art: Usb \| Bluetooth, verfuegbar }], gewaehlt? }` | FR-007 |
-| `eingabe_waehlen` | `{ midi: id }` \| `Keine` | `Eingabezustand` | FR-002; verwirft laufenden Durchlauf |
-| `bluetooth_suchen` | `{ an: bool }` | – (Funde als Ereignis) | FR-006, US 1/15 |
-| `warnung_bestaetigen` | – | – | FR-005 |
-| `neu_verbinden` | – | `Eingabezustand` | FR-006 |
-| `stueck_laden` | `{ pfad }` | `StueckInfo` \| `NotendateiUngueltig { grund }` | FR-008 |
-| `repertoire` | – | `[StueckInfo]` | US 2 |
-| `notenbild` | `{ stueck, transposition, variation, anzeigevariante }` | MusicXML (String) mit Noten-IDs | FR-011 |
-| `einstellungen_lesen` / `einstellungen_schreiben` | `Einstellungen` | `Einstellungen` | [data-model.md](../data-model.md#einstellungen-persistiert) |
+| `list_inputs` | – | `{ midi: [{ id, name, transport: Usb \| Bluetooth, available }], selected? }` | FR-007 |
+| `select_input` | `{ midi: id }` \| `None` | `InputState` | FR-002; verwirft laufenden Durchlauf |
+| `scan_bluetooth` | `{ enabled: bool }` | – (Funde als Ereignis) | FR-006, US 1/15 |
+| `acknowledge_warning` | – | – | FR-005 |
+| `reconnect` | – | `InputState` | FR-006 |
+| `load_piece` | `{ path }` | `PieceInfo` \| `InvalidScoreFile { reason }` | FR-008 |
+| `repertoire` | – | `[PieceInfo]` | US 2 |
+| `render_score` | `{ piece, transposition, variation, display_variant }` | MusicXML (String) mit Noten-IDs | FR-011 |
+| `get_settings` / `set_settings` | `Settings` | `Settings` | [data-model.md](../data-model.md#settings-einstellungen-persistiert) |
 
-`StueckInfo`: `{ id, werk, titel, nummer?, hat_fingersatz, anzeigevarianten: [..] }`
+`PieceInfo`: `{ id, work, title, number?, has_fingering, display_variants: [..] }`
 
-## Ereignisse
+## Ereignisse (`Event`)
 
 | Ereignis | Nutzdaten | Anforderung |
 |---|---|---|
-| `Eingabezustand` | `{ zustand: NichtVerbunden \| MidiVerbunden \| Abgebrochen, geraet?, eingaben_kommen_an, warnung_aktiv }` | FR-005, FR-007 |
-| `BluetoothGefunden` | `{ id, name }` | FR-006 |
-| `DurchlaufErkannt` | `{ stueck, variation, transposition }` | FR-016 |
-| `Position` | `{ noten_ids: [..], zeit_treiber_us }` | US 3; Latenzmessung (R9) |
-| `Abweichung` | `{ art, noten_id?, tonhoehe? }` | FR-025, nur wenn Markierung während des Spiels an |
-| `DurchlaufBeendet` | `{ ergebnis: Abgeschlossen \| Abgebrochen, grund?, abweichungen: [..] }` | FR-025, US 4 |
-| `HintergrundHinweis` | `{ durchlauf_verworfen }` | US 1/8 |
+| `InputStateChanged` | `{ state: Disconnected \| MidiConnected \| ConnectionLost, device?, receiving, warning_active }` | FR-005, FR-007 |
+| `BluetoothDeviceFound` | `{ id, name }` | FR-006 |
+| `PerformanceRecognized` | `{ piece, variation, transposition }` | FR-016 |
+| `Position` | `{ note_ids: [..], driver_time_us }` | US 3; Latenzmessung (R9) |
+| `DeviationDetected` | `{ kind, note_id?, pitch? }` | FR-025, nur wenn Fehlermarkierung während des Spiels an |
+| `PerformanceEnded` | `{ outcome: Completed \| Aborted, reason?, deviations: [..] }` | FR-025, US 4 |
+| `BackgroundNotice` | `{ performance_discarded }` | US 1/8 |
 
-## Nachrichten an `notenblatt-web`
+## Nachrichten an `score-view-web`
 
 Die Hülle reicht Notenbild und Ereignisse unverändert als JSON per `postMessage` weiter:
 
 | Nachricht | Inhalt |
 |---|---|
-| `laden` | `{ musicxml, anzeigevariante }` |
-| `position` | `{ noten_ids }` |
-| `markieren` | `{ noten_id, art }` |
-| `zuruecksetzen` | – |
+| `load` | `{ musicxml, display_variant }` |
+| `position` | `{ note_ids }` |
+| `mark` | `{ note_id, kind }` |
+| `reset` | – |
 
-Rückmeldungen des Bundles: `bereit`, `bild_gezeigt { zeit_treiber_us }` (nur Entwicklungs-Builds, Latenzmessung).
+Rückmeldungen des Bundles: `ready`, `frame_shown { driver_time_us }` (nur Entwicklungs-Builds, Latenzmessung).
 
 ## Regeln
 
