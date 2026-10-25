@@ -164,6 +164,26 @@ impl InputMachine {
         self.warnings_due.clear();
     }
 
+    /// Manual reconnect (FR-006): reopens the selected device if it is present.
+    pub fn reconnect(&mut self) -> Vec<Action> {
+        let Some(id) = self
+            .devices
+            .values()
+            .find(|info| self.matches_selected(info))
+            .map(|info| info.id)
+        else {
+            return Vec::new();
+        };
+        let mut actions: Vec<Action> = self
+            .connected
+            .take()
+            .map(Action::Disconnect)
+            .into_iter()
+            .collect();
+        actions.extend(self.connect(id));
+        actions
+    }
+
     pub fn next_deadline(&self) -> Option<u64> {
         self.warnings_due.first().copied()
     }

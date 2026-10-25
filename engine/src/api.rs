@@ -115,6 +115,17 @@ impl Engine {
         self.send(Input::AcknowledgeWarning);
     }
 
+    /// Reopens the selected device if it is present (FR-006).
+    pub fn reconnect(&self) -> InputState {
+        let (reply, answer) = mpsc::channel();
+        self.send(Input::Reconnect(reply));
+        answer.recv().expect("engine runtime stopped")
+    }
+
+    pub fn scan_bluetooth(&self, enabled: bool) {
+        self.send(Input::ScanBluetooth(enabled));
+    }
+
     pub fn repertoire(&self) -> Vec<PieceInfo> {
         self.repertoire
             .lock()

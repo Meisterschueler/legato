@@ -90,6 +90,30 @@ fn messages_without_selection_connect_nothing() {
     assert_eq!(port.calls(), vec![]);
 }
 
+#[test]
+fn reconnect_and_bluetooth_scan_reach_the_midi_layer() {
+    let (engine, port, _) = start("reconnect");
+    assert_eq!(engine.reconnect(), InputState::Disconnected);
+    engine.midi(MidiInput::DeviceAdded {
+        device: 3,
+        name: "Piano".into(),
+        transport: Transport::Bluetooth,
+    });
+    engine.select_input(Some(3)).unwrap();
+    assert_eq!(engine.reconnect(), InputState::MidiConnected);
+    engine.scan_bluetooth(true);
+    engine.get_settings();
+    assert_eq!(
+        port.calls(),
+        vec![
+            Call::Connect(3),
+            Call::Disconnect(3),
+            Call::Connect(3),
+            Call::ScanBluetooth(true)
+        ]
+    );
+}
+
 fn next_state(events: &std::sync::mpsc::Receiver<Event>) -> (InputState, bool, bool) {
     loop {
         if let Event::InputStateChanged {

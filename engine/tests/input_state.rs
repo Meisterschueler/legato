@@ -114,6 +114,19 @@ fn switching_input_disconnects_the_old_device() {
 }
 
 #[test]
+fn reconnect_reopens_the_selected_device_if_present() {
+    let mut input = connected();
+    assert_eq!(
+        input.reconnect(),
+        vec![Action::Disconnect(1), Action::Connect(1)]
+    );
+    input.device_removed(1, 0);
+    assert_eq!(input.reconnect(), vec![]);
+    assert_eq!(input.status().state, InputState::ConnectionLost);
+    assert_eq!(InputMachine::new(None).reconnect(), vec![]);
+}
+
+#[test]
 fn selecting_during_connection_loss_ends_the_warning() {
     let mut input = connected();
     input.device_added(2, "Other".into(), Transport::Usb);

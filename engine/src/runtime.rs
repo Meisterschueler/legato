@@ -51,6 +51,8 @@ pub trait MidiOutput: Send {
     fn send(&mut self, device: u32, data: &[u8]);
     /// No-op without vibration motor (e.g. iPad).
     fn vibrate(&mut self);
+    /// No-op where the operating system pairs Bluetooth devices (Windows, Linux).
+    fn scan_bluetooth(&mut self, _enabled: bool) {}
 }
 
 pub(crate) enum Input {
@@ -59,6 +61,8 @@ pub(crate) enum Input {
     SetSettings(Box<Settings>, Sender<io::Result<Settings>>),
     ListInputs(Sender<InputList>),
     Select(Option<u32>, Sender<io::Result<InputState>>),
+    Reconnect(Sender<InputState>),
+    ScanBluetooth(bool),
     AcknowledgeWarning,
     Midi(MidiInput),
 }
@@ -132,6 +136,12 @@ impl Runtime {
                 });
                 let _ = reply.send(result);
             }
+            Input::Reconnect(reply) => {
+                let actions = self.input.reconnect();
+                self.apply(actions);
+                let _ = reply.send(self.input.status().state);
+            }
+            Input::ScanBluetooth(enabled) => self.output.scan_bluetooth(enabled),
             Input::AcknowledgeWarning => self.input.acknowledge_warning(),
             Input::Midi(MidiInput::DeviceAdded {
                 device,

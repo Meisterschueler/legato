@@ -10,6 +10,7 @@ pub enum Call {
     Disconnect(u32),
     Send(u32, Vec<u8>),
     Vibrate,
+    ScanBluetooth(bool),
 }
 
 /// Clone it before handing it to the engine to inspect the calls.
@@ -42,5 +43,12 @@ impl MidiOutput for SimulatedPort {
 
     fn vibrate(&mut self) {
         self.calls.lock().unwrap().push(Call::Vibrate);
+    }
+
+    fn scan_bluetooth(&mut self, enabled: bool) {
+        self.calls
+            .lock()
+            .unwrap()
+            .push(Call::ScanBluetooth(enabled));
     }
 }
