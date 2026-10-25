@@ -6,7 +6,7 @@ use std::io;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex, MutexGuard, Weak};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use midir::{Ignore, MidiInputConnection, MidiOutputConnection};
 
@@ -15,6 +15,34 @@ use crate::storage::Transport;
 
 const POLL_INTERVAL: Duration = Duration::from_millis(250);
 const CLIENT_NAME: &str = "Legato";
+/// Larger differences between driver and arrival intervals are driver errors, not delivery delay.
+const MAX_DRIFT_US: i64 = 1_000_000;
+
+/// Maps the driver timestamps of one connection onto a common clock. Each connection starts
+/// at its own zero, and Windows 10 lets Bluetooth timestamps jump by about 8.1 s
+/// (research.md, Spike-Ergebnis S1 unter Windows); then the arrival time is taken anew.
+#[derive(Default)]
+struct Clock {
+    offset: i64,
+    last: Option<(u64, u64)>,
+    last_out: u64,
+}
+
+impl Clock {
+    fn map(&mut self, driver_us: u64, arrival_us: u64) -> u64 {
+        let jumped = self.last.is_none_or(|(driver, arrival)| {
+            let driver_step = driver_us as i64 - driver as i64;
+            let arrival_step = arrival_us as i64 - arrival as i64;
+            (driver_step - arrival_step).abs() > MAX_DRIFT_US
+        });
+        if jumped {
+            self.offset = arrival_us as i64 - driver_us as i64;
+        }
+        self.last = Some((driver_us, arrival_us));
+        self.last_out = ((driver_us as i64 + self.offset).max(0) as u64).max(self.last_out);
+        self.last_out
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Port {
@@ -88,6 +116,7 @@ fn transport(port_id: &str) -> Transport {
 pub(crate) struct DesktopMidi {
     ports: Arc<Mutex<Ports>>,
     inputs: Sender<Input>,
+    epoch: Instant,
 }
 
 impl DesktopMidi {
@@ -99,7 +128,11 @@ impl DesktopMidi {
         thread::Builder::new()
             .name("legato-midir".into())
             .spawn(move || poll(weak, sender))?;
-        Ok(DesktopMidi { ports, inputs })
+        Ok(DesktopMidi {
+            ports,
+            inputs,
+            epoch: Instant::now(),
+        })
     }
 
     fn ports(&self) -> MutexGuard<'_, Ports> {
@@ -151,10 +184,11 @@ impl MidiOutput for DesktopMidi {
         self.ports().wanted.insert(device);
         let ports = Arc::downgrade(&self.ports);
         let inputs = self.inputs.clone();
+        let epoch = self.epoch;
         let _ = thread::Builder::new()
             .name("legato-midir-open".into())
             .spawn(move || {
-                let (input, output) = open(device, &port, inputs);
+                let (input, output) = open(device, &port, inputs, epoch);
                 let Some(ports) = ports.upgrade() else {
                     return;
                 };
@@ -198,10 +232,12 @@ fn open(
     device: u32,
     port: &Port,
     inputs: Sender<Input>,
+    epoch: Instant,
 ) -> (
     Option<MidiInputConnection<()>>,
     Option<MidiOutputConnection>,
 ) {
+    let mut clock = Clock::default();
     let input = midir::MidiInput::new(CLIENT_NAME)
         .ok()
         .and_then(|mut midi| {
@@ -211,7 +247,8 @@ fn open(
             midi.connect(
                 &found,
                 CLIENT_NAME,
-                move |time_us, data, _| {
+                move |driver_us, data, _| {
+                    let time_us = clock.map(driver_us, epoch.elapsed().as_micros() as u64);
                     let _ = inputs.send(Input::Midi(MidiInput::Message {
                         device,
                         time_us,
@@ -242,6 +279,22 @@ mod tests {
             id: id.into(),
             name: name.into(),
         }
+    }
+
+    #[test]
+    fn clock_keeps_driver_steps_and_reanchors_after_jumps() {
+        // (arrival ms, driver us) measured with midi_probe over Bluetooth.
+        let mut clock = Clock::default();
+        let mut map = |arrival_ms: u64, driver_us: u64| clock.map(driver_us, arrival_ms * 1000);
+        assert_eq!(map(2393, 2_309_000), 2_393_000);
+        // Delivery is bunched; the driver steps stay.
+        assert_eq!(map(6713, 6_609_000), 6_693_000);
+        assert_eq!(map(6713, 6_610_000), 6_694_000);
+        // Jump by about 8.1 s within a chord: take the arrival time anew.
+        assert_eq!(map(6714, 14_685_000), 6_714_000);
+        assert_eq!(map(7556, 15_632_000), 7_661_000);
+        // Never backwards.
+        assert_eq!(map(7557, 5_000_000), 7_661_000);
     }
 
     #[test]
