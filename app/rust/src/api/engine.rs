@@ -101,6 +101,11 @@ impl LegatoEngine {
         self.engine.acknowledge_warning();
     }
 
+    /// Returns the input state after reopening the selected device as JSON string.
+    pub fn reconnect(&self) -> String {
+        serde_json::to_string(&self.engine.reconnect()).expect("state is serializable")
+    }
+
     /// `[PieceInfo]` as JSON.
     pub fn repertoire(&self) -> String {
         serde_json::to_string(&self.engine.repertoire()).expect("pieces are serializable")

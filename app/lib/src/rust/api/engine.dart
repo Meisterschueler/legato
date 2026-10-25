@@ -4,7 +4,6 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LegatoEngine>>
@@ -20,6 +19,9 @@ abstract class LegatoEngine implements RustOpaqueInterface {
 
   /// `PieceInfo` as JSON; the error is the reason code of `InvalidScoreFile`.
   Future<String> loadPiece({required String path});
+
+  /// Returns the input state after reopening the selected device as JSON string.
+  Future<String> reconnect();
 
   /// MusicXML for the display; `variation` and `display_variant` are enum names, e.g. `BothHands`, `Complete`.
   Future<String> renderScore({

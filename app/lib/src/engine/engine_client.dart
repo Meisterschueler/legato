@@ -37,6 +37,17 @@ class EngineClient {
       jsonDecode(await _engine.setSettings(json: jsonEncode(settings)))
           as Map<String, dynamic>;
 
+  /// `{ midi: [{ id, name, transport }], selected?: { name, transport, bluetooth_id? } }`.
+  Future<Map<String, dynamic>> listInputs() async =>
+      jsonDecode(await _engine.listInputs()) as Map<String, dynamic>;
+
+  /// `null` selects no input; the new state arrives as `InputStateChanged`.
+  Future<void> selectInput(int? device) => _engine.selectInput(device: device);
+
+  Future<void> acknowledgeWarning() => _engine.acknowledgeWarning();
+
+  Future<void> reconnect() => _engine.reconnect();
+
   /// `[PieceInfo]`: `{ id, work, title, number?, has_fingering, display_variants }`.
   Future<List<Map<String, dynamic>>> repertoire() async =>
       (jsonDecode(await _engine.repertoire()) as List)

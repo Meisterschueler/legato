@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:legato/src/engine/engine_client.dart';
+import 'package:legato/src/input/input_picker.dart';
+import 'package:legato/src/input/input_symbol.dart';
 import 'package:legato/src/l10n/generated/app_localizations.dart';
 import 'package:legato/src/repertoire/repertoire_screen.dart';
 import 'package:legato/src/score_view/score_view.dart';
 
-/// Practice screen with the score; the input symbol follows with US 1.
+/// Practice screen with the score and the input symbol.
 class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key, this.engine});
 
@@ -16,14 +20,26 @@ class PracticeScreen extends StatefulWidget {
 
 class _PracticeScreenState extends State<PracticeScreen> {
   String? _musicxml;
+  final _input = ValueNotifier<Map<String, dynamic>>({'state': 'Disconnected'});
+  StreamSubscription<Map<String, dynamic>>? _events;
 
   @override
   void initState() {
     super.initState();
+    _events = widget.engine?.events().listen((event) {
+      if (event['type'] == 'InputStateChanged') _input.value = event;
+    });
     // shortcut: shows the first piece until the recognition (US 3) chooses it.
     widget.engine?.repertoire().then((pieces) {
       if (pieces.isNotEmpty) _show(pieces.first['id'] as String);
     });
+  }
+
+  @override
+  void dispose() {
+    _events?.cancel();
+    _input.dispose();
+    super.dispose();
   }
 
   Future<void> _show(String piece) async {
@@ -40,6 +56,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
     if (piece != null) await _show(piece);
   }
 
+  void _openInputPicker() => showDialog<void>(
+    context: context,
+    builder: (_) => InputPicker(engine: widget.engine!, status: _input),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -53,10 +74,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
             icon: const Icon(Icons.library_music),
             onPressed: widget.engine == null ? null : _openRepertoire,
           ),
-          IconButton(
-            tooltip: l10n.midiInput,
-            icon: const Icon(Icons.piano),
-            onPressed: null,
+          ValueListenableBuilder(
+            valueListenable: _input,
+            builder: (context, input, _) => InputSymbol(
+              state: input['state'] as String,
+              onTap: widget.engine == null ? null : _openInputPicker,
+            ),
           ),
         ],
       ),
