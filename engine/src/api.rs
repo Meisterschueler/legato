@@ -7,9 +7,16 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::Instant;
 
+use std::path::Path;
+
+use legato_core::score::model::Variation;
+use legato_core::works::DisplayVariant;
+
 use crate::input::state::InputMachine;
 pub use crate::input::state::{InputInfo, InputList, InputState};
+pub use crate::repertoire::PieceInfo;
 pub use crate::runtime::{Event, MidiInput, MidiOutput};
+use crate::repertoire::Repertoire;
 use crate::runtime::{Input, Runtime};
 use crate::storage::Settings;
 use crate::warning::Speaker;
@@ -23,12 +30,14 @@ pub struct StartConfig {
 pub struct Engine {
     inputs: Sender<Input>,
     events: Mutex<Option<Receiver<Event>>>,
+    repertoire: Mutex<Repertoire>,
 }
 
 impl Engine {
     /// Loads the settings and starts the runtime thread.
     pub fn start(config: StartConfig, output: Box<dyn MidiOutput>) -> io::Result<Engine> {
         let settings = Settings::load(&config.data_dir)?;
+        let repertoire = Repertoire::load(&config.data_dir, &config.resource_dir)?;
         let (inputs, receiver) = mpsc::channel();
         let (events_sender, events) = mpsc::channel();
         let runtime = Runtime {
@@ -46,6 +55,7 @@ impl Engine {
         Ok(Engine {
             inputs,
             events: Mutex::new(Some(events)),
+            repertoire: Mutex::new(repertoire),
         })
     }
 
@@ -86,6 +96,34 @@ impl Engine {
 
     pub fn acknowledge_warning(&self) {
         self.send(Input::AcknowledgeWarning);
+    }
+
+    pub fn repertoire(&self) -> Vec<PieceInfo> {
+        self.repertoire
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .list()
+    }
+
+    pub fn load_piece(&self, path: impl AsRef<Path>) -> Result<PieceInfo, legato_core::score::musicxml_read::InvalidScoreFile> {
+        let mut repertoire = self
+            .repertoire
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        repertoire.load_piece(path.as_ref())
+    }
+
+    pub fn render_score(
+        &self,
+        piece_id: &str,
+        transposition: i8,
+        variation: Variation,
+        display_variant: DisplayVariant,
+    ) -> Option<String> {
+        self.repertoire
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .render_score(piece_id, transposition, variation, display_variant)
     }
 
     /// Entry point for the MIDI layer; returns immediately.
