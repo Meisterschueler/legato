@@ -20,7 +20,8 @@ pub fn reference(score: &Score, candidate: &Candidate, range: Range) -> Vec<Refe
     Setup::new(score, candidate.clone(), range).reference()
 }
 
-pub(crate) fn plays(variation: Variation, hand: Hand) -> bool {
+/// Whether the variation plays notes of `hand`.
+pub fn plays(variation: Variation, hand: Hand) -> bool {
     match variation {
         Variation::BothHands => true,
         Variation::LeftHandOnly => hand == Hand::Left,

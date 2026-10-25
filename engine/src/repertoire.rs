@@ -4,12 +4,15 @@ use std::hash::{Hash, Hasher};
 use std::io;
 use std::path::{Path, PathBuf};
 
+use legato_core::performance::Setup;
 use legato_core::score::model::Variation;
 use legato_core::score::musicxml_read::{InvalidReason, InvalidScoreFile};
 use legato_core::score::musicxml_write;
 use legato_core::works::DisplayVariant;
 use legato_core::works::detect::read_with_rules;
 use serde::{Deserialize, Serialize};
+
+use crate::session::PieceSetups;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PieceInfo {
@@ -128,6 +131,28 @@ impl Repertoire {
             return None;
         }
         musicxml_write::write(piece.musicxml.as_bytes(), transposition).ok()
+    }
+
+    /// Score and candidates of every piece for the recognition.
+    pub(crate) fn setups(&self) -> Vec<PieceSetups> {
+        self.pieces
+            .values()
+            .filter_map(|piece| {
+                let (read, rules) = read_with_rules(piece.musicxml.as_bytes()).ok()?;
+                let range = rules.performance_range(&read.score);
+                let setups = rules
+                    .candidates(&piece.info.id)
+                    .into_iter()
+                    .map(|c| Setup::new(&read.score, c, range))
+                    .collect();
+                Some(PieceSetups {
+                    id: piece.info.id.clone(),
+                    score: read.score,
+                    setups,
+                    recognition_length: rules.recognition_length(),
+                })
+            })
+            .collect()
     }
 
     fn pieces_dir(&self) -> PathBuf {

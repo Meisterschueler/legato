@@ -18,6 +18,8 @@ pub use crate::repertoire::PieceInfo;
 use crate::repertoire::Repertoire;
 pub use crate::runtime::{Event, MidiInput, MidiOutput};
 use crate::runtime::{Input, Runtime};
+pub use crate::session::Outcome;
+use crate::session::Session;
 use crate::storage::Settings;
 use crate::warning::Speaker;
 
@@ -57,9 +59,12 @@ impl Engine {
         let repertoire = Repertoire::load(&config.data_dir, &config.resource_dir)?;
         let (inputs, receiver) = mpsc::channel();
         let (events_sender, events) = mpsc::channel();
+        let pieces = repertoire.setups();
         let runtime = Runtime {
             data_dir: config.data_dir,
             input: InputMachine::new(settings.midi_device.clone()),
+            session: Session::new(&pieces, &settings),
+            pieces,
             settings,
             output: output(inputs.clone())?,
             speaker: Speaker::start()?,
@@ -138,7 +143,9 @@ impl Engine {
         path: impl AsRef<Path>,
     ) -> Result<PieceInfo, legato_core::score::musicxml_read::InvalidScoreFile> {
         let mut repertoire = self.repertoire.lock().unwrap_or_else(|e| e.into_inner());
-        repertoire.load_piece(path.as_ref())
+        let piece = repertoire.load_piece(path.as_ref())?;
+        self.send(Input::Pieces(repertoire.setups()));
+        Ok(piece)
     }
 
     pub fn render_score(

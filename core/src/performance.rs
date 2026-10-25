@@ -78,7 +78,7 @@ pub struct Limits {
     pub rest: f64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
 pub enum AbortReason {
     PauseLimit,
     AlignmentLoss,

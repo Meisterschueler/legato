@@ -7,7 +7,11 @@ use std::time::{Duration, Instant};
 
 use serde::Serialize;
 
+use legato_core::performance::AbortReason;
+use legato_core::score::model::Variation;
+
 use crate::input::state::{Action, InputList, InputMachine, InputState, Status};
+use crate::session::{Outcome, PieceSetups, Session};
 use crate::storage::{Settings, Transport};
 use crate::warning::Speaker;
 
@@ -23,6 +27,24 @@ pub enum Event {
     },
     BackgroundNotice {
         performance_discarded: bool,
+    },
+    PerformanceRecognized {
+        piece: String,
+        variation: Variation,
+        transposition: i8,
+    },
+    /// Display ids of the notes at the current position.
+    Position {
+        note_ids: Vec<String>,
+        driver_time_us: u64,
+    },
+    // shortcut: `deviations` of the contract follow with T079.
+    PerformanceEnded {
+        outcome: Outcome,
+        reason: Option<AbortReason>,
+    },
+    PracticeSessionChanged {
+        active: bool,
     },
 }
 
@@ -65,6 +87,8 @@ pub(crate) enum Input {
     ScanBluetooth(bool),
     AcknowledgeWarning,
     Midi(MidiInput),
+    /// The repertoire changed.
+    Pieces(Vec<PieceSetups>),
 }
 
 pub(crate) struct Runtime {
@@ -75,6 +99,8 @@ pub(crate) struct Runtime {
     pub events: Sender<Event>,
     pub input: InputMachine,
     pub started: Instant,
+    pub pieces: Vec<PieceSetups>,
+    pub session: Session,
 }
 
 impl Runtime {
@@ -82,7 +108,11 @@ impl Runtime {
         let mut reported = self.input.status();
         self.emit_status(&reported);
         loop {
-            let received = match self.input.next_deadline() {
+            let deadline = [self.input.next_deadline(), self.session.next_deadline()]
+                .into_iter()
+                .flatten()
+                .min();
+            let received = match deadline {
                 Some(due) => {
                     inputs.recv_timeout(Duration::from_millis(due.saturating_sub(self.now_ms())))
                 }
@@ -95,6 +125,8 @@ impl Runtime {
             }
             let actions = self.input.tick(self.now_ms());
             self.apply(actions);
+            let events = self.session.tick(self.now_ms());
+            self.emit_all(events);
             let status = self.input.status();
             if status != reported {
                 self.emit_status(&status);
@@ -106,10 +138,16 @@ impl Runtime {
     fn handle(&mut self, input: Input) {
         match input {
             Input::SetForeground(true) => {}
-            // NFR-005: a running performance is discarded (performances follow in US 3).
-            Input::SetForeground(false) => self.emit(Event::BackgroundNotice {
-                performance_discarded: false,
-            }),
+            Input::SetForeground(false) => {
+                let events = self.session.background();
+                let performance_discarded = events
+                    .iter()
+                    .any(|e| matches!(e, Event::PerformanceEnded { .. }));
+                self.emit_all(events);
+                self.emit(Event::BackgroundNotice {
+                    performance_discarded,
+                });
+            }
             Input::GetSettings(reply) => {
                 let _ = reply.send(self.settings.clone());
             }
@@ -120,12 +158,16 @@ impl Runtime {
                     self.settings = *settings;
                     self.settings.clone()
                 });
+                // shortcut: a performance running while the settings change is dropped silently.
+                self.session = Session::new(&self.pieces, &self.settings);
                 let _ = reply.send(result);
             }
             Input::ListInputs(reply) => {
                 let _ = reply.send(self.input.list());
             }
             Input::Select(device, reply) => {
+                let events = self.session.interrupt();
+                self.emit_all(events);
                 let actions = self.input.select(device);
                 self.apply(actions);
                 let mut settings = self.settings.clone();
@@ -153,11 +195,25 @@ impl Runtime {
             }
             Input::Midi(MidiInput::DeviceRemoved { device }) => {
                 let actions = self.input.device_removed(device, self.now_ms());
+                if !actions.is_empty() {
+                    let events = self.session.interrupt();
+                    self.emit_all(events);
+                }
                 self.apply(actions);
             }
-            // Assignment to the score follows with US 3.
-            Input::Midi(MidiInput::Message { device, .. }) => {
-                self.input.message(device);
+            Input::Midi(MidiInput::Message {
+                device,
+                time_us,
+                data,
+            }) => {
+                if self.input.message(device) {
+                    let events = self.session.message(&data, time_us, self.now_ms());
+                    self.emit_all(events);
+                }
+            }
+            Input::Pieces(pieces) => {
+                self.pieces = pieces;
+                self.session = Session::new(&self.pieces, &self.settings);
             }
         }
     }
@@ -186,6 +242,10 @@ impl Runtime {
             receiving: status.receiving,
             warning_active: status.warning_active,
         });
+    }
+
+    fn emit_all(&self, events: Vec<Event>) {
+        events.into_iter().for_each(|e| self.emit(e));
     }
 
     fn emit(&self, event: Event) {

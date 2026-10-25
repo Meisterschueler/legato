@@ -6,6 +6,7 @@ pub mod ffi;
 pub mod input;
 pub mod repertoire;
 mod runtime;
+mod session;
 pub mod storage;
 mod warning;
 
