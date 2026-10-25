@@ -3,6 +3,7 @@
 
 use crate::following::pthmm::PitchHmm;
 use crate::following::{ReferenceNote, ScoreFollower};
+use crate::performance::Setup;
 use crate::preprocessing::Observation;
 use crate::score::model::{Candidate, Hand, Score, Variation};
 use crate::works::Range;
@@ -16,23 +17,10 @@ const FINAL_POSTERIOR: f64 = 0.5;
 
 /// Notes of `range` as the candidate expects them: its hands, transposed.
 pub fn reference(score: &Score, candidate: &Candidate, range: Range) -> Vec<ReferenceNote> {
-    score.onsets[range.start as usize..=range.end as usize]
-        .iter()
-        .flat_map(|onset| {
-            let beat = onset.time.numerator as f64 / onset.time.denominator as f64;
-            onset
-                .notes
-                .iter()
-                .filter(|n| plays(candidate.variation, n.hand))
-                .map(move |n| ReferenceNote {
-                    onset_beat: beat,
-                    pitch: n.pitch.saturating_add_signed(candidate.transposition),
-                })
-        })
-        .collect()
+    Setup::new(score, candidate.clone(), range).reference()
 }
 
-fn plays(variation: Variation, hand: Hand) -> bool {
+pub(crate) fn plays(variation: Variation, hand: Hand) -> bool {
     match variation {
         Variation::BothHands => true,
         Variation::LeftHandOnly => hand == Hand::Left,
@@ -40,7 +28,7 @@ fn plays(variation: Variation, hand: Hand) -> bool {
     }
 }
 
-fn hands(variation: Variation) -> usize {
+pub(crate) fn hands(variation: Variation) -> usize {
     if variation == Variation::BothHands {
         2
     } else {
