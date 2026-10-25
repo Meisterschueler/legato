@@ -132,7 +132,8 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [x] T056 [US1] Zustandsmaschine `InputState` (`Disconnected` → `MidiConnected` ↔ `ConnectionLost`, `warning_acknowledged`) in `engine/src/input/state.rs`
 - [x] T057 [US1] Geräteverwaltung in `engine/src/input/state.rs`: Geräte aus FFI bzw. `midir`, `list_inputs`, `select_input`, `reconnect`, `scan_bluetooth`; gewählte Eingabe in `Settings` speichern und beim Start wiederherstellen (FR-002)
 - [x] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` (unter Windows Feature `winrt`, damit in Windows gekoppelte Bluetooth-MIDI-Geräte erscheinen) und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
-- [ ] T105 [US1] Spike S1 unter Windows (nach T058): Diagnoseprogramm `engine/examples/midi_probe.rs` protokolliert Geräte und Ereignisse mit Zeitstempel; mit einem gekoppelten Bluetooth-MIDI-Gerät und per USB Erkennung von Trennung und Wiederkehr, automatisches Wiederverbinden, Latenz und Jitter messen; Ergebnis als „Spike-Ergebnis S1 (Windows)“ in `specs/001-legato-mvp/research.md` (R4) eintragen
+- [x] T105 [US1] Spike S1 unter Windows (nach T058): Diagnoseprogramm `engine/examples/midi_probe.rs` protokolliert Geräte und Ereignisse mit Zeitstempel; mit einem gekoppelten Bluetooth-MIDI-Gerät und per USB Erkennung von Trennung und Wiederkehr, automatisches Wiederverbinden, Latenz und Jitter messen; Ergebnis als „Spike-Ergebnis S1 unter Windows“ in `specs/001-legato-mvp/research.md` (R4) eintragen
+- [ ] T107 [US1] Zeitstempel unter Windows korrigieren in `engine/src/input/midir_desktop.rs` (Spike-Ergebnis S1 unter Windows): weicht der Abstand zweier Treiber-Zeitstempel um mehr als 1 s vom Abstand der Ankunftszeiten ab oder beginnt eine neue Verbindung, wird die Zeit an der Ankunftszeit neu ausgerichtet; Test mit den gemessenen Folgen (Sprung um +8,1 s, Neubeginn nach Wiederverbinden)
 - [ ] T059 [US1] C-Schnittstelle vollständig umsetzen (Stub aus T016 ersetzen) in `engine/src/ffi.rs` und `engine/src/ffi/android.rs`; Funde aus `legato_midi_bluetooth_found` als Ereignis `BluetoothDeviceFound`
 - [x] T060 [US1] Warnung über den Lautsprecher mit `rodio` in `engine/src/warning.rs`: spielt `warning.wav` sofort sowie nach 10 s und 30 s, ruft jeweils `vibrate` der nativen Schicht auf, endet bei Wiederverbindung oder `acknowledge_warning` (FR-005)
 - [ ] T061 [US1] `LegatoMidi` in `app/ios/Runner/AppDelegate.swift` und `app/macos/Runner/AppDelegate.swift` registrieren; Audio-Session `playback` + `mixWithOthers`; `vibrate` (iPhone: `kSystemSoundID_Vibrate`, iPad: ohne Wirkung); `NSBluetoothAlwaysUsageDescription` in `app/ios/Runner/Info.plist`
@@ -288,7 +289,7 @@ Task: "outerhmm nach core/src/following/outer_hmm.rs portieren" (T042)
 Task: "arzt nach core/src/following/arzt.rs portieren"          (T043)
 ```
 
-**US1**: T054 und T055 parallel; danach T058, T063, T065 parallel zu T056/T057; T105 nach T058.
+**US1**: T054 und T055 parallel; danach T058, T063, T065 parallel zu T056/T057; T105 nach T058; T107 nach T105.
 
 **US3**: T072, T074, T075, T076, T077 parallel; danach T087 und T088 parallel zur Kern-Implementierung.
 

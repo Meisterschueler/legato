@@ -73,9 +73,15 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 - Bluetooth-Trennung ohne Abmeldung (Strom weg, Reichweite) erkennt das Betriebssystem erst nach dem Überwachungs-Timeout (iOS bis ca. 6 s). SC-003 zählt ab der Meldung des Betriebssystems.
 - Android: herstellerabhängiges Verhalten des Bluetooth-Stacks; Tests auf mehreren Geräten nötig.
 - Bluetooth-Adapter (z. B. Yamaha MD-BT01, CME WIDI) verhalten sich teils eigen.
-- Bluetooth-MIDI hat 10–30 ms zusätzliche Latenz und Jitter von einigen ms. Für NFR-003 unkritisch; für die Messung der Gleichmäßigkeit ([002](../002-bewertung/spec.md)) müssen die Zeitstempel des Instruments erhalten bleiben (CoreMIDI: ja; Android: zu prüfen).
+- Bluetooth-MIDI hat 10–30 ms zusätzliche Latenz und Jitter von einigen ms (Windows 10: deutlich mehr, siehe Spike-Ergebnis S1 unter Windows). Für NFR-003 unkritisch; für die Messung der Gleichmäßigkeit ([002](../002-bewertung/spec.md)) müssen die Zeitstempel des Instruments erhalten bleiben (CoreMIDI: ja; Android: zu prüfen).
 
 **Spike S1** (vorgezogen, ohne Framework): Minimale native iOS-App mit der MIDI-Schicht und einer Rust-Testbibliothek. Messen: Erkennung von Trennung und Wiederkehr (USB, Bluetooth), automatisches Wiederverbinden, Latenz, Jitter, Weitergabe der Instrument-Zeitstempel. Danach dasselbe für Android und unter Windows (`midir` mit WinRT, Diagnoseprogramm der Engine).
+
+**Spike-Ergebnis S1 unter Windows** (2026-10-25, Windows 10 22H2 ohne Windows MIDI Services, Digitalpiano „ATX3“ über Bluetooth, `engine/examples/midi_probe.rs`):
+- Gekoppelte Geräte erscheinen als Port mit einer ID wie `…MIDII_141B23E8.BLE10…`; daran erkennt die Engine Bluetooth. Der Verbindungsaufbau dauert 0,3–0,4 s. Vor einem erneuten Koppeln blieb das Öffnen ohne Rückmeldung hängen; die Engine öffnet Ports deshalb im Hintergrund.
+- Trennung und Wiederkehr: Nach dem Ausschalten von Bluetooth verschwindet der Port aus der Liste (höchstens 9,6 s nach dem letzten Ton; der genaue Zeitpunkt des Ausschaltens wurde nicht erfasst). Nach dem Einschalten erscheint er wieder und wird ohne Zutun verbunden (Öffnen 3,8 s). FR-006 ist damit ohne den manuellen Weg erfüllt.
+- Latenz: Windows liefert die Nachrichten gebündelt im Abstand von etwa 60 ms; der Abstand zwischen Ankunft und Treiber-Zeitstempel streut um 50–100 ms (der erste Ton nach einer Pause kommt am spätesten). NFR-003 ist per Bluetooth unter Windows 10 nicht erreichbar. Windows mit Bluetooth taugt für Funktionstests; die Latenz wird per USB oder auf iPad und Android abgenommen. USB unter Windows ist noch nicht gemessen.
+- Zeitstempel: Auflösung 1 ms, Abstände innerhalb eines Akkords (1–4 ms) plausibel. Zweimal sprang der Zeitstempel mitten im Spiel um etwa +8,1 s (vermutlich falsch behandelter Überlauf der 13-Bit-Zeitstempel von BLE-MIDI nach 8192 ms), und jede neue Verbindung beginnt bei einem neuen Nullpunkt. Ein solcher Sprung würde die Pausengrenze auslösen; die Engine richtet die Zeitstempel deshalb an der Ankunftszeit neu aus (T107).
 
 **Verworfene Alternativen**: `flutter_midi_command` (bindet MIDI an Flutter und Dart; Wiederverbinden nicht steuerbar); `midir` auf iOS (kein Bluetooth-Verbindungsaufbau); Web MIDI (nicht in Safari/WKWebView).
 
