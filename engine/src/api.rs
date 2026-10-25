@@ -36,6 +36,23 @@ pub struct Engine {
 impl Engine {
     /// Loads the settings and starts the runtime thread.
     pub fn start(config: StartConfig, output: Box<dyn MidiOutput>) -> io::Result<Engine> {
+        Self::start_with(config, |_| Ok(output))
+    }
+
+    /// Windows and Linux: MIDI through `midir` inside the engine (research.md R4).
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    pub fn start_desktop(config: StartConfig) -> io::Result<Engine> {
+        Self::start_with(config, |inputs| {
+            Ok(Box::new(crate::input::midir_desktop::DesktopMidi::start(
+                inputs,
+            )?))
+        })
+    }
+
+    fn start_with(
+        config: StartConfig,
+        output: impl FnOnce(Sender<Input>) -> io::Result<Box<dyn MidiOutput>>,
+    ) -> io::Result<Engine> {
         let settings = Settings::load(&config.data_dir)?;
         let repertoire = Repertoire::load(&config.data_dir, &config.resource_dir)?;
         let (inputs, receiver) = mpsc::channel();
@@ -44,7 +61,7 @@ impl Engine {
             data_dir: config.data_dir,
             input: InputMachine::new(settings.midi_device.clone()),
             settings,
-            output,
+            output: output(inputs.clone())?,
             speaker: Speaker::start()?,
             events: events_sender,
             started: Instant::now(),

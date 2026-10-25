@@ -131,7 +131,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 - [x] T056 [US1] Zustandsmaschine `InputState` (`Disconnected` → `MidiConnected` ↔ `ConnectionLost`, `warning_acknowledged`) in `engine/src/input/state.rs`
 - [ ] T057 [US1] Geräteverwaltung in `engine/src/input/registry.rs`: Geräte aus FFI bzw. `midir`, `list_inputs`, `select_input`, `reconnect`, `scan_bluetooth`; gewählte Eingabe in `Settings` speichern und beim Start wiederherstellen (FR-002)
-- [ ] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` (unter Windows Feature `winrt`, damit in Windows gekoppelte Bluetooth-MIDI-Geräte erscheinen) und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
+- [x] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` (unter Windows Feature `winrt`, damit in Windows gekoppelte Bluetooth-MIDI-Geräte erscheinen) und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
 - [ ] T105 [US1] Spike S1 unter Windows (nach T058): Diagnoseprogramm `engine/examples/midi_probe.rs` protokolliert Geräte und Ereignisse mit Zeitstempel; mit einem gekoppelten Bluetooth-MIDI-Gerät und per USB Erkennung von Trennung und Wiederkehr, automatisches Wiederverbinden, Latenz und Jitter messen; Ergebnis als „Spike-Ergebnis S1 (Windows)“ in `specs/001-legato-mvp/research.md` (R4) eintragen
 - [ ] T059 [US1] C-Schnittstelle vollständig umsetzen (Stub aus T016 ersetzen) in `engine/src/ffi.rs` und `engine/src/ffi/android.rs`
 - [x] T060 [US1] Warnung über den Lautsprecher mit `rodio` in `engine/src/warning.rs`: spielt `warning.wav` sofort sowie nach 10 s und 30 s, ruft jeweils `vibrate` der nativen Schicht auf, endet bei Wiederverbindung oder `acknowledge_warning` (FR-005)

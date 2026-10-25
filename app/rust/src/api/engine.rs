@@ -5,14 +5,18 @@ use std::path::PathBuf;
 
 use flutter_rust_bridge::frb;
 use legato_core::score::musicxml_read::InvalidReason;
-use legato_engine::api::{Engine, MidiOutput, StartConfig};
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
+use legato_engine::api::MidiOutput;
+use legato_engine::api::{Engine, StartConfig};
 use legato_engine::storage::Settings;
 
 use crate::frb_generated::StreamSink;
 
 /// MIDI output until the native layer is connected (US 1).
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
 struct NoMidi;
 
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
 impl MidiOutput for NoMidi {
     fn connect(&mut self, _device: u32) {}
     fn disconnect(&mut self, _device: u32) {}
@@ -36,7 +40,11 @@ impl LegatoEngine {
             resource_dir: PathBuf::from(resource_dir),
             locale,
         };
-        let engine = Engine::start(config, Box::new(NoMidi)).map_err(|e| e.to_string())?;
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        let engine = Engine::start_desktop(config);
+        #[cfg(not(any(target_os = "windows", target_os = "linux")))]
+        let engine = Engine::start(config, Box::new(NoMidi));
+        let engine = engine.map_err(|e| e.to_string())?;
         Ok(LegatoEngine { engine })
     }
 

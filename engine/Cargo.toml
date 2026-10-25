@@ -14,5 +14,9 @@ serde.workspace = true
 serde_json.workspace = true
 
 # macOS, iOS and Android use the native MIDI layer (contracts/native-midi.md).
-[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 midir.workspace = true
+
+# WinRT lists Bluetooth MIDI devices paired in Windows (research.md R4).
+[target.'cfg(target_os = "windows")'.dependencies]
+midir = { workspace = true, features = ["winrt"] }
