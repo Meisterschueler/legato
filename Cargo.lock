@@ -806,6 +806,7 @@ name = "legato_app"
 version = "0.1.0"
 dependencies = [
  "flutter_rust_bridge",
+ "legato-core",
  "legato-engine",
  "serde_json",
 ]

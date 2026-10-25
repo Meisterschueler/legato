@@ -2,5 +2,14 @@
   "@@locale": "de",
   "appTitle": "Legato",
   "scorePlaceholder": "Hier erscheinen die Noten",
-  "midiInput": "MIDI-Eingabe"
+  "midiInput": "MIDI-Eingabe",
+  "repertoire": "Repertoire",
+  "loadFile": "Datei laden",
+  "pieceWithNumber": "{title} Nr. {number}",
+  "noFingering": "Ohne Fingersatz: Analysen, die einen Fingersatz voraussetzen, sind nicht verfügbar",
+  "invalidUnreadable": "Die Datei konnte nicht gelesen werden. Bitte eine MusicXML-Datei wählen (.musicxml, .xml oder .mxl).",
+  "invalidNotPartwise": "Dieses MusicXML-Format (score-timewise) wird nicht unterstützt. Bitte das Stück als score-partwise exportieren.",
+  "invalidNoPitchedNotes": "Die Datei enthält keine Noten.",
+  "invalidUnpairedRepeats": "Die Wiederholungszeichen der Datei sind nicht paarig.",
+  "invalidIncompatibleWithWork": "Die Datei passt nicht zur Spezifikation ihres Werks."
 }

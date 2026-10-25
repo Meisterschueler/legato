@@ -36,4 +36,42 @@ class EngineClient {
   ) async =>
       jsonDecode(await _engine.setSettings(json: jsonEncode(settings)))
           as Map<String, dynamic>;
+
+  /// `[PieceInfo]`: `{ id, work, title, number?, has_fingering, display_variants }`.
+  Future<List<Map<String, dynamic>>> repertoire() async =>
+      (jsonDecode(await _engine.repertoire()) as List)
+          .cast<Map<String, dynamic>>();
+
+  /// Returns the `PieceInfo`; throws [InvalidScoreFile] if the file is rejected.
+  Future<Map<String, dynamic>> loadPiece(String path) async {
+    try {
+      return jsonDecode(await _engine.loadPiece(path: path))
+          as Map<String, dynamic>;
+    } on String catch (reason) {
+      throw InvalidScoreFile(reason);
+    }
+  }
+
+  Future<String> renderScore(
+    String piece, {
+    int transposition = 0,
+    String variation = 'BothHands',
+    String displayVariant = 'Complete',
+  }) => _engine.renderScore(
+    piece: piece,
+    transposition: transposition,
+    variation: variation,
+    displayVariant: displayVariant,
+  );
+}
+
+/// `reason`: `unreadable`, `not_partwise`, `no_pitched_notes`, `unpaired_repeats`
+/// or `incompatible_with_work`.
+class InvalidScoreFile implements Exception {
+  const InvalidScoreFile(this.reason);
+
+  final String reason;
+
+  @override
+  String toString() => 'InvalidScoreFile($reason)';
 }

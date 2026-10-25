@@ -2,5 +2,20 @@
   "@@locale": "en",
   "appTitle": "Legato",
   "scorePlaceholder": "The score appears here",
-  "midiInput": "MIDI input"
+  "midiInput": "MIDI input",
+  "repertoire": "Repertoire",
+  "loadFile": "Load file",
+  "pieceWithNumber": "{title} No. {number}",
+  "@pieceWithNumber": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "number": {"type": "String"}
+    }
+  },
+  "noFingering": "No fingering: analyses that need fingering are not available",
+  "invalidUnreadable": "The file could not be read. Please choose a MusicXML file (.musicxml, .xml or .mxl).",
+  "invalidNotPartwise": "This MusicXML layout (score-timewise) is not supported. Please export the piece as score-partwise.",
+  "invalidNoPitchedNotes": "The file contains no notes.",
+  "invalidUnpairedRepeats": "The repeat signs in the file do not match up.",
+  "invalidIncompatibleWithWork": "The file does not match the specification of its work."
 }

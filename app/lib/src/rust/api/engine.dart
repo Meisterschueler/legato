@@ -4,7 +4,6 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `NoMidi`
@@ -20,6 +19,20 @@ abstract class LegatoEngine implements RustOpaqueInterface {
   Future<String> getSettings();
 
   Future<String> listInputs();
+
+  /// `PieceInfo` as JSON; the error is the reason code of `InvalidScoreFile`.
+  Future<String> loadPiece({required String path});
+
+  /// MusicXML for the display; `variation` and `display_variant` are enum names, e.g. `BothHands`, `Complete`.
+  Future<String> renderScore({
+    required String piece,
+    required int transposition,
+    required String variation,
+    required String displayVariant,
+  });
+
+  /// `[PieceInfo]` as JSON.
+  Future<String> repertoire();
 
   /// Returns the input state after the selection as JSON string.
   Future<String> selectInput({int? device});

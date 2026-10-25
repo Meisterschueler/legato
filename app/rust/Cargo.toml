@@ -13,6 +13,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
+legato-core.workspace = true
 legato-engine.workspace = true
 serde_json.workspace = true
 

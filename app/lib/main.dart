@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:legato/spike/score_view_spike.dart';
 import 'package:legato/src/engine/engine_client.dart';
 import 'package:legato/src/l10n/generated/app_localizations.dart';
@@ -22,10 +24,21 @@ Future<void> main() async {
   final dataDir = await getApplicationSupportDirectory();
   final engine = await EngineClient.start(
     dataDir: dataDir.path,
-    resourceDir: '',
+    resourceDir: await _bundledResources(dataDir.path),
     locale: PlatformDispatcher.instance.locale.toLanguageTag(),
   );
   runApp(LegatoApp(home: PracticeScreen(engine: engine)));
+}
+
+/// The engine reads bundled pieces from files; assets are not files on every platform.
+Future<String> _bundledResources(String dataDir) async {
+  final dir = '$dataDir/resources';
+  final hanon = File('$dir/pieces/hanon-01.musicxml');
+  await hanon.parent.create(recursive: true);
+  await hanon.writeAsString(
+    await rootBundle.loadString('assets/pieces/hanon-01.musicxml'),
+  );
+  return dir;
 }
 
 class LegatoApp extends StatelessWidget {

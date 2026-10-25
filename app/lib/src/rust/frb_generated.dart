@@ -5,14 +5,11 @@
 
 import 'api/engine.dart';
 import 'api/version.dart';
-
 import 'dart:async';
 import 'dart:convert';
-
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -70,7 +67,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -1005319665;
+  int get rustContentHash => 1548659922;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -93,6 +90,23 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<String> crateApiEngineLegatoEngineListInputs({
+    required LegatoEngine that,
+  });
+
+  Future<String> crateApiEngineLegatoEngineLoadPiece({
+    required LegatoEngine that,
+    required String path,
+  });
+
+  Future<String> crateApiEngineLegatoEngineRenderScore({
+    required LegatoEngine that,
+    required String piece,
+    required int transposition,
+    required String variation,
+    required String displayVariant,
+  });
+
+  Future<String> crateApiEngineLegatoEngineRepertoire({
     required LegatoEngine that,
   });
 
@@ -288,6 +302,130 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<String> crateApiEngineLegatoEngineLoadPiece({
+    required LegatoEngine that,
+    required String path,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLegatoEngine(
+            that,
+            serializer,
+          );
+          sse_encode_String(path, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiEngineLegatoEngineLoadPieceConstMeta,
+        argValues: [that, path],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiEngineLegatoEngineLoadPieceConstMeta =>
+      const TaskConstMeta(
+        debugName: "LegatoEngine_load_piece",
+        argNames: ["that", "path"],
+      );
+
+  @override
+  Future<String> crateApiEngineLegatoEngineRenderScore({
+    required LegatoEngine that,
+    required String piece,
+    required int transposition,
+    required String variation,
+    required String displayVariant,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLegatoEngine(
+            that,
+            serializer,
+          );
+          sse_encode_String(piece, serializer);
+          sse_encode_i_8(transposition, serializer);
+          sse_encode_String(variation, serializer);
+          sse_encode_String(displayVariant, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiEngineLegatoEngineRenderScoreConstMeta,
+        argValues: [that, piece, transposition, variation, displayVariant],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiEngineLegatoEngineRenderScoreConstMeta =>
+      const TaskConstMeta(
+        debugName: "LegatoEngine_render_score",
+        argNames: [
+          "that",
+          "piece",
+          "transposition",
+          "variation",
+          "displayVariant",
+        ],
+      );
+
+  @override
+  Future<String> crateApiEngineLegatoEngineRepertoire({
+    required LegatoEngine that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLegatoEngine(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiEngineLegatoEngineRepertoireConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiEngineLegatoEngineRepertoireConstMeta =>
+      const TaskConstMeta(
+        debugName: "LegatoEngine_repertoire",
+        argNames: ["that"],
+      );
+
+  @override
   Future<String> crateApiEngineLegatoEngineSelectInput({
     required LegatoEngine that,
     int? device,
@@ -304,7 +442,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 8,
             port: port_,
           );
         },
@@ -339,7 +477,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             serializer,
           );
           sse_encode_bool(foreground, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -375,7 +513,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 10,
             port: port_,
           );
         },
@@ -412,7 +550,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 11,
             port: port_,
           );
         },
@@ -440,7 +578,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -465,7 +603,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 13,
             port: port_,
           );
         },
@@ -544,6 +682,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int dco_decode_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  int dco_decode_i_8(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
   }
@@ -652,6 +796,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_u_32(deserializer));
+  }
+
+  @protected
+  int sse_decode_i_8(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt8();
   }
 
   @protected
@@ -785,6 +935,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_i_8(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt8(self);
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -865,6 +1021,28 @@ class LegatoEngineImpl extends RustOpaque implements LegatoEngine {
 
   Future<String> listInputs() =>
       RustLib.instance.api.crateApiEngineLegatoEngineListInputs(that: this);
+
+  /// `PieceInfo` as JSON; the error is the reason code of `InvalidScoreFile`.
+  Future<String> loadPiece({required String path}) => RustLib.instance.api
+      .crateApiEngineLegatoEngineLoadPiece(that: this, path: path);
+
+  /// MusicXML for the display; `variation` and `display_variant` are enum names, e.g. `BothHands`, `Complete`.
+  Future<String> renderScore({
+    required String piece,
+    required int transposition,
+    required String variation,
+    required String displayVariant,
+  }) => RustLib.instance.api.crateApiEngineLegatoEngineRenderScore(
+    that: this,
+    piece: piece,
+    transposition: transposition,
+    variation: variation,
+    displayVariant: displayVariant,
+  );
+
+  /// `[PieceInfo]` as JSON.
+  Future<String> repertoire() =>
+      RustLib.instance.api.crateApiEngineLegatoEngineRepertoire(that: this);
 
   /// Returns the input state after the selection as JSON string.
   Future<String> selectInput({int? device}) => RustLib.instance.api

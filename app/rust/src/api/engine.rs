@@ -4,6 +4,7 @@
 use std::path::PathBuf;
 
 use flutter_rust_bridge::frb;
+use legato_core::score::musicxml_read::InvalidReason;
 use legato_engine::api::{Engine, MidiOutput, StartConfig};
 use legato_engine::storage::Settings;
 
@@ -90,5 +91,41 @@ impl LegatoEngine {
 
     pub fn acknowledge_warning(&self) {
         self.engine.acknowledge_warning();
+    }
+
+    /// `[PieceInfo]` as JSON.
+    pub fn repertoire(&self) -> String {
+        serde_json::to_string(&self.engine.repertoire()).expect("pieces are serializable")
+    }
+
+    /// `PieceInfo` as JSON; the error is the reason code of `InvalidScoreFile`.
+    pub fn load_piece(&self, path: String) -> Result<String, String> {
+        let piece = self.engine.load_piece(path).map_err(|e| {
+            match e.reason {
+                InvalidReason::Unreadable(_) => "unreadable",
+                InvalidReason::NotPartwise => "not_partwise",
+                InvalidReason::NoPitchedNotes => "no_pitched_notes",
+                InvalidReason::UnpairedRepeats => "unpaired_repeats",
+                InvalidReason::IncompatibleWithWork(_) => "incompatible_with_work",
+            }
+            .to_owned()
+        })?;
+        Ok(serde_json::to_string(&piece).expect("pieces are serializable"))
+    }
+
+    /// MusicXML for the display; `variation` and `display_variant` are enum names, e.g. `BothHands`, `Complete`.
+    pub fn render_score(
+        &self,
+        piece: String,
+        transposition: i8,
+        variation: String,
+        display_variant: String,
+    ) -> Result<String, String> {
+        let variation = serde_json::from_value(variation.into()).map_err(|e| e.to_string())?;
+        let display_variant =
+            serde_json::from_value(display_variant.into()).map_err(|e| e.to_string())?;
+        self.engine
+            .render_score(&piece, transposition, variation, display_variant)
+            .ok_or_else(|| format!("cannot render piece {piece}"))
     }
 }
