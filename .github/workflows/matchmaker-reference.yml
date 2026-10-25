@@ -1,7 +1,14 @@
 name: Matchmaker reference
 
 # Generates testdata/matchmaker/ from the fixed Matchmaker commit (contracts/matchmaker-referenz.md).
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  # Dispatch only works for workflows on the default branch; a change to the tool runs it, too.
+  push:
+    paths:
+      - tools/matchmaker-reference/pyproject.toml
+      - tools/matchmaker-reference/generate.py
+      - .github/workflows/matchmaker-reference.yml
 
 permissions:
   contents: write
