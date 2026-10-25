@@ -26,8 +26,8 @@ class ScoreWebView {
         controller.webMessage.listen((m) => onMessage?.call(m as String)),
       ];
       // The page is a single file (score-view-web/vite.config.ts), so file:// works.
-      final url = File(Platform.resolvedExecutable).parent.uri
-          .resolve('data/flutter_assets/$_page');
+      final exe = File(Platform.resolvedExecutable);
+      final url = exe.parent.uri.resolve('data/flutter_assets/$_page');
       controller.initialize().then((_) => controller.loadUrl(url.toString()));
     } else {
       final controller = WebViewController()
@@ -64,10 +64,10 @@ class ScoreWebView {
   Widget build() {
     final windows = _windows;
     if (windows == null) return WebViewWidget(controller: _flutter!);
+    const empty = SizedBox.expand();
     return ValueListenableBuilder(
       valueListenable: windows,
-      builder: (_, value, _) =>
-          value.isInitialized ? win.Webview(windows) : const SizedBox.expand(),
+      builder: (_, v, _) => v.isInitialized ? win.Webview(windows) : empty,
     );
   }
 
