@@ -1,0 +1,25 @@
+name: Matchmaker reference
+
+# Generates testdata/matchmaker/ from the fixed Matchmaker commit (contracts/matchmaker-referenz.md).
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - name: Generate
+        working-directory: tools/matchmaker-reference
+        run: uv run --python 3.12 generate.py
+      - name: Commit
+        run: |
+          git add testdata/matchmaker tools/matchmaker-reference/uv.lock
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test(core): Matchmaker-Referenzdaten erzeugen (T032, T034)"
+          git push

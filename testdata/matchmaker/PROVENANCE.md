@@ -12,5 +12,10 @@ Daten in diesem Verzeichnis stammen aus [Matchmaker](https://github.com/pymatchm
 
 | Datei | Quelle in Matchmaker | Änderungen |
 |---|---|---|
+| `pieces/simple_mozart_k265_var1.{musicxml,mid,match}` | `matchmaker/assets/` (`EXAMPLE_PIECES["simple_mozart"]`) | keine |
+| `pieces/mozart_k265_var1.{musicxml,mid,match}` | `matchmaker/assets/` (`EXAMPLE_MATCH` u. a.) | keine |
+| `pieces/Bach-fugue_bwv_858.{musicxml,mid,match}` | `matchmaker/assets/` (`EXAMPLE_PIECES["bach_fugue"]`) | keine |
 
-Die Tabelle wird mit T032 gefüllt.
+## Erzeugte Dateien
+
+`expected/{piece}.{method}.json` und `expected/hanon-01.note_array.json` schreibt `generate.py` (Workflow „Matchmaker reference“).
