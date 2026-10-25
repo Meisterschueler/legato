@@ -72,10 +72,10 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 ### Notentext
 
-- [ ] T025 [P] Kern-Typen in `core/src/score/model.rs` laut [data-model.md](data-model.md#noten): `Work`, `Piece`, `Score`, `Onset`, `Note`, `NoteId`, `Section`, `Measure`, `Candidate`, `Variation`, `Hand`; Regeln wörtlich: `NoteId` = „`(measure, voice, index)`; stabil, wird in erzeugtes MusicXML geschrieben“; `pitch` = „MIDI-Notennummer, in C-Dur wie notiert“; `hand` = „aus Notensystem (unteres = links)“; `finger` = „1–5“; `successors` = „normal `index + 1`; am Ende eines Wiederholungsabschnitts zusätzlich dessen Anfang (FR-014)“
-- [ ] T026 [P] Testfälle für den MusicXML-Parser in `core/tests/musicxml_read.rs` mit Dateien in `testdata/legato/musicxml/`: `score-partwise`, `.mxl`, Akkorde, Haltebögen, Pausen, Fingersatz, Wiederholungen, zwei Systeme bzw. zwei Parts; Ablehnungsgründe laut [contracts/notendatei.md](contracts/notendatei.md#ablehnung-us-2-szenario-2)
-- [ ] T027 MusicXML-Parser für die Teilmenge laut [contracts/notendatei.md](contracts/notendatei.md) in `core/src/score/musicxml_read.rs` (quick-xml, zip); Fehler als `InvalidScoreFile { reason }`
-- [ ] T028 MusicXML-Writer mit Transposition und Noten-IDs `id="m{measure}-v{voice}-n{index}"` in `core/src/score/musicxml_write.rs` (Anzeigevarianten folgen in US3)
+- [x] T025 [P] Kern-Typen in `core/src/score/model.rs` laut [data-model.md](data-model.md#noten): `Work`, `Piece`, `Score`, `Onset`, `Note`, `NoteId`, `Section`, `Measure`, `Candidate`, `Variation`, `Hand`; Regeln wörtlich: `NoteId` = „`(measure, voice, index)`; stabil, nur intern“; `pitch` = „MIDI-Notennummer, in C-Dur wie notiert“; `hand` = „aus Notensystem (unteres = links)“; `finger` = „1–5“; `successors` = „normal `index + 1`; am Ende eines Wiederholungsabschnitts zusätzlich dessen Anfang (FR-014)“
+- [x] T026 [P] Testfälle für den MusicXML-Parser in `core/tests/musicxml_read.rs` mit Dateien in `testdata/legato/musicxml/`: `score-partwise`, `.mxl`, Akkorde, Haltebögen, Pausen, Fingersatz, Wiederholungen, zwei Systeme bzw. zwei Parts; Ablehnungsgründe laut [contracts/notendatei.md](contracts/notendatei.md#ablehnung-us-2-szenario-2)
+- [x] T027 MusicXML-Parser für die Teilmenge laut [contracts/notendatei.md](contracts/notendatei.md) in `core/src/score/musicxml_read.rs` (quick-xml, zip); Fehler als `InvalidScoreFile { reason }`
+- [x] T028 MusicXML-Writer mit Transposition in `core/src/score/musicxml_write.rs`; liefert zusätzlich die Zuordnung `NoteId` → Anzeige-ID `Takt/System/Einsatz/Tonhöhe` laut [contracts/engine-schnittstelle.md](contracts/engine-schnittstelle.md#nachrichten-an-score-view-web) (Anzeigevarianten folgen in US3)
 
 ### Werkregeln
 

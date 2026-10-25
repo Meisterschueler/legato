@@ -43,7 +43,7 @@ Alle gleichzeitig zu spielenden Noten.
 ### `Note`
 | Feld | Typ | Regel |
 |---|---|---|
-| `id` | `NoteId` | `(measure, voice, index)`; stabil, wird in erzeugtes MusicXML geschrieben |
+| `id` | `NoteId` | `(measure, voice, index)`; stabil, nur intern; die Oberfläche adressiert Noten über die Anzeige-ID ([contracts/engine-schnittstelle.md](contracts/engine-schnittstelle.md#nachrichten-an-score-view-web)) |
 | `pitch` | u8 | MIDI-Notennummer, in C-Dur wie notiert |
 | `hand` | `Left` \| `Right` | aus Notensystem (unteres = links) |
 | `finger` | u8? | 1–5 |

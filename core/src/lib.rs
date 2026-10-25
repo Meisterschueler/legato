@@ -3,5 +3,7 @@
 //! Pure logic without I/O, clock or randomness, so that app, backend and web app
 //! produce the same results (research.md R2).
 
+pub mod score;
+
 /// Version of the core; stored with every evaluation.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

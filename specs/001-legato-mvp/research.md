@@ -94,7 +94,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 ## R7 – Notendarstellung
 
 **Entscheidung**: Eigenständiges Web-Bundle `score-view-web/` (TypeScript) mit [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org) (BSD-3-Clause), in Flutter über `webview_flutter` eingebettet (iOS, Android, macOS).
-- Der Kern erzeugt für jede Kombination aus Tonart und Anzeigevariante ein MusicXML mit stabilen Noten-IDs; OSMD rendert nur.
+- Der Kern erzeugt für jede Kombination aus Tonart und Anzeigevariante ein MusicXML und die Zuordnung zu den Anzeige-IDs; OSMD rendert nur (OSMD liest keine `id`-Attribute, Spike S2).
 - Markierungen als SVG-Ebene über dem Notenbild; Positionsmarke und Scrollen mit `requestAnimationFrame`, Farbwechsel mit CSS-Übergängen (FR-023).
 - Kommunikation Dart ↔ Web-Bundle über eine kleine Nachrichtenschnittstelle (`postMessage`); dieselbe Schnittstelle nutzt später Tauri.
 

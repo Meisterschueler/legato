@@ -21,7 +21,7 @@ Framework-neutrale Schnittstelle von `legato-engine` (`engine/src/api.rs`). Flut
 | `reconnect` | – | `InputState` | FR-006 |
 | `load_piece` | `{ path }` | `PieceInfo` \| `InvalidScoreFile { reason }` | FR-008 |
 | `repertoire` | – | `[PieceInfo]` | US 2 |
-| `render_score` | `{ piece, transposition, variation, display_variant }` | MusicXML (String) mit Noten-IDs | FR-011 |
+| `render_score` | `{ piece, transposition, variation, display_variant }` | MusicXML (String); die Engine merkt sich die Zuordnung zu den Anzeige-IDs | FR-011 |
 | `get_settings` / `set_settings` | `Settings` | `Settings` | [data-model.md](../data-model.md#settings-einstellungen-persistiert) |
 
 `PieceInfo`: `{ id, work, title, number?, has_fingering, display_variants: [..] }`
@@ -54,7 +54,7 @@ Rückmeldungen des Bundles: `ready { note_ids }` (nach jedem `load`, IDs in Note
 
 Transport: Die Hülle ruft `legatoReceive(json)` im WebView auf; das Bundle antwortet über den JavaScript-Kanal `LegatoHost.postMessage(json)`.
 
-**Noten-ID** (inhaltsbasiert, von Engine und Bundle gleich berechnet): `Takt/System/Einsatz/Tonhöhe`, z. B. `3/1/1:4/60`: Taktindex ab 0 in Dokumentreihenfolge, Systemindex ab 0 (0 = oben), Einsatz innerhalb des Takts als gekürzter Bruch einer ganzen Note, MIDI-Tonhöhe.
+**Anzeige-ID** (inhaltsbasiert, von Engine und Bundle gleich aus dem gesendeten MusicXML berechnet, also nach Transposition und Anzeigevariante): `Takt/System/Einsatz/Tonhöhe`, z. B. `3/1/1:4/60`: Taktindex ab 0 in Dokumentreihenfolge, Systemindex ab 0 (0 = oben), Einsatz innerhalb des Takts als gekürzter Bruch einer ganzen Note, MIDI-Tonhöhe.
 
 ## Regeln
 

@@ -34,4 +34,4 @@ Fehlender Fingersatz ist kein Ablehnungsgrund (US 2, Szenario 3).
 
 ## Erzeugtes MusicXML für die Anzeige
 
-Der Kern erzeugt aus dem Notentext je Tonart und Anzeigevariante ein eigenes MusicXML. Jede `<note>` trägt das Attribut `id="m{measure}-v{voice}-n{index}"` (Takt, Stimme, Index), über das die Oberfläche Markierungen setzt. Gekürzte Anzeigevarianten enthalten an den Lücken die Anweisung `<words>simile</words>`.
+Der Kern erzeugt aus dem Notentext je Tonart und Anzeigevariante ein eigenes MusicXML und dazu die Zuordnung `NoteId` → Anzeige-ID ([engine-schnittstelle.md](engine-schnittstelle.md#nachrichten-an-score-view-web)), über die die Oberfläche Markierungen setzt. Gekürzte Anzeigevarianten enthalten an den Lücken die Anweisung `<words>simile</words>`.
