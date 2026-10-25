@@ -85,16 +85,16 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 ### Matchmaker-Referenz und Portierung (Spike S3)
 
-- [ ] T032 [P] Testdaten aus Matchmaker (`EXAMPLE_MATCH`, `simple_mozart`, `bach_fugue`) nach `testdata/matchmaker/pieces/` übernehmen und in `testdata/matchmaker/PROVENANCE.md` belegen
-- [ ] T033 `tools/matchmaker-reference/generate.py` laut [contracts/matchmaker-referenz.md](contracts/matchmaker-referenz.md): `note_array`, `intermediates`, `steps` für `pthmm`, `outerhmm`, `arzt`; zusätzlich `note_array` von partitura für `app/assets/pieces/hanon-01.musicxml`
-- [ ] T034 Erwartungsdateien erzeugen und unter `testdata/matchmaker/expected/` einchecken
+- [x] T032 [P] Testdaten aus Matchmaker (`EXAMPLE_MATCH`, `simple_mozart`, `bach_fugue`) nach `testdata/matchmaker/pieces/` übernehmen und in `testdata/matchmaker/PROVENANCE.md` belegen
+- [x] T033 `tools/matchmaker-reference/generate.py` laut [contracts/matchmaker-referenz.md](contracts/matchmaker-referenz.md): `note_array`, `intermediates`, `steps` für `pthmm`, `outerhmm`, `arzt`; zusätzlich `note_array` von partitura für `app/assets/pieces/hanon-01.musicxml`
+- [x] T034 Erwartungsdateien erzeugen und unter `testdata/matchmaker/expected/` einchecken
 - [ ] T035 [P] Parser-Test gegen partitura in `core/tests/musicxml_vs_partitura.rs` (Hanon Nr. 1 und Matchmaker-Stücke)
 - [ ] T036 Trait `ScoreFollower` in `core/src/following/mod.rs` und `Preprocessor` (Tonhöhe je Ton bzw. je Akkord wie bei Matchmaker) in `core/src/preprocessing.rs`; kompatibler Modus mit `note_array` als Eingabe
-- [ ] T037 Vergleichs-Hilfen in `core/tests/matchmaker/compare.rs`: liest Erwartungsdateien; Toleranzen „`intermediates` relativ 1e-6; `onset_index` ≥ 99 % der Schritte identisch, keine Abweichung > 1“
-- [ ] T038 [P] Tests aus `tests/test_prob_hmm.py` 1:1 (gleiche Namen und Prüfungen) nach `core/tests/matchmaker/prob_hmm.rs` übertragen, plus Vergleich mit `*.pthmm.json`
+- [x] T037 Vergleichs-Hilfen in `core/tests/matchmaker/compare.rs`: liest Erwartungsdateien; Toleranzen „`intermediates` relativ 1e-6; `onset_index` ≥ 99 % der Schritte identisch, keine Abweichung > 1“
+- [x] T038 [P] Tests aus `tests/test_prob_hmm.py` 1:1 (gleiche Namen und Prüfungen) nach `core/tests/matchmaker/prob_hmm.rs` übertragen, plus Vergleich mit `*.pthmm.json`
 - [ ] T039 [P] Tests aus `tests/test_prob_outer_product_hmm.py` nach `core/tests/matchmaker/outer_product_hmm.rs` übertragen, plus Vergleich mit `*.outerhmm.json`
 - [ ] T040 [P] Tests aus `tests/test_oltw_arzt.py` nach `core/tests/matchmaker/oltw_arzt.rs` übertragen, plus Vergleich mit `*.arzt.json`
-- [ ] T041 [P] `pthmm` nach `core/src/following/pthmm.rs` portieren (Herkunftshinweis Apache-2.0 im Dateikopf)
+- [x] T041 [P] `pthmm` nach `core/src/following/pthmm.rs` portieren (Herkunftshinweis Apache-2.0 im Dateikopf)
 - [ ] T042 [P] `outerhmm` nach `core/src/following/outer_hmm.rs` portieren (Herkunftshinweis)
 - [ ] T043 [P] `arzt` nach `core/src/following/arzt.rs` portieren (Herkunftshinweis)
 - [ ] T044 S3 Teil 1 auswerten: alle Vergleiche grün; Ergebnis als „Spike-Ergebnis S3“ in `specs/001-legato-mvp/research.md` (R8) eintragen

@@ -3,6 +3,7 @@
 //! Pure logic without I/O, clock or randomness, so that app, backend and web app
 //! produce the same results (research.md R2).
 
+pub mod following;
 pub mod score;
 pub mod works;
 
