@@ -4,6 +4,7 @@
 //! produce the same results (research.md R2).
 
 pub mod following;
+pub mod preprocessing;
 pub mod score;
 pub mod works;
 

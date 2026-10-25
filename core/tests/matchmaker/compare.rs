@@ -10,6 +10,9 @@ pub struct Expected {
     #[serde(default)]
     pub intermediates: Option<serde_json::Map<String, serde_json::Value>>,
     pub steps: Vec<Step>,
+    /// `[time, pitch]` of every note-on, in Matchmaker's order.
+    pub midi_note_ons: Vec<(f64, u8)>,
+    pub midi_end_time: f64,
 }
 
 #[derive(Deserialize)]

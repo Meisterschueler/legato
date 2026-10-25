@@ -3,4 +3,5 @@
 mod compare;
 mod oltw_arzt;
 mod outer_product_hmm;
+mod preprocessing;
 mod prob_hmm;

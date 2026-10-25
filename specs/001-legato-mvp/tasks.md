@@ -89,7 +89,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [x] T033 `tools/matchmaker-reference/generate.py` laut [contracts/matchmaker-referenz.md](contracts/matchmaker-referenz.md): `note_array`, `intermediates`, `steps` für `pthmm`, `outerhmm`, `arzt`; zusätzlich `note_array` von partitura für `app/assets/pieces/hanon-01.musicxml`
 - [x] T034 Erwartungsdateien erzeugen und unter `testdata/matchmaker/expected/` einchecken
 - [x] T035 [P] Parser-Test gegen partitura in `core/tests/musicxml_vs_partitura.rs` (Hanon Nr. 1 und Matchmaker-Stücke)
-- [ ] T036 Trait `ScoreFollower` in `core/src/following/mod.rs` und `Preprocessor` (Tonhöhe je Ton bzw. je Akkord wie bei Matchmaker) in `core/src/preprocessing.rs`; kompatibler Modus mit `note_array` als Eingabe
+- [x] T036 Trait `ScoreFollower` in `core/src/following/mod.rs` und `Preprocessor` (Tonhöhe je Ton bzw. je Akkord wie bei Matchmaker) in `core/src/preprocessing.rs`; kompatibler Modus mit `note_array` als Eingabe
 - [x] T037 Vergleichs-Hilfen in `core/tests/matchmaker/compare.rs`: liest Erwartungsdateien; Toleranzen „`intermediates` relativ 1e-6; `onset_index` ≥ 99 % der Schritte identisch, keine Abweichung > 1“
 - [x] T038 [P] Tests aus `tests/test_prob_hmm.py` 1:1 (gleiche Namen und Prüfungen) nach `core/tests/matchmaker/prob_hmm.rs` übertragen, plus Vergleich mit `*.pthmm.json`
 - [x] T039 [P] Tests aus `tests/test_prob_outer_product_hmm.py` nach `core/tests/matchmaker/outer_product_hmm.rs` übertragen, plus Vergleich mit `*.outerhmm.json`

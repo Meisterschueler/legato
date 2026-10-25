@@ -144,7 +144,7 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 
 **Spike-Ergebnis S3, Teil 1** (2026-10-25, Matchmaker `6c09490`): `pthmm`, `outerhmm` und `arzt` (Ereignis-Variante für MIDI) sind portiert (`core/src/following/`) und stimmen mit Matchmaker überein: Übergangsmatrizen, Anfangs- und Emissionswahrscheinlichkeiten sowie die Zustandswahrscheinlichkeiten jedes Schritts (`simple_mozart`) relativ auf 1e-6, die Positionen bei allen drei Stücken (`simple_mozart`, `mozart_k265_var1`, `bach_fugue`) zu 100 % identisch. Abweichungen vom Plan:
 - Werte unter 1e-12 gelten beim Vergleich als null (Unterlauf bei Wahrscheinlichkeiten um 1e-300 ist implementierungsabhängig).
-- Die Eingaben der Referenz sind die von Matchmaker aufbereiteten Beobachtungen (`steps[].input`); die Vorverarbeitung aus dem MIDI-Strom (Zeitfenster, Akkordbildung) ist noch nicht portiert (T036, `Preprocessor`).
+- Die Vorverarbeitung (`core/src/preprocessing.rs`) bildet aus den rohen Note-on-Ereignissen dieselben Beobachtungen wie Matchmaker: Fenster von 10 ms (`pthmm`) bzw. 1 ms (`outerhmm`), Akkorde innerhalb von 35 ms (`arzt`).
 - `test_oltw_arzt.py` enthält nur Tests der Audio-Variante; für `arzt` gibt es daher nur den Vergleich mit der Referenz.
 - Der MusicXML-Leser stimmt bei Hanon Nr. 1 und den drei Matchmaker-Stücken mit partitura überein (Anschläge und Tonhöhen).
 
