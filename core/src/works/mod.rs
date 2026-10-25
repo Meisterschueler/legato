@@ -7,7 +7,7 @@ pub mod hanon;
 use crate::score::model::{Candidate, Hand, Score};
 
 /// Display variants of the score (FR-011).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum DisplayVariant {
     Complete,
     /// First and last two measures of each direction, gaps marked *simile*.

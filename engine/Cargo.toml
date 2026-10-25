@@ -10,6 +10,7 @@ repository.workspace = true
 [dependencies]
 legato-core.workspace = true
 rodio.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 
 # macOS, iOS and Android use the native MIDI layer (contracts/native-midi.md).

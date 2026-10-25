@@ -146,7 +146,7 @@ pub struct Metadata {
     pub movement_number: Option<String>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Variation {
     BothHands,
     LeftHandOnly,
