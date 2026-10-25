@@ -6,11 +6,17 @@ void main() {
   const supported = [Locale('en'), Locale('de')];
 
   test('de-AT gives German', () {
-    expect(resolveLocale([const Locale('de', 'AT')], supported), const Locale('de'));
+    expect(
+      resolveLocale([const Locale('de', 'AT')], supported),
+      const Locale('de'),
+    );
   });
 
   test('fr-FR gives English', () {
-    expect(resolveLocale([const Locale('fr', 'FR')], supported), const Locale('en'));
+    expect(
+      resolveLocale([const Locale('fr', 'FR')], supported),
+      const Locale('en'),
+    );
   });
 
   test('the first supported preference wins', () {

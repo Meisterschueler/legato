@@ -31,7 +31,9 @@ class EngineClient {
   Future<Map<String, dynamic>> getSettings() async =>
       jsonDecode(await _engine.getSettings()) as Map<String, dynamic>;
 
-  Future<Map<String, dynamic>> setSettings(Map<String, dynamic> settings) async =>
+  Future<Map<String, dynamic>> setSettings(
+    Map<String, dynamic> settings,
+  ) async =>
       jsonDecode(await _engine.setSettings(json: jsonEncode(settings)))
           as Map<String, dynamic>;
 }
