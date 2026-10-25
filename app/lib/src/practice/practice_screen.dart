@@ -22,7 +22,11 @@ class PracticeScreen extends StatefulWidget {
 
 class _PracticeScreenState extends State<PracticeScreen> {
   String? _musicxml;
+
+  /// Piece and transposition of the shown score.
+  (String, int)? _shown;
   final _input = ValueNotifier<Map<String, dynamic>>({'state': 'Disconnected'});
+  final _scoreMessages = StreamController<Map<String, dynamic>>.broadcast();
   StreamSubscription<Map<String, dynamic>>? _events;
   StreamSubscription<Map<String, dynamic>>? _wakelock;
   LifecycleAdapter? _lifecycle;
@@ -32,13 +36,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
     super.initState();
     final engine = widget.engine;
     if (engine != null) {
-      _events = engine.events().listen((event) {
-        if (event['type'] == 'InputStateChanged') _input.value = event;
-      });
+      _events = engine.events().listen(_handle);
       _wakelock = keepScreenOn(engine);
       _lifecycle = LifecycleAdapter(engine, onDiscarded: _backgroundNotice);
     }
-    // shortcut: shows the first piece until the recognition (US 3) chooses it.
+    // Until the first performance is recognized, the first piece is shown.
     widget.engine?.repertoire().then((pieces) {
       if (pieces.isNotEmpty) _show(pieces.first['id'] as String);
     });
@@ -50,7 +52,30 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _wakelock?.cancel();
     _lifecycle?.dispose();
     _input.dispose();
+    _scoreMessages.close();
     super.dispose();
+  }
+
+  /// Engine events for the input symbol and the score (US 3 scenario 18).
+  void _handle(Map<String, dynamic> event) {
+    switch (event['type']) {
+      case 'InputStateChanged':
+        _input.value = event;
+      case 'PerformanceRecognized':
+        final piece = event['piece'] as String;
+        final transposition = event['transposition'] as int;
+        if (_shown == (piece, transposition)) {
+          _scoreMessages.add({'type': 'reset'});
+        } else {
+          _show(piece, transposition: transposition);
+        }
+      case 'Position':
+        _scoreMessages.add({
+          'type': 'position',
+          'note_ids': event['note_ids'],
+          'driver_time_us': event['driver_time_us'],
+        });
+    }
   }
 
   void _backgroundNotice() {
@@ -58,8 +83,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  Future<void> _show(String piece) async {
-    final musicxml = await widget.engine!.renderScore(piece);
+  Future<void> _show(String piece, {int transposition = 0}) async {
+    _shown = (piece, transposition);
+    final musicxml = await widget.engine!.renderScore(
+      piece,
+      transposition: transposition,
+    );
     if (mounted) setState(() => _musicxml = musicxml);
   }
 
@@ -101,7 +130,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       ),
       body: musicxml == null
           ? Center(child: Text(l10n.scorePlaceholder))
-          : ScoreView(musicxml: musicxml),
+          : ScoreView(musicxml: musicxml, messages: _scoreMessages.stream),
     );
   }
 }
