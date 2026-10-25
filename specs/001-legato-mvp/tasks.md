@@ -153,13 +153,13 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 ### Tests für User Story 2
 
 - [x] T067 [P] [US2] Tests in `engine/tests/repertoire.rs`: gültige Datei → `PieceInfo`; ungültige Datei → `InvalidScoreFile { reason }`; Datei ohne Fingersatz → `has_fingering = false`; neu installiert → Repertoire enthält genau Hanon Nr. 1 (FR-010); geladene Datei bleibt nach Neustart erhalten
-- [ ] T068 [P] [US2] Widget-Test in `app/test/repertoire_screen_test.dart`: Fehlermeldung verständlich, App bleibt bedienbar; Kennzeichnung fehlender Fingersatz
+- [x] T068 [P] [US2] Widget-Test in `app/test/repertoire_screen_test.dart`: Fehlermeldung verständlich, App bleibt bedienbar; Kennzeichnung fehlender Fingersatz
 
 ### Implementierung für User Story 2
 
 - [x] T069 [US2] Repertoire in `engine/src/repertoire.rs`: mitgeliefertes Hanon Nr. 1 aus `resource_dir`; geladene Dateien nach `data_dir/pieces/` kopieren; `Piece.id` = Hash des Dateiinhalts; `load_piece`, `repertoire`, `render_score` (ohne Anzeigevarianten) in `engine/src/api.rs`
-- [ ] T070 [US2] Repertoire-Bildschirm mit Dateiauswahl (`file_selector`) in `app/lib/src/repertoire/repertoire_screen.dart`; Fehlermeldungen aus den ARB-Dateien
-- [ ] T071 [US2] Notenblatt-Widget in `app/lib/src/score_view/score_view.dart`: bettet `score-view-web` im WebView ein, sendet `load` mit dem MusicXML aus `render_score`
+- [x] T070 [US2] Repertoire-Bildschirm mit Dateiauswahl (`file_selector`) in `app/lib/src/repertoire/repertoire_screen.dart`; Fehlermeldungen aus den ARB-Dateien
+- [x] T071 [US2] Notenblatt-Widget in `app/lib/src/score_view/score_view.dart`: bettet `score-view-web` im WebView ein, sendet `load` mit dem MusicXML aus `render_score`
 
 **Checkpoint**: Hanon Nr. 1 und eigene Dateien werden angezeigt; fehlerhafte Dateien werden verständlich abgelehnt.
 
