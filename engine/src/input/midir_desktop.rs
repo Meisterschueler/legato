@@ -73,10 +73,10 @@ impl Ports {
     }
 }
 
-/// shortcut: Bluetooth is recognized only by the WinRT id of BLE devices ("BTHLE");
-/// check with real devices in T105.
+/// shortcut: Bluetooth is recognized only by the WinRT port id of BLE devices
+/// (e.g. `\\?\SWD#MMDEVAPI#MIDII_3DF03567.BLE10#{...}`); extend for Linux if needed.
 fn transport(port_id: &str) -> Transport {
-    if port_id.to_ascii_uppercase().contains("BTHLE") {
+    if port_id.to_ascii_uppercase().contains(".BLE") {
         Transport::Bluetooth
     } else {
         Transport::Usb
@@ -208,7 +208,10 @@ mod tests {
     fn reports_changes_and_keeps_device_numbers() {
         let mut ports = Ports::default();
         let usb = port("usb-1", "Piano");
-        let ble = port(r"\\?\BTHLEDevice#{03b80e5a}_1", "WIDI");
+        let ble = port(
+            r"\\?\SWD#MMDEVAPI#MIDII_3DF03567.BLE10#{504be32c-ccf6-4d2c-b73f-6f8b3747e22b}",
+            "WIDI",
+        );
         assert_eq!(
             ports.update(vec![usb.clone(), ble.clone()]),
             vec![
