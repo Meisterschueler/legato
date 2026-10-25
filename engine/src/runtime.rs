@@ -11,7 +11,7 @@ use legato_core::performance::AbortReason;
 use legato_core::score::model::Variation;
 
 use crate::input::state::{Action, InputList, InputMachine, InputState, Status};
-use crate::session::{Outcome, PieceSetups, Session};
+use crate::session::{DeviationInfo, Outcome, PieceSetups, Session};
 use crate::storage::{Settings, Transport};
 use crate::warning::Speaker;
 
@@ -38,10 +38,11 @@ pub enum Event {
         note_ids: Vec<String>,
         driver_time_us: u64,
     },
-    // shortcut: `deviations` of the contract follow with T079.
+    DeviationDetected(DeviationInfo),
     PerformanceEnded {
         outcome: Outcome,
         reason: Option<AbortReason>,
+        deviations: Vec<DeviationInfo>,
     },
     PracticeSessionChanged {
         active: bool,

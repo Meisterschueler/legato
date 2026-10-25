@@ -3,6 +3,7 @@
 
 use std::collections::BTreeMap;
 
+use legato_core::following::deviations::{Deviation, DeviationKind};
 use legato_core::performance::{AbortReason, Event as Performance, Limits, Performances, Setup};
 use legato_core::preprocessing::{Grouping, Observation, Preprocessor, played_pitch};
 use legato_core::recognition::plays;
@@ -10,7 +11,7 @@ use legato_core::score::model::{Candidate, Score};
 use serde::Serialize;
 
 use crate::runtime::Event;
-use crate::storage::Settings;
+use crate::storage::{ErrorMarking, Settings};
 
 /// Observation windows of `pthmm` (research.md R8).
 const WINDOW: Grouping = Grouping::Window { period: 0.01 };
@@ -34,11 +35,24 @@ pub enum Outcome {
     Aborted,
 }
 
+/// A deviation as the interface reports it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct DeviationInfo {
+    pub kind: DeviationKind,
+    /// Display id of the expected note; not for additions.
+    pub note_id: Option<String>,
+    /// Played pitch; not for omissions.
+    pub pitch: Option<u8>,
+}
+
 pub(crate) struct Session {
     scores: BTreeMap<String, Score>,
     performances: Performances,
     preprocessor: Preprocessor,
     running: Option<Candidate>,
+    deviations: Vec<DeviationInfo>,
+    /// Error marking during the performance (FR-025).
+    marking: ErrorMarking,
     /// Arrival minus driver time of the last tone (µs); maps the engine clock onto driver time.
     offset_us: i64,
     last_tone_ms: u64,
@@ -82,6 +96,8 @@ impl Session {
             performances: Performances::new(setups, recognition_length, limits),
             preprocessor: Preprocessor::new(WINDOW),
             running: None,
+            deviations: Vec::new(),
+            marking: settings.error_marking_during,
             offset_us: 0,
             last_tone_ms: 0,
             ticked_ms: 0,
@@ -181,6 +197,7 @@ impl Session {
                     transposition: candidate.transposition,
                 };
                 self.running = Some(candidate);
+                self.deviations.clear();
                 event
             }
             Performance::Position(index) => {
@@ -196,13 +213,39 @@ impl Session {
                     driver_time_us: (time * 1e6) as u64,
                 }
             }
+            Performance::Deviation(deviation) => {
+                let info = self.info(deviation)?;
+                self.deviations.push(info.clone());
+                let marked = match info.kind {
+                    DeviationKind::Omission => self.marking.omission,
+                    DeviationKind::Substitution => self.marking.wrong_note,
+                    DeviationKind::Addition => self.marking.addition,
+                };
+                if !marked {
+                    return None;
+                }
+                Event::DeviationDetected(info)
+            }
             Performance::Completed => self.ended(Outcome::Completed, None),
             Performance::Aborted(reason) => self.ended(Outcome::Aborted, Some(reason)),
         })
     }
 
+    fn info(&self, deviation: Deviation) -> Option<DeviationInfo> {
+        let transposition = self.running.as_ref()?.transposition;
+        Some(DeviationInfo {
+            kind: deviation.kind,
+            note_id: deviation.note.map(|n| n.display_id(transposition)),
+            pitch: deviation.played,
+        })
+    }
+
     fn ended(&mut self, outcome: Outcome, reason: Option<AbortReason>) -> Event {
         self.running = None;
-        Event::PerformanceEnded { outcome, reason }
+        Event::PerformanceEnded {
+            outcome,
+            reason,
+            deviations: std::mem::take(&mut self.deviations),
+        }
     }
 }

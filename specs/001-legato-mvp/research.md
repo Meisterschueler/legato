@@ -147,6 +147,8 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 
 Die A-posteriori-Wahrscheinlichkeit der Kandidaten kommt aus der Evidenz je eines `pthmm` (gleichverteilte A-priori-Wahrscheinlichkeit), unabhängig vom eingestellten Folgeverfahren: `outerhmm` (Viterbi) und `arzt` liefern keine Evidenz. Der erkannte `pthmm` folgt weiter; bei anderem Folgeverfahren wird es mit den bisherigen Tönen gestartet (`core/src/recognition.rs`).
 
+Abweichungen (FR-012, FR-013) ordnet ein eigener Abgleich ein, nicht die Position des Folgeverfahrens: Nach einer Lücke springt `pthmm` kurz zu weit und meldete falsche Auslassungen. Jeder Ton sucht seine Note im aktuellen und den drei folgenden Anschlagszeitpunkten; übersprungene Noten sind Auslassungen, ein Ton bis 2 Halbtöne neben einer offenen Note ist ein falscher Ton, sonst ein Zusatzton. Das Folgeverfahren liefert den Startpunkt und setzt den Abgleich neu, wenn er weiter zurückliegt (`core/src/following/deviations.rs`).
+
 **Darstellung** (FR-023): Übergänge 150–400 ms; bei „Bewegung reduzieren“ (iOS `UIAccessibility.isReduceMotionEnabled`, Android „Animationen entfernen“, Web `prefers-reduced-motion`) Überblenden statt Bewegung.
 
 **Lizenz**: Portierter Code trägt einen Herkunftshinweis; `NOTICE` mit Verweis auf Matchmaker (Apache-2.0).

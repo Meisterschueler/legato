@@ -188,7 +188,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 ### Implementierung für User Story 3
 
 - [ ] T078 [US3] Wiederholungen als Kanten im Zustandsgraph (statt Auflösung) für alle drei Verfahren in `core/src/following/repeats.rs`
-- [ ] T079 [US3] Einordnung der Abweichungen (`Omission`, `Substitution`, `Addition` mit Note, Hand, Finger) in `core/src/following/deviations.rs`; in `engine/src/session.rs` das Ereignis `DeviationDetected` (nur wenn Fehlermarkierung während des Spiels an) und `deviations` in `PerformanceEnded`
+- [x] T079 [US3] Einordnung der Abweichungen (`Omission`, `Substitution`, `Addition` mit Note, Hand, Finger) in `core/src/following/deviations.rs`; in `engine/src/session.rs` das Ereignis `DeviationDetected` (nur wenn Fehlermarkierung während des Spiels an) und `deviations` in `PerformanceEnded`
 - [x] T080 [US3] Pedal-Filter (CC 64 verwerfen) in `core/src/preprocessing.rs` (FR-003)
 - [x] T081 [US3] Erkennung mit parallel verfolgten Kandidaten, Entscheidung über a-posteriori-Schwelle und Abstand zum Zweitbesten mit den Startwerten aus research.md R8 (≥ 4 Töne je Hand, ≥ 0,95, ≥ 20 : 1; spätestens nach der Erkennungslänge bei ≥ 0,5), spätestens nach der Erkennungslänge, in `core/src/recognition.rs`
 - [x] T082 [US3] Zustandsmaschine `PerformanceState` (`Recognizing`, `Running`, `Completed`, `Aborted`) mit `PauseLimit`, `RestLimit` und `AlignmentLoss` in `core/src/performance.rs` laut [data-model.md](data-model.md#performance-durchlauf)

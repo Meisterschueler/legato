@@ -1,6 +1,7 @@
 //! Score following (research.md R8): methods ported from Matchmaker.
 
 pub mod arzt;
+pub mod deviations;
 pub mod outer_hmm;
 pub mod pthmm;
 

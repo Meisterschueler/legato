@@ -2,12 +2,13 @@ use std::path::PathBuf;
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
+use legato_core::following::deviations::DeviationKind;
 use legato_core::performance::{AbortReason, Setup};
 use legato_core::score::model::{Candidate, Variation};
 use legato_core::score::musicxml_read::read;
 use legato_core::works::WorkRules;
 use legato_core::works::hanon::HanonRules;
-use legato_engine::api::{Engine, Event, MidiInput, Outcome, StartConfig};
+use legato_engine::api::{DeviationInfo, Engine, Event, MidiInput, Outcome, StartConfig};
 use legato_engine::input::sim::SimulatedPort;
 use legato_engine::storage::Transport;
 
@@ -105,7 +106,40 @@ fn performance_is_recognized_followed_and_completed() {
         seen.last(),
         Some(&Event::PerformanceEnded {
             outcome: Outcome::Completed,
-            reason: None
+            reason: None,
+            deviations: vec![],
+        })
+    );
+}
+
+/// FR-025: with marking during the performance on, a wrong note is reported at once.
+#[test]
+fn wrong_note_is_marked_and_listed_at_the_end() {
+    let (engine, events, _) = start("wrong");
+    let mut settings = engine.get_settings();
+    settings.error_marking_during.wrong_note = true;
+    engine.set_settings(settings).unwrap();
+    let mut notes = notes(Variation::RightHandOnly, 0);
+    notes[60].1 += 1;
+    play(&engine, &notes);
+    let seen = until(&events, |e| matches!(e, Event::PerformanceEnded { .. }));
+
+    let wrong = DeviationInfo {
+        kind: DeviationKind::Substitution,
+        note_id: seen.iter().find_map(|e| match e {
+            Event::DeviationDetected(d) => d.note_id.clone(),
+            _ => None,
+        }),
+        pitch: Some(notes[60].1),
+    };
+    assert!(wrong.note_id.is_some());
+    assert!(seen.contains(&Event::DeviationDetected(wrong.clone())));
+    assert_eq!(
+        seen.last(),
+        Some(&Event::PerformanceEnded {
+            outcome: Outcome::Completed,
+            reason: None,
+            deviations: vec![wrong],
         })
     );
 }
@@ -125,7 +159,8 @@ fn background_discards_the_running_performance() {
         [
             Event::PerformanceEnded {
                 outcome: Outcome::Aborted,
-                reason: Some(AbortReason::Interrupted)
+                reason: Some(AbortReason::Interrupted),
+                deviations: vec![],
             },
             Event::PracticeSessionChanged { active: false },
             Event::BackgroundNotice {

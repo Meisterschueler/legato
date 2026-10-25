@@ -75,6 +75,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
           'note_ids': event['note_ids'],
           'driver_time_us': event['driver_time_us'],
         });
+      // Additions have no note to mark.
+      case 'DeviationDetected' when event['note_id'] != null:
+        final missing = event['kind'] == 'Omission';
+        _scoreMessages.add({
+          'type': 'mark',
+          'note_id': event['note_id'],
+          'kind': missing ? 'missing' : 'wrong',
+        });
     }
   }
 

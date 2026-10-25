@@ -18,8 +18,8 @@ pub use crate::repertoire::PieceInfo;
 use crate::repertoire::Repertoire;
 pub use crate::runtime::{Event, MidiInput, MidiOutput};
 use crate::runtime::{Input, Runtime};
-pub use crate::session::Outcome;
 use crate::session::Session;
+pub use crate::session::{DeviationInfo, Outcome};
 use crate::storage::Settings;
 use crate::warning::Speaker;
 

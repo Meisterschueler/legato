@@ -3,11 +3,12 @@
 
 use std::collections::VecDeque;
 
+use crate::following::deviations::{Deviation, Deviations};
 use crate::following::pthmm::PitchHmm;
 use crate::following::{ReferenceNote, ScoreFollower};
 use crate::preprocessing::Observation;
 use crate::recognition::{Decision, Recognition, hands, plays};
-use crate::score::model::{Candidate, Score};
+use crate::score::model::{Candidate, Note, Score};
 use crate::works::Range;
 
 /// Share of the last tones that must be assigned (FR-021).
@@ -22,6 +23,8 @@ pub struct Expected {
     pub beat: f64,
     /// Transposed pitches of the candidate's hands.
     pub pitches: Vec<u8>,
+    /// The notes behind `pitches`, as notated.
+    pub notes: Vec<Note>,
     /// A notated rest precedes the onset (FR-020).
     pub rest_before: bool,
 }
@@ -39,16 +42,20 @@ impl Setup {
         let onsets = score.onsets[range.start as usize..=range.end as usize]
             .iter()
             .filter_map(|onset| {
-                let pitches: Vec<u8> = onset
+                let notes: Vec<Note> = onset
                     .notes
                     .iter()
                     .filter(|n| plays(candidate.variation, n.hand))
-                    .map(|n| n.pitch.saturating_add_signed(candidate.transposition))
+                    .cloned()
                     .collect();
-                (!pitches.is_empty()).then(|| Expected {
+                (!notes.is_empty()).then(|| Expected {
                     index: onset.index,
                     beat: onset.time.numerator as f64 / onset.time.denominator as f64,
-                    pitches,
+                    pitches: notes
+                        .iter()
+                        .map(|n| n.pitch.saturating_add_signed(candidate.transposition))
+                        .collect(),
+                    notes,
                     rest_before: score.rests_before.contains(&onset.index),
                 })
             })
@@ -91,6 +98,7 @@ pub enum Event {
     Recognized(Candidate),
     /// Score onset index of the current position.
     Position(u32),
+    Deviation(Deviation),
     Completed,
     Aborted(AbortReason),
 }
@@ -106,6 +114,7 @@ enum State {
         current: usize,
         /// Whether each of the last tones was assigned.
         recent: VecDeque<bool>,
+        deviations: Deviations,
     },
 }
 
@@ -162,9 +171,11 @@ impl Performances {
                         follower,
                         current: 0,
                         recent: VecDeque::new(),
+                        deviations: Deviations::new(&self.setups[setup].onsets),
                     };
                     let mut events = vec![Event::Recognized(candidate)];
-                    events.extend(self.follow(&[]));
+                    // The deciding tones are judged at the first position.
+                    events.extend(self.follow(&observation.pitches));
                     events
                 }
             },
@@ -218,6 +229,7 @@ impl Performances {
             follower,
             current,
             recent,
+            deviations,
         } = &mut self.state
         else {
             return Vec::new();
@@ -226,22 +238,27 @@ impl Performances {
         let beat = follower.score_positions()[follower.current_index()];
         // Inserted states between onsets match no onset.
         let found = onsets.iter().position(|o| o.beat == beat);
+        let (found_deviations, assigned) = deviations.step(onsets, found, pitches);
+        let mut events: Vec<Event> = found_deviations.into_iter().map(Event::Deviation).collect();
         let n = self.recognition_length * hands(self.setups[*setup].candidate.variation);
-        for pitch in pitches {
-            recent.push_back(found.is_some_and(|i| onsets[i].pitches.contains(pitch)));
+        for a in assigned {
+            recent.push_back(a);
             if recent.len() > n {
                 recent.pop_front();
             }
         }
         let assigned = recent.iter().filter(|a| **a).count();
         if recent.len() == n && (assigned as f64) < MIN_ASSIGNED * n as f64 {
-            return self.end(Event::Aborted(AbortReason::AlignmentLoss));
+            events.extend(self.end(Event::Aborted(AbortReason::AlignmentLoss)));
+            return events;
         }
         let Some(i) = found else {
-            return Vec::new();
+            return events;
         };
         *current = i;
-        let mut events = vec![Event::Position(onsets[i].index)];
+        events.push(Event::Position(onsets[i].index));
+        // shortcut: notes of the last onset still missing at completion are not judged, since the
+        // other hand may follow a few milliseconds later.
         if i == onsets.len() - 1 {
             events.extend(self.end(Event::Completed));
         }
