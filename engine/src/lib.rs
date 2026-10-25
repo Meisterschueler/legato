@@ -6,5 +6,6 @@ pub mod ffi;
 pub mod input;
 mod runtime;
 pub mod storage;
+mod warning;
 
 pub use legato_core::VERSION as CORE_VERSION;

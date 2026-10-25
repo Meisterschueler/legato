@@ -132,7 +132,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T057 [US1] Geräteverwaltung in `engine/src/input/registry.rs`: Geräte aus FFI bzw. `midir`, `list_inputs`, `select_input`, `reconnect`, `scan_bluetooth`; gewählte Eingabe in `Settings` speichern und beim Start wiederherstellen (FR-002)
 - [ ] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
 - [ ] T059 [US1] C-Schnittstelle vollständig umsetzen (Stub aus T016 ersetzen) in `engine/src/ffi.rs` und `engine/src/ffi/android.rs`
-- [ ] T060 [US1] Warnung über den Lautsprecher mit `rodio` in `engine/src/warning.rs`: spielt `warning.wav` sofort sowie nach 10 s und 30 s, ruft jeweils `vibrate` der nativen Schicht auf, endet bei Wiederverbindung oder `acknowledge_warning` (FR-005)
+- [x] T060 [US1] Warnung über den Lautsprecher mit `rodio` in `engine/src/warning.rs`: spielt `warning.wav` sofort sowie nach 10 s und 30 s, ruft jeweils `vibrate` der nativen Schicht auf, endet bei Wiederverbindung oder `acknowledge_warning` (FR-005)
 - [ ] T061 [US1] `LegatoMidi` in `app/ios/Runner/AppDelegate.swift` und `app/macos/Runner/AppDelegate.swift` registrieren; Audio-Session `playback` + `mixWithOthers`; `vibrate` (iPhone: `kSystemSoundID_Vibrate`, iPad: ohne Wirkung); `NSBluetoothAlwaysUsageDescription` in `app/ios/Runner/Info.plist`
 - [ ] T062 [US1] `legato-midi` in `app/android/app/src/main/kotlin/.../MainActivity.kt` registrieren; `vibrate` über `Vibrator`; Berechtigungen (inkl. `VIBRATE`) in `app/android/app/src/main/AndroidManifest.xml`
 - [ ] T063 [P] [US1] Eingabe-Symbol in `app/lib/src/input/input_symbol.dart` (Zustände laut US 1 Szenario 10, fließende Übergänge)

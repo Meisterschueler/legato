@@ -141,7 +141,7 @@ fn selected_input_warns_on_loss_reconnects_and_is_restored() {
         next_state(&events),
         (InputState::ConnectionLost, false, true)
     );
-    assert_eq!(port.calls(), vec![Call::Connect(3), Call::Warn]);
+    assert_eq!(port.calls(), vec![Call::Connect(3), Call::Vibrate]);
     engine.acknowledge_warning();
     assert_eq!(
         next_state(&events),

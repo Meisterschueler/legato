@@ -16,7 +16,7 @@ impl MidiOutput for NoMidi {
     fn connect(&mut self, _device: u32) {}
     fn disconnect(&mut self, _device: u32) {}
     fn send(&mut self, _device: u32, _data: &[u8]) {}
-    fn warn(&mut self) {}
+    fn vibrate(&mut self) {}
 }
 
 #[frb(opaque)]

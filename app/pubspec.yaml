@@ -30,6 +30,5 @@ flutter:
   generate: true
   assets:
     - assets/pieces/
-    - assets/warning.wav
     # Built by score-view-web (npm run build); in CI downloaded from the web job.
     - assets/score-view-web/

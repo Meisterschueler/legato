@@ -9,7 +9,7 @@ pub enum Call {
     Connect(u32),
     Disconnect(u32),
     Send(u32, Vec<u8>),
-    Warn,
+    Vibrate,
 }
 
 /// Clone it before handing it to the engine to inspect the calls.
@@ -40,7 +40,7 @@ impl MidiOutput for SimulatedPort {
             .push(Call::Send(device, data.to_vec()));
     }
 
-    fn warn(&mut self) {
-        self.calls.lock().unwrap().push(Call::Warn);
+    fn vibrate(&mut self) {
+        self.calls.lock().unwrap().push(Call::Vibrate);
     }
 }

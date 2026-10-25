@@ -9,6 +9,7 @@ use serde::Serialize;
 
 use crate::input::state::{Action, InputList, InputMachine, InputState, Status};
 use crate::storage::{Settings, Transport};
+use crate::warning::Speaker;
 
 /// Events of the engine (contracts/engine-schnittstelle.md#ereignisse-event).
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -48,8 +49,8 @@ pub trait MidiOutput: Send {
     fn connect(&mut self, device: u32);
     fn disconnect(&mut self, device: u32);
     fn send(&mut self, device: u32, data: &[u8]);
-    /// Warning sound over the device speaker plus vibration where available (FR-005).
-    fn warn(&mut self);
+    /// No-op without vibration motor (e.g. iPad).
+    fn vibrate(&mut self);
 }
 
 pub(crate) enum Input {
@@ -66,6 +67,7 @@ pub(crate) struct Runtime {
     pub data_dir: PathBuf,
     pub settings: Settings,
     pub output: Box<dyn MidiOutput>,
+    pub speaker: Speaker,
     pub events: Sender<Event>,
     pub input: InputMachine,
     pub started: Instant,
@@ -155,7 +157,10 @@ impl Runtime {
             match action {
                 Action::Connect(device) => self.output.connect(device),
                 Action::Disconnect(device) => self.output.disconnect(device),
-                Action::Warn => self.output.warn(),
+                Action::Warn => {
+                    self.speaker.play();
+                    self.output.vibrate();
+                }
             }
         }
     }

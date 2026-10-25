@@ -12,6 +12,7 @@ pub use crate::input::state::{InputInfo, InputList, InputState};
 pub use crate::runtime::{Event, MidiInput, MidiOutput};
 use crate::runtime::{Input, Runtime};
 use crate::storage::Settings;
+use crate::warning::Speaker;
 
 pub struct StartConfig {
     pub data_dir: PathBuf,
@@ -35,6 +36,7 @@ impl Engine {
             input: InputMachine::new(settings.midi_device.clone()),
             settings,
             output,
+            speaker: Speaker::start()?,
             events: events_sender,
             started: Instant::now(),
         };
