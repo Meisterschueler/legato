@@ -20,6 +20,7 @@ pub struct PitchHmm {
     pitch_profiles: Vec<[f64; PIANO_KEYS]>,
     forward: Option<Vec<f64>>,
     current_index: usize,
+    log_evidence: f64,
 }
 
 impl PitchHmm {
@@ -41,7 +42,13 @@ impl PitchHmm {
             score_positions,
             forward: None,
             current_index: 0,
+            log_evidence: 0.0,
         }
+    }
+
+    /// Log-likelihood of all observations so far (not in Matchmaker; for the recognition).
+    pub fn log_evidence(&self) -> f64 {
+        self.log_evidence
     }
 
     pub fn transition_matrix(&self) -> &[Vec<f64>] {
@@ -80,6 +87,7 @@ impl ScoreFollower for PitchHmm {
                 })
                 .collect(),
         };
+        let total: f64 = prior.iter().sum();
         let mut forward: Vec<f64> = prior
             .iter()
             .zip(&self.pitch_profiles)
@@ -92,7 +100,9 @@ impl ScoreFollower for PitchHmm {
                 likelihood * p
             })
             .collect();
-        let sum = forward.iter().sum::<f64>().max(1e-6);
+        let raw: f64 = forward.iter().sum();
+        self.log_evidence += raw.max(f64::MIN_POSITIVE).ln() - total.ln();
+        let sum = raw.max(1e-6);
         forward.iter_mut().for_each(|f| *f /= sum);
         self.current_index = argmax(&forward);
         self.forward = Some(forward);

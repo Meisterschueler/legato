@@ -5,6 +5,7 @@
 
 pub mod following;
 pub mod preprocessing;
+pub mod recognition;
 pub mod score;
 pub mod works;
 

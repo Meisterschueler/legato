@@ -84,6 +84,15 @@ impl Preprocessor {
     }
 }
 
+/// Pitch of a note-on in raw MIDI bytes; `None` for everything else, so the sustain pedal
+/// (CC 64, FR-003) and note-ons with velocity 0 (note-offs) never reach the followers.
+pub fn played_pitch(data: &[u8]) -> Option<u8> {
+    match data {
+        [status, pitch, velocity, ..] if status & 0xF0 == 0x90 && *velocity > 0 => Some(*pitch),
+        _ => None,
+    }
+}
+
 /// Window `k` holds `(k·p, (k+1)·p]`; window 0 also holds time 0.
 fn window_of(time: f64, period: f64) -> i64 {
     let mut k = (time / period).ceil() as i64 - 1;
@@ -99,6 +108,15 @@ fn window_of(time: f64, period: f64) -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_note_ons_are_played() {
+        assert_eq!(played_pitch(&[0x93, 60, 40]), Some(60));
+        assert_eq!(played_pitch(&[0x90, 60, 0]), None);
+        assert_eq!(played_pitch(&[0x80, 60, 40]), None);
+        assert_eq!(played_pitch(&[0xB0, 64, 127]), None);
+        assert_eq!(played_pitch(&[0x90, 60]), None);
+    }
 
     #[test]
     fn windows_include_their_end() {

@@ -145,6 +145,8 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 | Verhältnis zum zweitbesten Kandidaten | ≥ 20 : 1 |
 | Entscheidung spätestens nach der Erkennungslänge | bester Kandidat, wenn Wahrscheinlichkeit ≥ 0,5; sonst kein Durchlauf |
 
+Die A-posteriori-Wahrscheinlichkeit der Kandidaten kommt aus der Evidenz je eines `pthmm` (gleichverteilte A-priori-Wahrscheinlichkeit), unabhängig vom eingestellten Folgeverfahren: `outerhmm` (Viterbi) und `arzt` liefern keine Evidenz. Der erkannte `pthmm` folgt weiter; bei anderem Folgeverfahren wird es mit den bisherigen Tönen gestartet (`core/src/recognition.rs`).
+
 **Darstellung** (FR-023): Übergänge 150–400 ms; bei „Bewegung reduzieren“ (iOS `UIAccessibility.isReduceMotionEnabled`, Android „Animationen entfernen“, Web `prefers-reduced-motion`) Überblenden statt Bewegung.
 
 **Lizenz**: Portierter Code trägt einen Herkunftshinweis; `NOTICE` mit Verweis auf Matchmaker (Apache-2.0).
