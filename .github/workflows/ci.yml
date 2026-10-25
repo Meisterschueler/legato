@@ -346,3 +346,11 @@ jobs:
           path: app/build/windows/x64/runner/Debug
           if-no-files-found: error
           retention-days: 14
+      # Spike S2 on Windows (T106); local builds need Developer Mode for plugin symlinks.
+      - run: flutter build windows --debug --dart-define=SPIKE_S2=true
+      - uses: actions/upload-artifact@v7
+        with:
+          name: legato-s2-windows-x64-debug
+          path: app/build/windows/x64/runner/Debug
+          if-no-files-found: error
+          retention-days: 14
