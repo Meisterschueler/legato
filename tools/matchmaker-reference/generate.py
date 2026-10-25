@@ -5,19 +5,20 @@ testdata/matchmaker/pieces/ and writes testdata/matchmaker/expected/{piece}.{met
 """
 
 import json
-import shutil
+import urllib.request
 from pathlib import Path
 
 import numpy as np
 import partitura as pt
 from importlib.metadata import distribution
-from matchmaker import ASSETS_DIR, Matchmaker
+from matchmaker import Matchmaker
 from matchmaker.io.midi import MidiStream
 from matchmaker.io.queue import RECVQueue
 from matchmaker.io.stream import STREAM_END
 
 ROOT = Path(__file__).resolve().parents[2]
 TESTDATA = ROOT / "testdata" / "matchmaker"
+PIECES_DIR = TESTDATA / "pieces"
 PIECES = {
     "simple_mozart": "simple_mozart_k265_var1",
     "mozart_k265_var1": "mozart_k265_var1",
@@ -72,8 +73,9 @@ def intermediates(follower) -> dict:
     result = {}
     transition_model = getattr(follower, "transition_model", None)
     if transition_model is not None:
-        result["transition_matrix"] = plain(transition_model.transition_probabilities)
-        result["initial_probabilities"] = plain(transition_model.init_probabilities)
+        # The public properties switch between log and linear values; record the linear ones.
+        result["transition_matrix"] = plain(transition_model._transition_prob)
+        result["initial_probabilities"] = plain(transition_model._init_dist)
     observation_model = getattr(follower, "observation_model", None)
     if observation_model is not None and hasattr(observation_model, "pitch_profiles"):
         result["pitch_profiles"] = plain(observation_model.pitch_profiles)
@@ -92,7 +94,7 @@ def state(follower):
 
 def generate(piece: str, method: str, commit: str) -> dict:
     stem = PIECES[piece]
-    mm = Matchmaker(ASSETS_DIR / f"{stem}.musicxml", ASSETS_DIR / f"{stem}.mid",
+    mm = Matchmaker(PIECES_DIR / f"{stem}.musicxml", PIECES_DIR / f"{stem}.mid",
                     input_type="midi", method=method)
     follower = mm.score_follower
     full = piece in INTERMEDIATES_FOR
@@ -128,13 +130,14 @@ def generate(piece: str, method: str, commit: str) -> dict:
 
 def main() -> None:
     commit = matchmaker_commit()
-    pieces_dir = TESTDATA / "pieces"
     expected_dir = TESTDATA / "expected"
-    pieces_dir.mkdir(parents=True, exist_ok=True)
+    PIECES_DIR.mkdir(parents=True, exist_ok=True)
     expected_dir.mkdir(parents=True, exist_ok=True)
+    # The installed package has no assets; take them from the repository at the same commit.
+    base = f"https://raw.githubusercontent.com/pymatchmaker/matchmaker/{commit}/matchmaker/assets"
     for stem in PIECES.values():
         for suffix in [".musicxml", ".mid", ".match"]:
-            shutil.copy(ASSETS_DIR / f"{stem}{suffix}", pieces_dir)
+            urllib.request.urlretrieve(f"{base}/{stem}{suffix}", PIECES_DIR / f"{stem}{suffix}")
 
     for piece in PIECES:
         for method in METHODS:
