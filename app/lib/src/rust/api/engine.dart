@@ -12,10 +12,17 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LegatoEngine>>
 abstract class LegatoEngine implements RustOpaqueInterface {
+  Future<void> acknowledgeWarning();
+
   /// Events as JSON objects with a `type` field; can be subscribed once.
   Stream<String> events();
 
   Future<String> getSettings();
+
+  Future<String> listInputs();
+
+  /// Returns the input state after the selection as JSON string.
+  Future<String> selectInput({int? device});
 
   void setForeground({required bool foreground});
 
