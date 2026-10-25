@@ -4,6 +4,7 @@
 //! produce the same results (research.md R2).
 
 pub mod score;
+pub mod works;
 
 /// Version of the core; stored with every evaluation.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -1,0 +1,95 @@
+//! Hanon, part 1 (docs/werke/hanon.md).
+
+use super::generic::VARIATIONS;
+use super::{DisplayVariant, Range, WorkRules};
+use crate::score::model::{Candidate, Hand, Score};
+
+pub struct HanonRules;
+
+impl HanonRules {
+    /// "Ascending" and "Descending": first and second half of the measures of the repeat
+    /// section (with an odd count, descending has one measure more).
+    pub fn directions(&self, score: &Score) -> [Range; 2] {
+        let section = self.performance_range(score);
+        let measure = |index: u32| score.onsets[index as usize].notes[0].id.measure;
+        let first = measure(section.start);
+        let measures = measure(section.end) + 1 - first;
+        let half = measures / 2;
+        let split = (section.start..=section.end)
+            .find(|&i| measure(i) >= first + half)
+            .unwrap_or(section.end + 1);
+        [
+            Range {
+                start: section.start,
+                end: split - 1,
+            },
+            Range {
+                start: split,
+                end: section.end,
+            },
+        ]
+    }
+
+    /// First notated pitch of `hand`.
+    fn first_pitch(score: &Score, hand: Hand) -> Option<u8> {
+        score
+            .onsets
+            .iter()
+            .flat_map(|o| &o.notes)
+            .find(|n| n.hand == hand)
+            .map(|n| n.pitch)
+    }
+}
+
+impl WorkRules for HanonRules {
+    fn work_id(&self) -> &'static str {
+        "hanon"
+    }
+
+    fn check(&self, score: &Score) -> Result<(), String> {
+        if score.sections.is_empty() {
+            return Err("Hanon, Teil 1: Wiederholungsabschnitt fehlt".into());
+        }
+        Ok(())
+    }
+
+    fn candidates(&self, piece: &str) -> Vec<Candidate> {
+        VARIATIONS
+            .iter()
+            .flat_map(|&variation| {
+                (0..12).map(move |transposition| Candidate {
+                    piece: piece.to_owned(),
+                    variation,
+                    transposition,
+                })
+            })
+            .collect()
+    }
+
+    /// The repeat section, without "Ende".
+    fn performance_range(&self, score: &Score) -> Range {
+        let section = &score.sections[0];
+        Range {
+            start: section.start,
+            end: section.end,
+        }
+    }
+
+    fn display_variants(&self) -> Vec<DisplayVariant> {
+        vec![
+            DisplayVariant::Complete,
+            DisplayVariant::Abbreviated,
+            DisplayVariant::FirstMeasures,
+            DisplayVariant::FirstMeasure,
+        ]
+    }
+
+    /// Both hands are transposed by the same 0–11 half tones and notated an octave apart,
+    /// so the possible first tones of the hands do not overlap.
+    fn hand_from_position(&self, score: &Score, first_pitch: u8) -> Option<Hand> {
+        [Hand::Left, Hand::Right].into_iter().find(|&hand| {
+            Self::first_pitch(score, hand)
+                .is_some_and(|start| (start..start.saturating_add(12)).contains(&first_pitch))
+        })
+    }
+}

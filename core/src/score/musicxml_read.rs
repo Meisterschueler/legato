@@ -16,6 +16,8 @@ pub enum InvalidReason {
     NotPartwise,
     NoPitchedNotes,
     UnpairedRepeats,
+    /// A work rule recognises the file as incompatible with the work specification.
+    IncompatibleWithWork(String),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

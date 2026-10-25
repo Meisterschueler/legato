@@ -79,9 +79,9 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 ### Werkregeln
 
-- [ ] T029 Trait `WorkRules` (zulässige Kandidaten, Erkennungslänge, Grenzen eines Durchlaufs, Anzeigevarianten, Hand aus Lage) und allgemeine Regeln in `core/src/works/mod.rs` und `core/src/works/generic.rs`: „keine Transposition, Durchlauf = gesamtes Stück, Erkennungslänge 8 Töne je Hand, nur Anzeigevariante ‚komplett‘“
-- [ ] T030 [P] Tests für die Hanon-Regeln in `core/tests/works_hanon.rs`: Transposition 0–11 Halbtöne für beide Hände gleich; Lage eindeutig aus Tonart; Durchlauf = Wiederholungsabschnitt ohne „Ende“; „Aufwärts“/„Abwärts“ = erste/zweite Hälfte der Takte; Erkennungslänge 8 Töne je Hand; einhändig: Hand aus Lage, Einschränkung (FR-018) hat Vorrang
-- [ ] T031 Hanon-Regeln in `core/src/works/hanon.rs` und Erkennung des Werks aus Metadaten in `core/src/works/detect.rs`
+- [x] T029 Trait `WorkRules` (zulässige Kandidaten, Erkennungslänge, Grenzen eines Durchlaufs, Anzeigevarianten, Hand aus Lage) und allgemeine Regeln in `core/src/works/mod.rs` und `core/src/works/generic.rs`: „keine Transposition, Durchlauf = gesamtes Stück, Erkennungslänge 8 Töne je Hand, nur Anzeigevariante ‚komplett‘“
+- [x] T030 [P] Tests für die Hanon-Regeln in `core/tests/works_hanon.rs`: Transposition 0–11 Halbtöne für beide Hände gleich; Lage eindeutig aus Tonart; Durchlauf = Wiederholungsabschnitt ohne „Ende“; „Aufwärts“/„Abwärts“ = erste/zweite Hälfte der Takte; Erkennungslänge 8 Töne je Hand; einhändig: Hand aus Lage, Einschränkung (FR-018) hat Vorrang
+- [x] T031 Hanon-Regeln in `core/src/works/hanon.rs` und Erkennung des Werks aus Metadaten in `core/src/works/detect.rs`
 
 ### Matchmaker-Referenz und Portierung (Spike S3)
 
