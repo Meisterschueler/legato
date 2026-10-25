@@ -1,25 +1,46 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:legato/spike/score_view_spike.dart';
+import 'package:legato/src/engine/engine_client.dart';
+import 'package:legato/src/l10n/generated/app_localizations.dart';
+import 'package:legato/src/l10n/locale_resolution.dart';
+import 'package:legato/src/practice/practice_screen.dart';
 import 'package:legato/src/rust/frb_generated.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// `--dart-define=SPIKE_S2=true` starts the WebView spike instead of the app.
 const _spikeS2 = bool.fromEnvironment('SPIKE_S2');
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
-  runApp(const LegatoApp());
+  if (_spikeS2) {
+    runApp(const LegatoApp(home: ScoreViewSpike()));
+    return;
+  }
+  final dataDir = await getApplicationSupportDirectory();
+  final engine = await EngineClient.start(
+    dataDir: dataDir.path,
+    resourceDir: '',
+    locale: PlatformDispatcher.instance.locale.toLanguageTag(),
+  );
+  runApp(LegatoApp(home: PracticeScreen(engine: engine)));
 }
 
 class LegatoApp extends StatelessWidget {
-  const LegatoApp({super.key});
+  const LegatoApp({super.key, required this.home});
+
+  final Widget home;
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Legato',
-      home: _spikeS2
-          ? ScoreViewSpike()
-          : Scaffold(body: Center(child: Text('Legato'))),
+    return MaterialApp(
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localeListResolutionCallback: resolveLocale,
+      home: home,
     );
   }
 }

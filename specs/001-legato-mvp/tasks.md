@@ -106,10 +106,10 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [x] T047 [P] Tests für `Settings` in `engine/tests/storage.rs`: Standardwerte wörtlich laut [data-model.md](data-model.md#settings-einstellungen-persistiert) (u. a. `pause_limit_ms` 4000, `rest_limit_ms` 10000, `ok_signal` `WhenStopped`, `abort_signal` `Immediately`, `connect_signal` `On`, Fehlermarkierung aus); Speichern und Laden als JSON in `data_dir`
 - [x] T048 `Settings` und Speicherung in `engine/src/storage.rs`; `get_settings`/`set_settings` in `engine/src/api.rs`; Änderungen wirken ab dem nächsten Durchlauf
 - [x] T049 [P] Simulierter MIDI-Port für Tests in `engine/src/input/sim.rs` (Gerät hinzu/weg, Nachrichten mit Zeitstempel, gesendete Nachrichten mitschneiden)
-- [ ] T050 Engine-Schnittstelle über `flutter_rust_bridge` in `app/rust/src/api.rs` freigeben; Dart-Wrapper ohne Fachlogik in `app/lib/src/engine/engine_client.dart`
-- [ ] T051 [P] Mehrsprachigkeit: `app/l10n.yaml`, `app/l10n/app_en.arb`, `app/l10n/app_de.arb`; Sprache aus der Regionseinstellung, Englisch als Fallback für nicht unterstützte Sprachen und einzelne fehlende Texte (NFR-006) in `app/lib/src/l10n/locale_resolution.dart`
-- [ ] T052 [P] Test für NFR-006 in `app/test/locale_resolution_test.dart`: `de-AT` → Deutsch, `fr-FR` → Englisch
-- [ ] T053 App-Gerüst in `app/lib/main.dart` und `app/lib/src/practice/practice_screen.dart`: Engine starten (`data_dir` über `path_provider`), Platz für Notenblatt und Eingabe-Symbol
+- [x] T050 Engine-Schnittstelle über `flutter_rust_bridge` in `app/rust/src/api.rs` freigeben; Dart-Wrapper ohne Fachlogik in `app/lib/src/engine/engine_client.dart`
+- [x] T051 [P] Mehrsprachigkeit: `app/l10n.yaml`, `app/l10n/app_en.arb`, `app/l10n/app_de.arb`; Sprache aus der Regionseinstellung, Englisch als Fallback für nicht unterstützte Sprachen und einzelne fehlende Texte (NFR-006) in `app/lib/src/l10n/locale_resolution.dart`
+- [x] T052 [P] Test für NFR-006 in `app/test/locale_resolution_test.dart`: `de-AT` → Deutsch, `fr-FR` → Englisch
+- [x] T053 App-Gerüst in `app/lib/main.dart` und `app/lib/src/practice/practice_screen.dart`: Engine starten (`data_dir` über `path_provider`), Platz für Notenblatt und Eingabe-Symbol
 
 **Checkpoint**: Kern parst Hanon Nr. 1, Werkregeln und portierte Verfahren sind gegen Matchmaker geprüft, Engine läuft hinter der Flutter-Hülle.
 

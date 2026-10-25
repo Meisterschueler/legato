@@ -2,6 +2,7 @@
 
 use std::io;
 use std::path::PathBuf;
+use std::sync::Mutex;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 
@@ -17,7 +18,7 @@ pub struct StartConfig {
 
 pub struct Engine {
     inputs: Sender<Input>,
-    events: Receiver<Event>,
+    events: Mutex<Option<Receiver<Event>>>,
 }
 
 impl Engine {
@@ -35,12 +36,15 @@ impl Engine {
         thread::Builder::new()
             .name("legato-engine".into())
             .spawn(move || runtime.run(receiver))?;
-        Ok(Engine { inputs, events })
+        Ok(Engine {
+            inputs,
+            events: Mutex::new(Some(events)),
+        })
     }
 
-    /// Events in the order they occur.
-    pub fn events(&self) -> &Receiver<Event> {
-        &self.events
+    /// The event stream, in the order the events occur; there is one stream per engine.
+    pub fn take_events(&self) -> Option<Receiver<Event>> {
+        self.events.lock().unwrap_or_else(|e| e.into_inner()).take()
     }
 
     pub fn set_foreground(&self, foreground: bool) {

@@ -27,8 +27,10 @@ fn start(name: &str) -> (Engine, SimulatedPort, PathBuf) {
 #[test]
 fn starts_disconnected_and_reports_background() {
     let (engine, _, _) = start("events");
+    let events = engine.take_events().unwrap();
+    assert!(engine.take_events().is_none());
     assert_eq!(
-        engine.events().recv_timeout(TIMEOUT).unwrap(),
+        events.recv_timeout(TIMEOUT).unwrap(),
         Event::InputStateChanged {
             state: InputState::Disconnected,
             device: None,
@@ -38,7 +40,7 @@ fn starts_disconnected_and_reports_background() {
     );
     engine.set_foreground(false);
     assert_eq!(
-        engine.events().recv_timeout(TIMEOUT).unwrap(),
+        events.recv_timeout(TIMEOUT).unwrap(),
         Event::BackgroundNotice {
             performance_discarded: false
         }
