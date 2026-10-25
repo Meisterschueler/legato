@@ -15,6 +15,7 @@ from matchmaker import Matchmaker
 from matchmaker.io.midi import MidiStream
 from matchmaker.io.queue import RECVQueue
 from matchmaker.io.stream import STREAM_END
+from matchmaker.utils.symbolic import midi_messages_from_performance
 
 ROOT = Path(__file__).resolve().parents[2]
 TESTDATA = ROOT / "testdata" / "matchmaker"
@@ -110,6 +111,13 @@ def generate(piece: str, method: str, commit: str) -> dict:
     reference = mm.reference_features
     if isinstance(reference, np.ndarray) and reference.dtype.names is None:
         result["reference_features"] = [pitches(row) for row in reference]
+    # Raw input of the stream, in Matchmaker's order, for the preprocessor (T036).
+    messages, times = midi_messages_from_performance(mm.performance_file)
+    result["midi_note_ons"] = [
+        [float(t), int(m.note)] for m, t in zip(messages, times)
+        if m.type == "note_on" and m.velocity > 0
+    ]
+    result["midi_end_time"] = float(times.max())
     if full:
         result["intermediates"] = intermediates(follower)
     steps = []
