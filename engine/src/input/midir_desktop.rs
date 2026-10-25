@@ -1,7 +1,7 @@
 //! MIDI on Windows and Linux with `midir` inside the engine (research.md R4).
 //! A thread polls the input ports every 250 ms; the runtime connects through `MidiOutput`.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex, MutexGuard, Weak};
@@ -27,6 +27,8 @@ struct Ports {
     /// Port id → device number; stable while the engine runs.
     numbers: BTreeMap<String, u32>,
     present: BTreeMap<u32, Port>,
+    /// Devices the runtime connected; an opening that finishes later is kept only for these.
+    wanted: BTreeSet<u32>,
     inputs: BTreeMap<u32, MidiInputConnection<()>>,
     outputs: BTreeMap<u32, MidiOutputConnection>,
 }
@@ -138,50 +140,49 @@ fn poll(ports: Weak<Mutex<Ports>>, inputs: Sender<Input>) {
 }
 
 impl MidiOutput for DesktopMidi {
+    /// Opens in the background: WinRT blocks for Bluetooth devices that are paired but not
+    /// reachable, and the runtime must not wait for that.
+    /// shortcut: such an opening never returns and its thread stays blocked; replace when
+    /// Bluetooth on Windows gets its own connection handling (T105).
     fn connect(&mut self, device: u32) {
-        let inputs = self.inputs.clone();
-        let mut ports = self.ports();
-        let Some(port) = ports.present.get(&device).cloned() else {
+        let Some(port) = self.ports().present.get(&device).cloned() else {
             return;
         };
-        let input = midir::MidiInput::new(CLIENT_NAME)
-            .ok()
-            .and_then(|mut midi| {
-                // Active sensing would count as "receiving".
-                midi.ignore(Ignore::All);
-                let found = midi.find_port_by_id(&port.id)?;
-                midi.connect(
-                    &found,
-                    CLIENT_NAME,
-                    move |time_us, data, _| {
-                        let _ = inputs.send(Input::Midi(MidiInput::Message {
-                            device,
-                            time_us,
-                            data: data.to_vec(),
-                        }));
-                    },
-                    (),
-                )
-                .ok()
+        self.ports().wanted.insert(device);
+        let ports = Arc::downgrade(&self.ports);
+        let inputs = self.inputs.clone();
+        let _ = thread::Builder::new()
+            .name("legato-midir-open".into())
+            .spawn(move || {
+                let (input, output) = open(device, &port, inputs);
+                let Some(ports) = ports.upgrade() else {
+                    return;
+                };
+                let mut ports = ports.lock().unwrap_or_else(|e| e.into_inner());
+                let keep = ports.wanted.contains(&device)
+                    && ports.present.contains_key(&device)
+                    && !ports.inputs.contains_key(&device);
+                if let Some(connection) = input {
+                    if keep {
+                        ports.inputs.insert(device, connection);
+                    } else {
+                        connection.close();
+                    }
+                }
+                if let Some(connection) = output {
+                    if keep {
+                        ports.outputs.insert(device, connection);
+                    } else {
+                        connection.close();
+                    }
+                }
             });
-        // The output for the signals (US 4) is the port with the same name.
-        let output = midir::MidiOutput::new(CLIENT_NAME).ok().and_then(|midi| {
-            let found = midi
-                .ports()
-                .into_iter()
-                .find(|p| midi.port_name(p).is_ok_and(|name| name == port.name))?;
-            midi.connect(&found, CLIENT_NAME).ok()
-        });
-        if let Some(connection) = input {
-            ports.inputs.insert(device, connection);
-        }
-        if let Some(connection) = output {
-            ports.outputs.insert(device, connection);
-        }
     }
 
     fn disconnect(&mut self, device: u32) {
-        self.ports().close(device);
+        let mut ports = self.ports();
+        ports.wanted.remove(&device);
+        ports.close(device);
     }
 
     fn send(&mut self, device: u32, data: &[u8]) {
@@ -191,6 +192,45 @@ impl MidiOutput for DesktopMidi {
     }
 
     fn vibrate(&mut self) {}
+}
+
+fn open(
+    device: u32,
+    port: &Port,
+    inputs: Sender<Input>,
+) -> (
+    Option<MidiInputConnection<()>>,
+    Option<MidiOutputConnection>,
+) {
+    let input = midir::MidiInput::new(CLIENT_NAME)
+        .ok()
+        .and_then(|mut midi| {
+            // Active sensing would count as "receiving".
+            midi.ignore(Ignore::All);
+            let found = midi.find_port_by_id(&port.id)?;
+            midi.connect(
+                &found,
+                CLIENT_NAME,
+                move |time_us, data, _| {
+                    let _ = inputs.send(Input::Midi(MidiInput::Message {
+                        device,
+                        time_us,
+                        data: data.to_vec(),
+                    }));
+                },
+                (),
+            )
+            .ok()
+        });
+    // The output for the signals (US 4) is the port with the same name.
+    let output = midir::MidiOutput::new(CLIENT_NAME).ok().and_then(|midi| {
+        let found = midi
+            .ports()
+            .into_iter()
+            .find(|p| midi.port_name(p).is_ok_and(|name| name == port.name))?;
+        midi.connect(&found, CLIENT_NAME).ok()
+    });
+    (input, output)
 }
 
 #[cfg(test)]

@@ -57,6 +57,8 @@ fn main() {
             input.ignore(Ignore::All);
             let port = input.find_port_by_id(id).expect("port just listed");
             let mut first: Option<i128> = None;
+            // WinRT may block here for Bluetooth devices that are paired but not reachable.
+            println!("{:>8} ms  connecting to {name} ...", ms());
             match input.connect(
                 &port,
                 "Legato probe",
