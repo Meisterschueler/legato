@@ -73,7 +73,9 @@ fn valid_and_invalid_files_are_loaded_and_rejected() {
 
     let no_fingering = data_dir.join("no-fingering.musicxml");
     let xml = fs::read(resource_dir().join("pieces/hanon-01.musicxml")).unwrap();
-    let xml = String::from_utf8(xml).unwrap().replace("<fingering>", "<dummy>")
+    let xml = String::from_utf8(xml)
+        .unwrap()
+        .replace("<fingering>", "<dummy>")
         .replace("</fingering>", "</dummy>");
     fs::write(&no_fingering, xml).unwrap();
 
@@ -103,12 +105,7 @@ fn render_score_transposes_for_display() {
         .expect("bundled Hanon piece should be loaded");
 
     let rendered = engine
-        .render_score(
-            &piece.id,
-            1,
-            Variation::BothHands,
-            DisplayVariant::Complete,
-        )
+        .render_score(&piece.id, 1, Variation::BothHands, DisplayVariant::Complete)
         .expect("score should be renderable");
 
     assert!(rendered.contains("<fifths>-5</fifths>"), "{rendered}");
@@ -133,7 +130,11 @@ fn pieces_persist_across_restarts() {
     .unwrap();
 
     let file = data_dir.join("custom.musicxml");
-    fs::write(&file, fs::read(resource_dir.join("pieces/hanon-01.musicxml")).unwrap()).unwrap();
+    fs::write(
+        &file,
+        fs::read(resource_dir.join("pieces/hanon-01.musicxml")).unwrap(),
+    )
+    .unwrap();
     let loaded = engine.load_piece(file).unwrap();
 
     drop(engine);

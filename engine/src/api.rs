@@ -15,8 +15,8 @@ use legato_core::works::DisplayVariant;
 use crate::input::state::InputMachine;
 pub use crate::input::state::{InputInfo, InputList, InputState};
 pub use crate::repertoire::PieceInfo;
-pub use crate::runtime::{Event, MidiInput, MidiOutput};
 use crate::repertoire::Repertoire;
+pub use crate::runtime::{Event, MidiInput, MidiOutput};
 use crate::runtime::{Input, Runtime};
 use crate::storage::Settings;
 use crate::warning::Speaker;
@@ -105,11 +105,11 @@ impl Engine {
             .list()
     }
 
-    pub fn load_piece(&self, path: impl AsRef<Path>) -> Result<PieceInfo, legato_core::score::musicxml_read::InvalidScoreFile> {
-        let mut repertoire = self
-            .repertoire
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
+    pub fn load_piece(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<PieceInfo, legato_core::score::musicxml_read::InvalidScoreFile> {
+        let mut repertoire = self.repertoire.lock().unwrap_or_else(|e| e.into_inner());
         repertoire.load_piece(path.as_ref())
     }
 

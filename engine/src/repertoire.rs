@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 use legato_core::score::model::Variation;
 use legato_core::score::musicxml_read::{InvalidReason, InvalidScoreFile};
 use legato_core::score::musicxml_write;
-use legato_core::works::detect::read_with_rules;
 use legato_core::works::DisplayVariant;
+use legato_core::works::detect::read_with_rules;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -50,7 +50,10 @@ impl Repertoire {
             if path.is_dir() {
                 continue;
             }
-            if matches!(path.extension().and_then(|s| s.to_str()), Some("musicxml" | "mxl")) {
+            if matches!(
+                path.extension().and_then(|s| s.to_str()),
+                Some("musicxml" | "mxl")
+            ) {
                 let _ = repertoire.load_piece(&path);
             }
         }
@@ -59,7 +62,11 @@ impl Repertoire {
     }
 
     pub fn list(&self) -> Vec<PieceInfo> {
-        let mut items: Vec<_> = self.pieces.values().map(|piece| piece.info.clone()).collect();
+        let mut items: Vec<_> = self
+            .pieces
+            .values()
+            .map(|piece| piece.info.clone())
+            .collect();
         items.sort_by(|lhs, rhs| lhs.title.cmp(&rhs.title).then_with(|| lhs.id.cmp(&rhs.id)));
         items
     }
@@ -142,4 +149,3 @@ fn content_hash(bytes: &[u8]) -> u64 {
     bytes.hash(&mut hasher);
     hasher.finish()
 }
-
