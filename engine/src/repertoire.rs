@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 use legato_core::score::model::Variation;
 use legato_core::score::musicxml_read::{InvalidReason, InvalidScoreFile};
+use legato_core::score::musicxml_write;
 use legato_core::works::detect::read_with_rules;
 use legato_core::works::DisplayVariant;
 use serde::{Deserialize, Serialize};
@@ -111,13 +112,15 @@ impl Repertoire {
     pub fn render_score(
         &self,
         piece_id: &str,
-        _transposition: i8,
+        transposition: i8,
         _variation: Variation,
-        _display_variant: DisplayVariant,
+        display_variant: DisplayVariant,
     ) -> Option<String> {
-        self.pieces
-            .get(piece_id)
-            .map(|piece| piece.musicxml.clone())
+        let piece = self.pieces.get(piece_id)?;
+        if !piece.info.display_variants.contains(&display_variant) {
+            return None;
+        }
+        musicxml_write::write(piece.musicxml.as_bytes(), transposition).ok()
     }
 
     fn pieces_dir(&self) -> PathBuf {

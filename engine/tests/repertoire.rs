@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::PathBuf;
 
+use legato_core::score::model::Variation;
+use legato_core::works::DisplayVariant;
 use legato_engine::api::{Engine, MidiOutput, StartConfig};
 
 struct NoMidi;
@@ -74,6 +76,40 @@ fn valid_and_invalid_files_are_loaded_and_rejected() {
 
     let piece = engine.load_piece(no_fingering).unwrap();
     assert!(!piece.has_fingering);
+
+    std::fs::remove_dir_all(data_dir).unwrap();
+}
+
+#[test]
+fn render_score_transposes_for_display() {
+    let data_dir = temp_dir("render");
+    let engine = Engine::start(
+        StartConfig {
+            data_dir: data_dir.clone(),
+            resource_dir: resource_dir(),
+            locale: "de-DE".into(),
+        },
+        Box::new(NoMidi),
+    )
+    .unwrap();
+
+    let piece = engine
+        .repertoire()
+        .into_iter()
+        .next()
+        .expect("bundled Hanon piece should be loaded");
+
+    let rendered = engine
+        .render_score(
+            &piece.id,
+            1,
+            Variation::BothHands,
+            DisplayVariant::Complete,
+        )
+        .expect("score should be renderable");
+
+    assert!(rendered.contains("<fifths>-5</fifths>"), "{rendered}");
+    assert!(rendered.contains("<step>D</step><alter>-1</alter><octave>4</octave>"));
 
     std::fs::remove_dir_all(data_dir).unwrap();
 }
