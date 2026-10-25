@@ -65,8 +65,11 @@ fn valid_and_invalid_files_are_loaded_and_rejected() {
     assert!(valid.has_fingering);
     assert_eq!(valid.number.as_deref(), Some("1"));
 
-    let invalid = engine.load_piece(data_dir.join("not-a-score.xml"));
+    let not_a_score = data_dir.join("not-a-score.xml");
+    fs::write(&not_a_score, "<html><body>kein MusicXML</body></html>").unwrap();
+    let invalid = engine.load_piece(not_a_score);
     assert!(invalid.is_err());
+    assert_eq!(engine.repertoire().len(), 1);
 
     let no_fingering = data_dir.join("no-fingering.musicxml");
     let xml = fs::read(resource_dir().join("pieces/hanon-01.musicxml")).unwrap();
