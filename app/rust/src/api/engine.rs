@@ -74,4 +74,21 @@ impl LegatoEngine {
             .map_err(|e| e.to_string())?;
         Ok(serde_json::to_string(&saved).expect("settings are serializable"))
     }
+
+    pub fn list_inputs(&self) -> String {
+        serde_json::to_string(&self.engine.list_inputs()).expect("inputs are serializable")
+    }
+
+    /// Returns the input state after the selection as JSON string.
+    pub fn select_input(&self, device: Option<u32>) -> Result<String, String> {
+        let state = self
+            .engine
+            .select_input(device)
+            .map_err(|e| e.to_string())?;
+        Ok(serde_json::to_string(&state).expect("state is serializable"))
+    }
+
+    pub fn acknowledge_warning(&self) {
+        self.engine.acknowledge_warning();
+    }
 }
