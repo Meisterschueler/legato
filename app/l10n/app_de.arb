@@ -13,6 +13,7 @@
   "acknowledgeWarning": "Warnung bestätigen",
   "reconnect": "Neu verbinden",
   "bluetoothSettings": "Bluetooth-Einstellungen",
+  "performanceDiscarded": "Der Durchlauf wurde verworfen, weil Legato im Hintergrund war.",
   "repertoire": "Repertoire",
   "loadFile": "Datei laden",
   "pieceWithNumber": "{title} Nr. {number}",

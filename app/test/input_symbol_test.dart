@@ -9,7 +9,7 @@ import 'package:legato/src/practice/practice_screen.dart';
 
 /// Stands in for the Rust engine, which is not loaded in widget tests.
 class _Engine implements EngineClient {
-  final stateEvents = StreamController<Map<String, dynamic>>();
+  final stateEvents = StreamController<Map<String, dynamic>>.broadcast();
   final selected = <int?>[];
   var reconnects = 0;
   var acknowledged = 0;

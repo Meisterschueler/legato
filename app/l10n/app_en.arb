@@ -13,6 +13,7 @@
   "acknowledgeWarning": "Stop warning",
   "reconnect": "Reconnect",
   "bluetoothSettings": "Bluetooth settings",
+  "performanceDiscarded": "The performance was discarded because Legato was in the background.",
   "repertoire": "Repertoire",
   "loadFile": "Load file",
   "pieceWithNumber": "{title} No. {number}",

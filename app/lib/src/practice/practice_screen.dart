@@ -5,6 +5,8 @@ import 'package:legato/src/engine/engine_client.dart';
 import 'package:legato/src/input/input_picker.dart';
 import 'package:legato/src/input/input_symbol.dart';
 import 'package:legato/src/l10n/generated/app_localizations.dart';
+import 'package:legato/src/platform/lifecycle_adapter.dart';
+import 'package:legato/src/platform/wakelock_adapter.dart';
 import 'package:legato/src/repertoire/repertoire_screen.dart';
 import 'package:legato/src/score_view/score_view.dart';
 
@@ -22,13 +24,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
   String? _musicxml;
   final _input = ValueNotifier<Map<String, dynamic>>({'state': 'Disconnected'});
   StreamSubscription<Map<String, dynamic>>? _events;
+  StreamSubscription<Map<String, dynamic>>? _wakelock;
+  LifecycleAdapter? _lifecycle;
 
   @override
   void initState() {
     super.initState();
-    _events = widget.engine?.events().listen((event) {
-      if (event['type'] == 'InputStateChanged') _input.value = event;
-    });
+    final engine = widget.engine;
+    if (engine != null) {
+      _events = engine.events().listen((event) {
+        if (event['type'] == 'InputStateChanged') _input.value = event;
+      });
+      _wakelock = keepScreenOn(engine);
+      _lifecycle = LifecycleAdapter(engine, onDiscarded: _backgroundNotice);
+    }
     // shortcut: shows the first piece until the recognition (US 3) chooses it.
     widget.engine?.repertoire().then((pieces) {
       if (pieces.isNotEmpty) _show(pieces.first['id'] as String);
@@ -38,8 +47,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
   @override
   void dispose() {
     _events?.cancel();
+    _wakelock?.cancel();
+    _lifecycle?.dispose();
     _input.dispose();
     super.dispose();
+  }
+
+  void _backgroundNotice() {
+    final text = AppLocalizations.of(context).performanceDiscarded;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   Future<void> _show(String piece) async {

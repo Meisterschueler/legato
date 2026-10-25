@@ -140,8 +140,8 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T062 [US1] `legato-midi` in `app/android/app/src/main/kotlin/.../MainActivity.kt` registrieren; `vibrate` über `Vibrator`; Berechtigungen (inkl. `VIBRATE`) in `app/android/app/src/main/AndroidManifest.xml`
 - [x] T063 [P] [US1] Eingabe-Symbol in `app/lib/src/input/input_symbol.dart` (Zustände laut US 1 Szenario 10, fließende Übergänge)
 - [x] T064 [US1] Eingabe-Auswahl in `app/lib/src/input/input_picker.dart`: verfügbare MIDI-Geräte, aktuelle Wahl, Anzeige ob Eingaben ankommen, Warnung bestätigen, neu verbinden (US 1 Szenarien 11, 15); unter Windows ein Verweis auf die Bluetooth-Einstellungen von Windows (research.md R4); die Bluetooth-Suche der Mobilplattformen folgt mit T059
-- [ ] T065 [P] [US1] Bildschirmsperre verhindern, solange eine Übeeinheit läuft (Ereignis `PracticeSessionChanged`), in `app/lib/src/platform/wakelock_adapter.dart` (NFR-005)
-- [ ] T066 [US1] Lebenszyklus an die Engine melden (`set_foreground`) und `BackgroundNotice` anzeigen in `app/lib/src/platform/lifecycle_adapter.dart` (US 1 Szenario 8)
+- [x] T065 [P] [US1] Bildschirmsperre verhindern, solange eine Übeeinheit läuft (Ereignis `PracticeSessionChanged`, sendet die Engine ab T084), in `app/lib/src/platform/wakelock_adapter.dart` (NFR-005)
+- [x] T066 [US1] Lebenszyklus an die Engine melden (`set_foreground`) und `BackgroundNotice` anzeigen in `app/lib/src/platform/lifecycle_adapter.dart` (US 1 Szenario 8)
 
 **Checkpoint**: Verbinden, Trennen, Warnen und Wiederverbinden funktionieren unter Windows (USB und Bluetooth), auf iPad und Android; Symbol zeigt den Zustand.
 

@@ -21,9 +21,14 @@ class EngineClient {
     return EngineClient._(engine);
   }
 
-  /// Events of contracts/engine-schnittstelle.md; can be listened to once.
-  Stream<Map<String, dynamic>> events() =>
-      _engine.events().map((json) => jsonDecode(json) as Map<String, dynamic>);
+  /// Events of contracts/engine-schnittstelle.md; listeners that subscribe in
+  /// the same frame all receive the first events.
+  Stream<Map<String, dynamic>> events() => _events;
+
+  late final _events = _engine
+      .events()
+      .map((json) => jsonDecode(json) as Map<String, dynamic>)
+      .asBroadcastStream();
 
   void setForeground(bool foreground) =>
       _engine.setForeground(foreground: foreground);
