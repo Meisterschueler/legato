@@ -8,7 +8,7 @@
 - Flutter (stable) mit `flutter_rust_bridge_codegen`
 - Node.js (LTS) für `score-view-web`
 - Xcode (iOS, macOS; nur auf macOS), Android Studio mit NDK
-- Windows: Visual Studio mit C++-Workload und Windows-SDK, WebView2-Runtime (in Windows 11 enthalten)
+- Windows: Visual Studio mit C++-Workload und Windows-SDK, WebView2-Runtime (in Windows 11 enthalten), Entwicklermodus (Flutter-Plugins brauchen symbolische Links)
 - Nur zum Neuerzeugen der Matchmaker-Erwartungsdateien: `uv`
 - Für manuelle Abnahme: Digitalpiano mit MIDI-Ein- und -Ausgang (USB, optional Bluetooth), Windows-Rechner, iPad
 

@@ -4,7 +4,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+
+import '../src/score_view/score_web_view.dart';
 
 /// Spike S2 (research.md R7): score-view-web in the WebView with synthetic
 /// positions at 16 notes per second; measures frame rate and message latency.
@@ -19,7 +20,7 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
   static const _notesPerSecond = 16;
 
   final _clock = Stopwatch()..start();
-  late final WebViewController _controller;
+  late final ScoreWebView _view;
   List<List<String>> _onsets = [];
   Timer? _timer;
   int _index = 0;
@@ -31,18 +32,13 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..addJavaScriptChannel('LegatoHost', onMessageReceived: _onMessage)
-      ..setNavigationDelegate(
-        NavigationDelegate(onPageFinished: (_) => _load()),
-      )
-      ..loadFlutterAsset('assets/score-view-web/index.html');
+    _view = ScoreWebView(onPageLoaded: _load, onMessage: _onMessage);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _view.dispose();
     super.dispose();
   }
 
@@ -53,14 +49,11 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
     await _send({'type': 'load', 'musicxml': musicxml});
   }
 
-  Future<void> _send(Map<String, Object?> message) {
-    return _controller.runJavaScript(
-      'legatoReceive(${jsonEncode(jsonEncode(message))})',
-    );
-  }
+  Future<void> _send(Map<String, Object?> message) =>
+      _view.send(jsonEncode(message));
 
-  void _onMessage(JavaScriptMessage message) {
-    final data = jsonDecode(message.message) as Map<String, dynamic>;
+  void _onMessage(String json) {
+    final data = jsonDecode(json) as Map<String, dynamic>;
     switch (data['type']) {
       case 'ready':
         _onsets = _groupByOnset((data['note_ids'] as List).cast<String>());
@@ -155,7 +148,7 @@ class _ScoreViewSpikeState extends State<ScoreViewSpike> {
       ),
       body: Column(
         children: [
-          Expanded(child: WebViewWidget(controller: _controller)),
+          Expanded(child: _view.build()),
           Padding(
             padding: const EdgeInsets.all(8),
             child: Text(

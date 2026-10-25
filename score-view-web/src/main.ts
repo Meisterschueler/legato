@@ -15,6 +15,8 @@ declare global {
     legatoReceive: (json: string) => void;
     /** JavaScript channel of webview_flutter. */
     LegatoHost?: { postMessage: (message: string) => void };
+    /** WebView2 (webview_windows). */
+    chrome?: { webview?: { postMessage: (message: string) => void } };
   }
 }
 
@@ -41,6 +43,8 @@ function send(message: ViewMessage): void {
   const json = JSON.stringify(message);
   if (window.LegatoHost) {
     window.LegatoHost.postMessage(json);
+  } else if (window.chrome?.webview) {
+    window.chrome.webview.postMessage(json);
   } else {
     window.parent.postMessage(json, "*");
   }

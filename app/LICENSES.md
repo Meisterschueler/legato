@@ -7,6 +7,7 @@ Jede Abhängigkeit wird vor der Aufnahme geprüft (Constitution, Abschnitt Lizen
 | Flutter SDK (`flutter`, `flutter_localizations`, `flutter_test`) | BSD-3-Clause | App-Hülle, Mehrsprachigkeit |
 | `intl` | BSD-3-Clause | Mehrsprachigkeit (`gen-l10n`) |
 | `webview_flutter` | BSD-3-Clause | Notenblatt (`score-view-web`) |
+| `webview_windows` | BSD-3-Clause | Notenblatt unter Windows (WebView2) |
 | `wakelock_plus` | BSD-3-Clause | Bildschirmsperre während der Übeeinheit |
 | `path_provider` | BSD-3-Clause | App-Verzeichnis für die Engine |
 | `file_selector` | BSD-3-Clause | Laden von Notendateien |

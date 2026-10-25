@@ -52,7 +52,7 @@ Die Hülle reicht Notenbild und Ereignisse unverändert als JSON per `postMessag
 
 Rückmeldungen des Bundles: `ready { note_ids }` (nach jedem `load`, IDs in Notenreihenfolge), `error { message }`, `frame_shown { driver_time_us }` und `frame_stats { fps, max_frame_ms }` (nur Entwicklungs-Builds, Messungen R7/R9).
 
-Transport: Die Hülle ruft `legatoReceive(json)` im WebView auf; das Bundle antwortet über den JavaScript-Kanal `LegatoHost.postMessage(json)`.
+Transport: Die Hülle ruft `legatoReceive(json)` im WebView auf; das Bundle antwortet über den JavaScript-Kanal `LegatoHost.postMessage(json)`, unter Windows (WebView2) über `window.chrome.webview.postMessage(json)`.
 
 **Anzeige-ID** (inhaltsbasiert, von Engine und Bundle gleich aus dem gesendeten MusicXML berechnet, also nach Transposition und Anzeigevariante): `Takt/System/Einsatz/Tonhöhe`, z. B. `3/1/1:4/60`: Taktindex ab 0 in Dokumentreihenfolge, Systemindex ab 0 (0 = oben), Einsatz innerhalb des Takts als gekürzter Bruch einer ganzen Note, MIDI-Tonhöhe.
 
