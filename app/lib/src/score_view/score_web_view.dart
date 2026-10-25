@@ -26,8 +26,9 @@ class ScoreWebView {
         controller.webMessage.listen((m) => onMessage?.call(m as String)),
       ];
       // The page is a single file (score-view-web/vite.config.ts), so file:// works.
-      final url = File(Platform.resolvedExecutable).parent.uri
-          .resolve('data/flutter_assets/$_page');
+      final url = File(
+        Platform.resolvedExecutable,
+      ).parent.uri.resolve('data/flutter_assets/$_page');
       controller.initialize().then((_) => controller.loadUrl(url.toString()));
     } else {
       final controller = WebViewController()
