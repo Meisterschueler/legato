@@ -147,7 +147,7 @@ fn read_score(root: &Element) -> Result<Score, InvalidScoreFile> {
                             });
                         }
                     }
-                    "note" if !child.has("grace") && !child.has("cue") => {
+                    "note" if !child.has("grace") => {
                         let start = if child.has("chord") {
                             last_start
                         } else {
@@ -159,6 +159,8 @@ fn read_score(root: &Element) -> Result<Score, InvalidScoreFile> {
                         }
                         if child.has("rest") {
                             rest_ends.push(at(start + duration()));
+                        } else if child.has("cue") {
+                            // Cue notes take time but are not played.
                         } else if let Some(pitch) = child.child("pitch").and_then(midi_pitch) {
                             let tie_stop = child
                                 .children("tie")
