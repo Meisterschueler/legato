@@ -18,7 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      # setup-uv publishes no major-version tags.
+      - uses: astral-sh/setup-uv@v10.3.2
       - name: Generate
         working-directory: tools/matchmaker-reference
         run: uv run --python 3.12 generate.py
