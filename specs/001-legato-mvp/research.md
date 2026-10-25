@@ -142,6 +142,14 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 
 **Spike S3**: `pthmm` und `outerhmm` im kompatiblen Modus portieren, gegen die Matchmaker-Referenz prüfen (R13), dann mit Erweiterungen an 10 aufgezeichneten Durchläufen von Hanon Nr. 1 gegen SC-001 (≥ 99 %) und SC-002 messen.
 
+**Spike-Ergebnis S3, Teil 1** (2026-10-25, Matchmaker `6c09490`): `pthmm`, `outerhmm` und `arzt` (Ereignis-Variante für MIDI) sind portiert (`core/src/following/`) und stimmen mit Matchmaker überein: Übergangsmatrizen, Anfangs- und Emissionswahrscheinlichkeiten sowie die Zustandswahrscheinlichkeiten jedes Schritts (`simple_mozart`) relativ auf 1e-6, die Positionen bei allen drei Stücken (`simple_mozart`, `mozart_k265_var1`, `bach_fugue`) zu 100 % identisch. Abweichungen vom Plan:
+- Werte unter 1e-12 gelten beim Vergleich als null (Unterlauf bei Wahrscheinlichkeiten um 1e-300 ist implementierungsabhängig).
+- Die Eingaben der Referenz sind die von Matchmaker aufbereiteten Beobachtungen (`steps[].input`); die Vorverarbeitung aus dem MIDI-Strom (Zeitfenster, Akkordbildung) ist noch nicht portiert (T036, `Preprocessor`).
+- `test_oltw_arzt.py` enthält nur Tests der Audio-Variante; für `arzt` gibt es daher nur den Vergleich mit der Referenz.
+- Der MusicXML-Leser stimmt bei Hanon Nr. 1 und den drei Matchmaker-Stücken mit partitura überein (Anschläge und Tonhöhen).
+
+Teil 2 (Erweiterungen, 10 aufgezeichnete Durchläufe von Hanon Nr. 1) braucht Aufnahmen mit dem Piano.
+
 ## R9 – Latenz (NFR-003)
 
 **Budget** (95. Perzentil, Ziel ≤ 50 ms):
