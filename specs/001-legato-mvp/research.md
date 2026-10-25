@@ -4,7 +4,7 @@
 
 Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alternativen. Punkte, die vor der Implementierung mit einem kurzen Prototyp (Spike) bestätigt werden müssen, sind als **Spike** gekennzeichnet; sie stehen am Anfang von `tasks.md`.
 
-**Prioritäten**: iOS (insbesondere iPad) vor Android vor Desktop. MIDI per USB auf allen Plattformen vollständig, Bluetooth-MIDI vollständig auf iOS, macOS und Android, auf Windows und Linux nach Möglichkeit.
+**Prioritäten**: iOS (insbesondere iPad) vor Android vor Desktop. Unabhängig davon ist Windows die erste Entwicklungs- und Abnahmeplattform: Die Grundfunktionalität wird dort zuerst geprüft, weil dafür weder Mac noch Mobilgerät nötig ist. MIDI per USB auf allen Plattformen vollständig, Bluetooth-MIDI vollständig auf iOS, macOS, Android und Windows (in Windows gekoppelte Geräte, Spike S1), auf Linux nach Möglichkeit.
 
 ## R1 – App-Framework
 
@@ -34,7 +34,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 - feste Regel bei Gleichstand: die kleinste Position gewinnt;
 - jede gespeicherte Auswertung trägt die Version des Kerns.
 
-**Toleranzen**: Zwischenwerte (Wahrscheinlichkeiten) relativ 1e-6; Zuordnung: mindestens 99,9 % der Töne plattformübergreifend identisch zugeordnet, keine Abweichung um mehr als eine Position; Durchlauf-Ergebnis (abgeschlossen/abgebrochen, erkannter Kandidat) identisch. Geprüft durch denselben Testsatz auf iOS-Simulator, Android-Emulator, Linux und WebAssembly (R13).
+**Toleranzen**: Zwischenwerte (Wahrscheinlichkeiten) relativ 1e-6; Zuordnung: mindestens 99,9 % der Töne plattformübergreifend identisch zugeordnet, keine Abweichung um mehr als eine Position; Durchlauf-Ergebnis (abgeschlossen/abgebrochen, erkannter Kandidat) identisch. Geprüft durch denselben Testsatz auf iOS-Simulator, Android-Emulator, Linux, Windows und WebAssembly (R13).
 
 ## R3 – Austauschbarkeit des Frameworks (Flutter → Tauri)
 
@@ -66,7 +66,8 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 |---|---|---|---|
 | iOS, macOS | CoreMIDI | CoreBluetooth: Suche nach dem BLE-MIDI-Dienst, Verbinden; danach stellt CoreMIDI das Gerät als Endpunkt bereit | Kennung des Geräts speichern; dauerhafte Verbindungsanfrage über CoreBluetooth (läuft nicht ab), USB über CoreMIDI-Benachrichtigungen |
 | Android | `android.media.midi`, `MidiManager.DeviceCallback` | eigene BLE-Suche, `MidiManager.openBluetoothDevice()`; Berechtigungen `BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT` (ab Android 12) | gespeicherte Adresse erneut öffnen |
-| Windows, Linux | `midir` (MIT) in der Engine; Abfrage der Portliste alle 250 ms | nach Möglichkeit (Windows: WinRT bzw. Windows MIDI Services; Linux: BlueZ mit MIDI-Unterstützung) | USB automatisch, Bluetooth über das Symbol |
+| Windows | `midir` (MIT) mit Feature `winrt` (`Windows.Devices.Midi`) in der Engine; Abfrage der Portliste alle 250 ms | in den Bluetooth-Einstellungen von Windows gekoppelte Geräte erscheinen über WinRT als MIDI-Ports; keine eigene Suche (`scan_bluetooth` ohne Wirkung) | USB und gekoppelte Bluetooth-Geräte automatisch, sobald der Port wieder in der Liste erscheint (Spike S1 unter Windows); sonst über das Symbol |
+| Linux | `midir` (MIT, ALSA) in der Engine; Abfrage der Portliste alle 250 ms | nach Möglichkeit (BlueZ mit MIDI-Unterstützung) | USB automatisch, Bluetooth über das Symbol |
 
 **Bekannte Hindernisse**:
 - Bluetooth-Trennung ohne Abmeldung (Strom weg, Reichweite) erkennt das Betriebssystem erst nach dem Überwachungs-Timeout (iOS bis ca. 6 s). SC-003 zählt ab der Meldung des Betriebssystems.
@@ -74,7 +75,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 - Bluetooth-Adapter (z. B. Yamaha MD-BT01, CME WIDI) verhalten sich teils eigen.
 - Bluetooth-MIDI hat 10–30 ms zusätzliche Latenz und Jitter von einigen ms. Für NFR-003 unkritisch; für die Messung der Gleichmäßigkeit ([002](../002-bewertung/spec.md)) müssen die Zeitstempel des Instruments erhalten bleiben (CoreMIDI: ja; Android: zu prüfen).
 
-**Spike S1** (vorgezogen, ohne Framework): Minimale native iOS-App mit der MIDI-Schicht und einer Rust-Testbibliothek. Messen: Erkennung von Trennung und Wiederkehr (USB, Bluetooth), automatisches Wiederverbinden, Latenz, Jitter, Weitergabe der Instrument-Zeitstempel. Danach dasselbe für Android.
+**Spike S1** (vorgezogen, ohne Framework): Minimale native iOS-App mit der MIDI-Schicht und einer Rust-Testbibliothek. Messen: Erkennung von Trennung und Wiederkehr (USB, Bluetooth), automatisches Wiederverbinden, Latenz, Jitter, Weitergabe der Instrument-Zeitstempel. Danach dasselbe für Android und unter Windows (`midir` mit WinRT, Diagnoseprogramm der Engine).
 
 **Verworfene Alternativen**: `flutter_midi_command` (bindet MIDI an Flutter und Dart; Wiederverbinden nicht steuerbar); `midir` auf iOS (kein Bluetooth-Verbindungsaufbau); Web MIDI (nicht in Safari/WKWebView).
 
@@ -93,16 +94,17 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 
 ## R7 – Notendarstellung
 
-**Entscheidung**: Eigenständiges Web-Bundle `score-view-web/` (TypeScript) mit [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org) (BSD-3-Clause), in Flutter über `webview_flutter` eingebettet (iOS, Android, macOS).
+**Entscheidung**: Eigenständiges Web-Bundle `score-view-web/` (TypeScript) mit [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org) (BSD-3-Clause), in Flutter über `webview_flutter` eingebettet (iOS, Android, macOS), unter Windows über [`webview_windows`](https://pub.dev/packages/webview_windows) (BSD-3-Clause, WebView2).
+- `webview_windows` rendert als Textur; Flutter-Widgets (Eingabe-Symbol, Auswahl, Hinweise) können über dem Notenblatt liegen. Rückmeldungen gehen dort über `window.chrome.webview.postMessage` statt über den JavaScript-Kanal von `webview_flutter`.
 - Der Kern erzeugt für jede Kombination aus Tonart und Anzeigevariante ein MusicXML und die Zuordnung zu den Anzeige-IDs; OSMD rendert nur (OSMD liest keine `id`-Attribute, Spike S2).
 - Markierungen als SVG-Ebene über dem Notenbild; Positionsmarke und Scrollen mit `requestAnimationFrame`, Farbwechsel mit CSS-Übergängen (FR-023).
 - Kommunikation Dart ↔ Web-Bundle über eine kleine Nachrichtenschnittstelle (`postMessage`); dieselbe Schnittstelle nutzt später Tauri.
 
 **Begründung**: Für Flutter gibt es keinen ausgereiften MusicXML-Renderer; das Web-Bundle ist zugleich der wichtigste wiederverwendbare Baustein für Tauri und die Web-App.
 
-**Verworfene Alternativen**: Verovio (LGPL-3.0; statisches Linken auf iOS problematisch); eigene Darstellung in Flutter (zu aufwendig über Hanon hinaus).
+**Verworfene Alternativen**: Verovio (LGPL-3.0; statisches Linken auf iOS problematisch); eigene Darstellung in Flutter (zu aufwendig über Hanon hinaus); `webview_win_floating` für Windows (gleiche Schnittstelle wie `webview_flutter`, legt das WebView aber als natives Fenster über Flutter: keine Widgets und keine Routen darüber).
 
-**Spike S2**: Hanon Nr. 1 in allen vier Anzeigevarianten im WebView auf iPad und Android-Mittelklasse; flüssiges Scrollen mit 60 fps; Latenz der Nachrichten Dart → WebView. Windows/Linux: geeignetes WebView-Paket prüfen (niedrige Priorität).
+**Spike S2**: Hanon Nr. 1 in allen vier Anzeigevarianten im WebView auf iPad und Android-Mittelklasse; flüssiges Scrollen mit 60 fps; Latenz der Nachrichten Dart → WebView. Dasselbe unter Windows mit `webview_windows`. Linux: geeignetes WebView-Paket prüfen (niedrige Priorität).
 
 ## R8 – Zuordnung während des Spiels: Portierung aus Matchmaker
 
@@ -189,7 +191,7 @@ Teil 2 (Erweiterungen, 10 aufgezeichnete Durchläufe von Hanon Nr. 1) braucht Au
 
 **Eigene Referenzdaten**: Legato-Erweiterungen werden gegen eigene Referenz-Durchläufe getestet ([contracts/referenzdaten.md](contracts/referenzdaten.md)); daraus SC-001 und SC-002.
 
-**Plattformübergreifend**: Derselbe Testsatz läuft auf iOS-Simulator, Android-Emulator, Linux und WebAssembly; Vergleich mit den Toleranzen aus R2.
+**Plattformübergreifend**: Derselbe Testsatz läuft auf iOS-Simulator, Android-Emulator, Linux, Windows und WebAssembly; Vergleich mit den Toleranzen aus R2.
 
 **Weitere Ebenen**: Engine mit simuliertem MIDI-Port (Trennen, Wiederverbinden, Echo, SC-003); `flutter test` für Widgets; Vitest für `score-view-web`; manuelle Abnahme laut [quickstart.md](quickstart.md).
 

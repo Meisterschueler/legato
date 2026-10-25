@@ -6,17 +6,17 @@
 
 ## Zusammenfassung
 
-Das MVP ist eine plattformübergreifende App (Priorität iOS/iPad, dann Android, dann Desktop), die Klavierspiel per MIDI empfängt, Stück, Variation und Tonart selbständig erkennt, dem Spiel im Notenblatt folgt und Durchläufe per MIDI-Signal quittiert. Technisch: Flutter als dünne App-Hülle; die gesamte Fachlogik in Rust (Kern und Engine), damit App, Backend und Web-App dieselben Algorithmen ausführen. Die Verfahren für die Zuordnung werden aus Matchmaker nach Rust portiert und gegen Matchmaker getestet. MIDI läuft über eine eigene native Schicht (Swift, Kotlin) direkt in die Engine. Die Architektur hält einen späteren Wechsel zu Tauri offen. Details: [research.md](research.md).
+Das MVP ist eine plattformübergreifende App (Priorität iOS/iPad, dann Android, dann Desktop; Windows ist erste Entwicklungs- und Abnahmeplattform, siehe [research.md](research.md)), die Klavierspiel per MIDI empfängt, Stück, Variation und Tonart selbständig erkennt, dem Spiel im Notenblatt folgt und Durchläufe per MIDI-Signal quittiert. Technisch: Flutter als dünne App-Hülle; die gesamte Fachlogik in Rust (Kern und Engine), damit App, Backend und Web-App dieselben Algorithmen ausführen. Die Verfahren für die Zuordnung werden aus Matchmaker nach Rust portiert und gegen Matchmaker getestet. MIDI läuft über eine eigene native Schicht (Swift, Kotlin) direkt in die Engine. Die Architektur hält einen späteren Wechsel zu Tauri offen. Details: [research.md](research.md).
 
 ## Technischer Kontext
 
 **Sprache/Version**: Rust (stable, Edition 2024) für Kern und Engine; Dart 3 / Flutter (stable) für die Oberfläche; Swift 5.9+ (iOS, macOS) und Kotlin (Android) für die MIDI-Schicht; TypeScript 5 für das Notenblatt-Bundle; Python 3.12 nur für das Referenz-Werkzeug
 
-**Wesentliche Abhängigkeiten**: `flutter_rust_bridge`, `quick-xml`, `zip`, `rodio`, `midir` (Windows, Linux), `webview_flutter`, `wakelock_plus`, `path_provider`, `file_selector`, OpenSheetMusicDisplay; Referenz: `pymatchmaker` (festgelegter Commit), `partitura`
+**Wesentliche Abhängigkeiten**: `flutter_rust_bridge`, `quick-xml`, `zip`, `rodio`, `midir` (Windows mit WinRT, Linux), `webview_flutter`, `webview_windows` (Windows), `wakelock_plus`, `path_provider`, `file_selector`, OpenSheetMusicDisplay; Referenz: `pymatchmaker` (festgelegter Commit), `partitura`
 
 **Speicherung**: Einstellungen als JSON und Kopien geladener Notendateien in einem App-Verzeichnis, verwaltet von der Engine. Keine Speicherung von Durchläufen (folgt in 003).
 
-**Tests**: `cargo test` (Kern gegen Matchmaker-Referenz und eigene Referenzdaten; Engine mit simuliertem MIDI-Port); plattformübergreifender Testsatz auf iOS-Simulator, Android-Emulator, Linux, WebAssembly; `flutter test`; Vitest; manuelle Abnahme laut [quickstart.md](quickstart.md)
+**Tests**: `cargo test` (Kern gegen Matchmaker-Referenz und eigene Referenzdaten; Engine mit simuliertem MIDI-Port); plattformübergreifender Testsatz auf iOS-Simulator, Android-Emulator, Linux, Windows, WebAssembly; `flutter test`; Vitest; manuelle Abnahme laut [quickstart.md](quickstart.md)
 
 **Zielplattformen**: iOS/iPadOS 16+, Android 9+ (API 28), macOS 12+, Windows 10+, Linux (x86_64)
 
@@ -168,9 +168,9 @@ Verzeichnis-, Datei- und Typnamen sind englisch ([Glossar](../../docs/glossar.md
 
 | Spike | Frage | Wenn nicht erfüllt |
 |---|---|---|
-| **S1** (zuerst) | Native MIDI-Schicht auf iOS, dann Android: Trennung und Wiederkehr rechtzeitig erkannt? Bluetooth selbständig wiederverbunden? Latenz, Jitter, Instrument-Zeitstempel? | Manuellen Weg laut FR-006 umsetzen; Grenzen je Plattform dokumentieren; Auswirkung auf 002 bewerten |
+| **S1** (zuerst) | Native MIDI-Schicht auf iOS, dann Android, sowie `midir` mit WinRT unter Windows: Trennung und Wiederkehr rechtzeitig erkannt? Bluetooth selbständig wiederverbunden? Latenz, Jitter, Instrument-Zeitstempel? | Manuellen Weg laut FR-006 umsetzen; Grenzen je Plattform dokumentieren; Auswirkung auf 002 bewerten |
 | **S3** | Portierte `pthmm`/`outerhmm` stimmen mit Matchmaker überein; mit Erweiterungen SC-001 (≥ 99 %) und SC-002 erreicht? | Fehlermodell anpassen; `arzt` als Standard prüfen |
-| **S2** | `score-view-web` im WebView auf iPad und Android flüssig (60 fps) und mit geringer Nachrichtenlatenz? | Markierung nativ in Flutter über dem WebView; letzte Option Tauri |
+| **S2** | `score-view-web` im WebView auf iPad, Android und Windows flüssig (60 fps) und mit geringer Nachrichtenlatenz? | Markierung nativ in Flutter über dem WebView; letzte Option Tauri |
 
 S1 und S3 sind unabhängig vom Framework und können parallel laufen.
 

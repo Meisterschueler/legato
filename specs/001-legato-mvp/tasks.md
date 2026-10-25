@@ -61,6 +61,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 - [x] T023 [P] Nachrichtenschnittstelle (`load`, `position`, `mark`, `reset`; Rückmeldungen `ready`, `frame_shown`) laut [contracts/engine-schnittstelle.md](contracts/engine-schnittstelle.md#nachrichten-an-score-view-web) in `score-view-web/src/protocol.ts` und Rendering von `hanon-01.musicxml` mit OSMD in `score-view-web/src/main.ts`
 - [ ] T024 Spike-Seite `app/lib/spike/score_view_spike.dart`: WebView mit `score-view-web`, synthetische Positionen mit 16 Tönen/s; Bildrate und Nachrichtenlatenz auf iPad und Android messen; Ergebnis in `specs/001-legato-mvp/research.md` (R7) eintragen
+- [ ] T106 [P] Notenblatt unter Windows (research.md R7): `webview_windows` in `app/pubspec.yaml` aufnehmen und in `app/LICENSES.md` vermerken; `app/lib/src/score_view/score_view.dart` und `app/lib/spike/score_view_spike.dart` betten unter Windows WebView2 ein; `score-view-web/src/main.ts` sendet Rückmeldungen auch über `window.chrome.webview.postMessage`; Bildrate und Nachrichtenlatenz unter Windows messen und in `specs/001-legato-mvp/research.md` (R7) eintragen
 
 **Checkpoint**: S1 und S2 ausgewertet. Bei negativem Ergebnis Plan anpassen, bevor Phase 4 beginnt.
 
@@ -98,7 +99,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [x] T042 [P] `outerhmm` nach `core/src/following/outer_hmm.rs` portieren (Herkunftshinweis)
 - [x] T043 [P] `arzt` nach `core/src/following/arzt.rs` portieren (Herkunftshinweis)
 - [x] T044 S3 Teil 1 auswerten: alle Vergleiche grün; Ergebnis als „Spike-Ergebnis S3“ in `specs/001-legato-mvp/research.md` (R8) eintragen
-- [ ] T045 Plattformübergreifender Lauf des Kern-Testsatzes auf iOS-Simulator, Android-Emulator, Linux und `wasm32` (wasm-bindgen-test) in `.github/workflows/cross-platform.yml`; Vergleich der Ergebnisse mit den Toleranzen aus research.md R2 in `core/tests/cross_platform.rs`
+- [ ] T045 Plattformübergreifender Lauf des Kern-Testsatzes auf iOS-Simulator, Android-Emulator, Linux, Windows und `wasm32` (wasm-bindgen-test) in `.github/workflows/cross-platform.yml`; Vergleich der Ergebnisse mit den Toleranzen aus research.md R2 in `core/tests/cross_platform.rs`
 
 ### Engine und Hülle
 
@@ -130,17 +131,18 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 - [x] T056 [US1] Zustandsmaschine `InputState` (`Disconnected` → `MidiConnected` ↔ `ConnectionLost`, `warning_acknowledged`) in `engine/src/input/state.rs`
 - [ ] T057 [US1] Geräteverwaltung in `engine/src/input/registry.rs`: Geräte aus FFI bzw. `midir`, `list_inputs`, `select_input`, `reconnect`, `scan_bluetooth`; gewählte Eingabe in `Settings` speichern und beim Start wiederherstellen (FR-002)
-- [ ] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
+- [ ] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` (unter Windows Feature `winrt`, damit in Windows gekoppelte Bluetooth-MIDI-Geräte erscheinen) und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
+- [ ] T105 [US1] Spike S1 unter Windows (nach T058): Diagnoseprogramm `engine/examples/midi_probe.rs` protokolliert Geräte und Ereignisse mit Zeitstempel; mit einem gekoppelten Bluetooth-MIDI-Gerät und per USB Erkennung von Trennung und Wiederkehr, automatisches Wiederverbinden, Latenz und Jitter messen; Ergebnis als „Spike-Ergebnis S1 (Windows)“ in `specs/001-legato-mvp/research.md` (R4) eintragen
 - [ ] T059 [US1] C-Schnittstelle vollständig umsetzen (Stub aus T016 ersetzen) in `engine/src/ffi.rs` und `engine/src/ffi/android.rs`
 - [x] T060 [US1] Warnung über den Lautsprecher mit `rodio` in `engine/src/warning.rs`: spielt `warning.wav` sofort sowie nach 10 s und 30 s, ruft jeweils `vibrate` der nativen Schicht auf, endet bei Wiederverbindung oder `acknowledge_warning` (FR-005)
 - [ ] T061 [US1] `LegatoMidi` in `app/ios/Runner/AppDelegate.swift` und `app/macos/Runner/AppDelegate.swift` registrieren; Audio-Session `playback` + `mixWithOthers`; `vibrate` (iPhone: `kSystemSoundID_Vibrate`, iPad: ohne Wirkung); `NSBluetoothAlwaysUsageDescription` in `app/ios/Runner/Info.plist`
 - [ ] T062 [US1] `legato-midi` in `app/android/app/src/main/kotlin/.../MainActivity.kt` registrieren; `vibrate` über `Vibrator`; Berechtigungen (inkl. `VIBRATE`) in `app/android/app/src/main/AndroidManifest.xml`
 - [ ] T063 [P] [US1] Eingabe-Symbol in `app/lib/src/input/input_symbol.dart` (Zustände laut US 1 Szenario 10, fließende Übergänge)
-- [ ] T064 [US1] Eingabe-Auswahl in `app/lib/src/input/input_picker.dart`: verfügbare MIDI-Geräte, aktuelle Wahl, Anzeige ob Eingaben ankommen, Warnung bestätigen, neu verbinden, Bluetooth-Suche (US 1 Szenarien 11, 15)
+- [ ] T064 [US1] Eingabe-Auswahl in `app/lib/src/input/input_picker.dart`: verfügbare MIDI-Geräte, aktuelle Wahl, Anzeige ob Eingaben ankommen, Warnung bestätigen, neu verbinden, Bluetooth-Suche (US 1 Szenarien 11, 15; unter Windows statt der Suche ein Verweis auf die Bluetooth-Einstellungen von Windows, research.md R4)
 - [ ] T065 [P] [US1] Bildschirmsperre verhindern, solange eine Übeeinheit läuft (Ereignis `PracticeSessionChanged`), in `app/lib/src/platform/wakelock_adapter.dart` (NFR-005)
 - [ ] T066 [US1] Lebenszyklus an die Engine melden (`set_foreground`) und `BackgroundNotice` anzeigen in `app/lib/src/platform/lifecycle_adapter.dart` (US 1 Szenario 8)
 
-**Checkpoint**: Verbinden, Trennen, Warnen und Wiederverbinden funktionieren auf iPad und Android; Symbol zeigt den Zustand.
+**Checkpoint**: Verbinden, Trennen, Warnen und Wiederverbinden funktionieren unter Windows (USB und Bluetooth), auf iPad und Android; Symbol zeigt den Zustand.
 
 ---
 
@@ -273,7 +275,7 @@ flowchart LR
 
 **Setup**: T002, T003, T004, T006, T007, T008, T009, T010, T011, T012, T014, T015 gleichzeitig.
 
-**Spikes und Grundlagen**: S1 (T016–T022) und S2 (T023–T024) parallel zu T025–T045.
+**Spikes und Grundlagen**: S1 (T016–T022) und S2 (T023–T024, T106) parallel zu T025–T045.
 
 **Portierung**:
 ```text
@@ -286,7 +288,7 @@ Task: "outerhmm nach core/src/following/outer_hmm.rs portieren" (T042)
 Task: "arzt nach core/src/following/arzt.rs portieren"          (T043)
 ```
 
-**US1**: T054 und T055 parallel; danach T058, T063, T065 parallel zu T056/T057.
+**US1**: T054 und T055 parallel; danach T058, T063, T065 parallel zu T056/T057; T105 nach T058.
 
 **US3**: T072, T074, T075, T076, T077 parallel; danach T087 und T088 parallel zur Kern-Implementierung.
 
@@ -295,10 +297,12 @@ Task: "arzt nach core/src/following/arzt.rs portieren"          (T043)
 1. Setup (Phase 1)
 2. Spikes S1 und S2 sowie Matchmaker-Portierung (S3 Teil 1) parallel; Ergebnisse in research.md eintragen und Plan bei Bedarf anpassen
 3. Grundlagen abschließen
-4. US1 → am Checkpoint auf dem iPad prüfen
+4. US1 → am Checkpoint zuerst unter Windows, dann auf dem iPad prüfen
 5. US2 → prüfen
 6. US3 → prüfen, Standardverfahren festlegen (S3 Teil 2)
 7. US4 → MVP vollständig, manuelle Abnahme (Phase 8)
+
+Windows ist erste Entwicklungs- und Abnahmeplattform (research.md): Jeder Checkpoint wird zuerst unter Windows geprüft (MIDI per USB oder Bluetooth), danach auf iPad und Android.
 
 ## Hinweise
 

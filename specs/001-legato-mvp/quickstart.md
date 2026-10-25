@@ -8,8 +8,9 @@
 - Flutter (stable) mit `flutter_rust_bridge_codegen`
 - Node.js (LTS) für `score-view-web`
 - Xcode (iOS, macOS; nur auf macOS), Android Studio mit NDK
+- Windows: Visual Studio mit C++-Workload und Windows-SDK, WebView2-Runtime (in Windows 11 enthalten)
 - Nur zum Neuerzeugen der Matchmaker-Erwartungsdateien: `uv`
-- Für manuelle Abnahme: Digitalpiano mit MIDI-Ein- und -Ausgang (USB, optional Bluetooth), iPad
+- Für manuelle Abnahme: Digitalpiano mit MIDI-Ein- und -Ausgang (USB, optional Bluetooth), Windows-Rechner, iPad
 
 ## Automatische Prüfungen
 
@@ -20,7 +21,7 @@ npm --prefix score-view-web test           # Notenblatt (Vitest)
 flutter test app                           # Bildschirme, Adapter
 ```
 
-Erwartet: Alle Tests grün; der Bericht von `legato-core` weist für SC-001 ≥ 99 % aus. Plattformübergreifend läuft derselbe Kern-Testsatz in der CI auf iOS-Simulator, Android-Emulator, Linux und WebAssembly (Toleranzen laut [research.md R2](research.md#r2--gemeinsamer-kern-in-rust)).
+Erwartet: Alle Tests grün; der Bericht von `legato-core` weist für SC-001 ≥ 99 % aus. Plattformübergreifend läuft derselbe Kern-Testsatz in der CI auf iOS-Simulator, Android-Emulator, Linux, Windows und WebAssembly (Toleranzen laut [research.md R2](research.md#r2--gemeinsamer-kern-in-rust)).
 
 Matchmaker-Erwartungsdateien neu erzeugen (nur nach Änderung des Commits):
 
@@ -61,3 +62,4 @@ flutter run -d windows                     # bzw. macos, linux
 | 17 | Gerät im Flugmodus: App starten, Datei laden, Hanon Nr. 1 spielen | alles funktioniert ohne Einschränkung | NFR-002, US 3/16 |
 | 18 | „Bewegung reduzieren“ am Gerät einschalten, spielen | Positionsmarke und Scrollen überblenden statt sich zu bewegen | FR-023 |
 | 19 | Verbindung trennen und nicht wiederherstellen | Warnung sofort, nach 10 s und nach 30 s (iPhone/Android zusätzlich Vibration), danach nur noch das Symbol | FR-005 |
+| 20 | Wie 15 unter Windows mit einem in Windows gekoppelten Bluetooth-MIDI-Gerät | wie 15, sonst manueller Weg über das Symbol in höchstens 2 Tippaktionen | US 1/15, FR-006 |

@@ -54,4 +54,4 @@ size_t legato_debug_drain(uint8_t* buffer, size_t capacity); // logged events as
 
 ## Desktop
 
-Windows und Linux verwenden `midir` innerhalb der Engine; die C-Schnittstelle wird dort nicht benötigt. macOS nutzt das Swift-Package (Bluetooth über CoreBluetooth).
+Windows und Linux verwenden `midir` innerhalb der Engine; die C-Schnittstelle wird dort nicht benötigt. Unter Windows mit dem Feature `winrt`, damit in Windows gekoppelte Bluetooth-MIDI-Geräte als Ports erscheinen. macOS nutzt das Swift-Package (Bluetooth über CoreBluetooth).
