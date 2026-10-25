@@ -123,12 +123,11 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 ### Tests für User Story 1
 
-- [ ] T054 [P] [US1] Tests in `engine/tests/input_state.rs` mit simuliertem Port: Trennung → `DisconnectWarning` sofort sowie nach 10 s und 30 s, sofern nicht wiederverbunden oder bestätigt, danach keine weitere akustische Warnung; `vibrate` wird mit jeder Warnung aufgerufen; Warnung binnen 2 s nach Meldung des Betriebssystems (SC-003); automatisches Wiederverbinden; laufender Durchlauf wird bei Trennung, Eingabewechsel und Hintergrund verworfen; kein Wechsel zu Audio; ohne gewählte Eingabe keine Zuordnung und keine Warnung; Wiederherstellen der zuletzt gewählten Eingabe beim Start
-- [ ] T055 [P] [US1] Widget-Tests in `app/test/input_symbol_test.dart`: Zustände unterscheiden sich in der Form; klein bei verbunden, deutlich bei nicht verbunden/abgebrochen; gleiche Position in allen Ansichten; Antippen öffnet die Auswahl
+- [x] T054 [P] [US1] Tests in `engine/tests/input_state.rs` mit simuliertem Port: Trennung → `DisconnectWarning` sofort sowie nach 10 s und 30 s, sofern nicht wiederverbunden oder bestätigt, danach keine weitere akustische Warnung; `vibrate` wird mit jeder Warnung aufgerufen; Warnung binnen 2 s nach Meldung des Betriebssystems (SC-003); automatisches Wiederverbinden; laufender Durchlauf wird bei Trennung, Eingabewechsel und Hintergrund verworfen; kein Wechsel zu Audio; ohne gewählte Eingabe keine Zuordnung und keine Warnung; Wiederherstellen der zuletzt gewählten Eingabe beim Start (Verwerfen des Durchlaufs folgt mit T084; Warnton und Vibration sind ein Aufruf `warn`)- [ ] T055 [P] [US1] Widget-Tests in `app/test/input_symbol_test.dart`: Zustände unterscheiden sich in der Form; klein bei verbunden, deutlich bei nicht verbunden/abgebrochen; gleiche Position in allen Ansichten; Antippen öffnet die Auswahl
 
 ### Implementierung für User Story 1
 
-- [ ] T056 [US1] Zustandsmaschine `InputState` (`Disconnected` → `MidiConnected` ↔ `ConnectionLost`, `warning_acknowledged`) in `engine/src/input/state.rs`
+- [x] T056 [US1] Zustandsmaschine `InputState` (`Disconnected` → `MidiConnected` ↔ `ConnectionLost`, `warning_acknowledged`) in `engine/src/input/state.rs`
 - [ ] T057 [US1] Geräteverwaltung in `engine/src/input/registry.rs`: Geräte aus FFI bzw. `midir`, `list_inputs`, `select_input`, `reconnect`, `scan_bluetooth`; gewählte Eingabe in `Settings` speichern und beim Start wiederherstellen (FR-002)
 - [ ] T058 [P] [US1] MIDI unter Windows und Linux mit `midir` und Abfrage der Portliste alle 250 ms in `engine/src/input/midir_desktop.rs`
 - [ ] T059 [US1] C-Schnittstelle vollständig umsetzen (Stub aus T016 ersetzen) in `engine/src/ffi.rs` und `engine/src/ffi/android.rs`

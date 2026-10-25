@@ -73,7 +73,7 @@ fn settings_are_saved_and_survive_a_restart() {
 }
 
 #[test]
-fn simulated_device_is_connected_in_order() {
+fn messages_without_selection_connect_nothing() {
     let (engine, port, _) = start("midi");
     engine.midi(MidiInput::DeviceAdded {
         device: 3,
@@ -87,5 +87,97 @@ fn simulated_device_is_connected_in_order() {
     });
     // A command after the MIDI input is answered only after the input was processed.
     engine.get_settings();
-    assert_eq!(port.calls(), vec![Call::Connect(3)]);
+    assert_eq!(port.calls(), vec![]);
+}
+
+fn next_state(events: &std::sync::mpsc::Receiver<Event>) -> (InputState, bool, bool) {
+    loop {
+        if let Event::InputStateChanged {
+            state,
+            receiving,
+            warning_active,
+            ..
+        } = events.recv_timeout(TIMEOUT).unwrap()
+        {
+            return (state, receiving, warning_active);
+        }
+    }
+}
+
+#[test]
+fn selected_input_warns_on_loss_reconnects_and_is_restored() {
+    let (engine, port, data_dir) = start("select");
+    let events = engine.take_events().unwrap();
+    next_state(&events);
+    engine.midi(MidiInput::DeviceAdded {
+        device: 3,
+        name: "Piano".into(),
+        transport: Transport::Usb,
+    });
+    let list = engine.list_inputs();
+    assert_eq!(list.midi.len(), 1);
+    assert_eq!(list.selected, None);
+    assert_eq!(
+        engine.select_input(Some(3)).unwrap(),
+        InputState::MidiConnected
+    );
+    assert_eq!(
+        next_state(&events),
+        (InputState::MidiConnected, false, false)
+    );
+    engine.midi(MidiInput::Message {
+        device: 3,
+        time_us: 1_000,
+        data: vec![0x90, 60, 80],
+    });
+    assert_eq!(
+        next_state(&events),
+        (InputState::MidiConnected, true, false)
+    );
+
+    engine.midi(MidiInput::DeviceRemoved { device: 3 });
+    // SC-003: the warning goes out right with the state change.
+    assert_eq!(
+        next_state(&events),
+        (InputState::ConnectionLost, false, true)
+    );
+    assert_eq!(port.calls(), vec![Call::Connect(3), Call::Warn]);
+    engine.acknowledge_warning();
+    assert_eq!(
+        next_state(&events),
+        (InputState::ConnectionLost, false, false)
+    );
+    engine.midi(MidiInput::DeviceAdded {
+        device: 4,
+        name: "Piano".into(),
+        transport: Transport::Usb,
+    });
+    assert_eq!(
+        next_state(&events),
+        (InputState::MidiConnected, false, false)
+    );
+    assert_eq!(port.calls().last(), Some(&Call::Connect(4)));
+    drop(engine);
+
+    let port = SimulatedPort::default();
+    let restarted = Engine::start(
+        StartConfig {
+            data_dir: data_dir.clone(),
+            resource_dir: PathBuf::new(),
+            locale: "de-DE".into(),
+        },
+        Box::new(port.clone()),
+    )
+    .unwrap();
+    restarted.midi(MidiInput::DeviceAdded {
+        device: 9,
+        name: "Piano".into(),
+        transport: Transport::Usb,
+    });
+    assert_eq!(
+        restarted.list_inputs().selected.map(|d| d.name),
+        Some("Piano".to_string())
+    );
+    assert_eq!(port.calls(), vec![Call::Connect(9)]);
+    std::fs::remove_dir_all(data_dir).unwrap();
 }

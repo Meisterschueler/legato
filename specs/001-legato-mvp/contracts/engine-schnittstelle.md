@@ -14,7 +14,7 @@ Framework-neutrale Schnittstelle von `legato-engine` (`engine/src/api.rs`). Flut
 
 | Funktion | Parameter | Antwort | Anforderung |
 |---|---|---|---|
-| `list_inputs` | – | `{ midi: [{ id, name, transport: Usb \| Bluetooth, available }], selected? }` | FR-007 |
+| `list_inputs` | – | `{ midi: [{ id, name, transport: Usb \| Bluetooth }], selected?: { name, transport, bluetooth_id? } }`; `selected` auch, wenn das Gerät gerade fehlt | FR-007 |
 | `select_input` | `{ midi: id }` \| `None` | `InputState` | FR-002; verwirft laufenden Durchlauf |
 | `scan_bluetooth` | `{ enabled: bool }` | – (Funde als Ereignis) | FR-006, US 1/15 |
 | `acknowledge_warning` | – | – | FR-005 |

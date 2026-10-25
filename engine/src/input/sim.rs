@@ -7,7 +7,9 @@ use crate::runtime::MidiOutput;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Call {
     Connect(u32),
+    Disconnect(u32),
     Send(u32, Vec<u8>),
+    Warn,
 }
 
 /// Clone it before handing it to the engine to inspect the calls.
@@ -27,10 +29,18 @@ impl MidiOutput for SimulatedPort {
         self.calls.lock().unwrap().push(Call::Connect(device));
     }
 
+    fn disconnect(&mut self, device: u32) {
+        self.calls.lock().unwrap().push(Call::Disconnect(device));
+    }
+
     fn send(&mut self, device: u32, data: &[u8]) {
         self.calls
             .lock()
             .unwrap()
             .push(Call::Send(device, data.to_vec()));
+    }
+
+    fn warn(&mut self) {
+        self.calls.lock().unwrap().push(Call::Warn);
     }
 }

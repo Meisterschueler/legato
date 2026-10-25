@@ -5,8 +5,11 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
+use std::time::Instant;
 
-pub use crate::runtime::{Event, InputState, MidiInput, MidiOutput};
+use crate::input::state::InputMachine;
+pub use crate::input::state::{InputInfo, InputList, InputState};
+pub use crate::runtime::{Event, MidiInput, MidiOutput};
 use crate::runtime::{Input, Runtime};
 use crate::storage::Settings;
 
@@ -29,9 +32,11 @@ impl Engine {
         let (events_sender, events) = mpsc::channel();
         let runtime = Runtime {
             data_dir: config.data_dir,
+            input: InputMachine::new(settings.midi_device.clone()),
             settings,
             output,
             events: events_sender,
+            started: Instant::now(),
         };
         thread::Builder::new()
             .name("legato-engine".into())
@@ -62,6 +67,23 @@ impl Engine {
         let (reply, answer) = mpsc::channel();
         self.send(Input::SetSettings(Box::new(settings), reply));
         answer.recv().expect("engine runtime stopped")
+    }
+
+    pub fn list_inputs(&self) -> InputList {
+        let (reply, answer) = mpsc::channel();
+        self.send(Input::ListInputs(reply));
+        answer.recv().expect("engine runtime stopped")
+    }
+
+    /// Selects a present MIDI device or none and saves the choice (FR-002).
+    pub fn select_input(&self, device: Option<u32>) -> io::Result<InputState> {
+        let (reply, answer) = mpsc::channel();
+        self.send(Input::Select(device, reply));
+        answer.recv().expect("engine runtime stopped")
+    }
+
+    pub fn acknowledge_warning(&self) {
+        self.send(Input::AcknowledgeWarning);
     }
 
     /// Entry point for the MIDI layer; returns immediately.
