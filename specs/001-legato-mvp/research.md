@@ -102,6 +102,7 @@ Jeder Abschnitt folgt dem Schema Entscheidung · Begründung · Verworfene Alter
 
 **Entscheidung**: Eigenständiges Web-Bundle `score-view-web/` (TypeScript) mit [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org) (BSD-3-Clause), in Flutter über `webview_flutter` eingebettet (iOS, Android, macOS), unter Windows über [`webview_windows`](https://pub.dev/packages/webview_windows) (BSD-3-Clause, WebView2).
 - `webview_windows` rendert als Textur; Flutter-Widgets (Eingabe-Symbol, Auswahl, Hinweise) können über dem Notenblatt liegen. Rückmeldungen gehen dort über `window.chrome.webview.postMessage` statt über den JavaScript-Kanal von `webview_flutter`.
+- Risiko: `webview_windows` wird seit 2024 nicht mehr gepflegt und nutzt `<experimental/coroutine>`, das Visual Studio 2026 nur noch mit `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS` übersetzt (`app/windows/CMakeLists.txt`). Entfernt Microsoft den Header, muss das Paket ersetzt werden.
 - Der Kern erzeugt für jede Kombination aus Tonart und Anzeigevariante ein MusicXML und die Zuordnung zu den Anzeige-IDs; OSMD rendert nur (OSMD liest keine `id`-Attribute, Spike S2).
 - Markierungen als SVG-Ebene über dem Notenbild; Positionsmarke und Scrollen mit `requestAnimationFrame`, Farbwechsel mit CSS-Übergängen (FR-023).
 - Kommunikation Dart ↔ Web-Bundle über eine kleine Nachrichtenschnittstelle (`postMessage`); dieselbe Schnittstelle nutzt später Tauri.

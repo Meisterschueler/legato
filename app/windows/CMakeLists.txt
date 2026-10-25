@@ -57,6 +57,13 @@ add_subdirectory("runner")
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# webview_windows 0.4.0 uses <experimental/coroutine>, which Visual Studio 2026
+# rejects unless silenced.
+# shortcut: works only until Microsoft removes the header; then replace the
+# package (research.md R7).
+target_compile_definitions(webview_windows_plugin PRIVATE
+  _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 
 # === Installation ===
 # Support files are copied into place next to the executable, so that it can
