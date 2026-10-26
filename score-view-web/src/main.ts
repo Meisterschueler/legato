@@ -36,8 +36,10 @@ const osmd = new OpenSheetMusicDisplay(container, {
   drawTitle: false,
 });
 let notes = new Map<string, VexFlowGraphicalNote[]>();
-let highlighted: VexFlowGraphicalNote[] = [];
-const marked = new Map<VexFlowGraphicalNote, string>();
+let highlighted: string[] = [];
+const marked = new Map<string, string>();
+let loaded = false;
+let renderedWidth = 0;
 
 function send(message: ViewMessage): void {
   const json = JSON.stringify(message);
@@ -50,24 +52,35 @@ function send(message: ViewMessage): void {
   }
 }
 
-function color(note: VexFlowGraphicalNote, fill: string | undefined): void {
-  for (const head of note.getNoteheadSVGs()) {
-    // The paths carry their own fill attribute, so styling the group is not enough.
-    for (const element of [
-      head,
-      ...head.querySelectorAll<SVGElement>("path"),
-    ]) {
-      element.style.fill = fill ?? "";
+function color(id: string, fill: string | undefined): void {
+  for (const note of notes.get(id) ?? []) {
+    for (const head of note.getNoteheadSVGs()) {
+      // The paths carry their own fill attribute, so styling the group is not enough.
+      for (const element of [
+        head,
+        ...head.querySelectorAll<SVGElement>("path"),
+      ]) {
+        element.style.fill = fill ?? "";
+      }
     }
   }
 }
 
 async function load(musicxml: string): Promise<void> {
+  loaded = false;
   await osmd.load(musicxml);
-  osmd.render();
-  notes = new Map();
   highlighted = [];
   marked.clear();
+  send({ type: "ready", note_ids: render() });
+  loaded = true;
+}
+
+// Lays the score out for the current width. Every render replaces the
+// graphical notes, so the colors are reapplied by note ID.
+function render(): string[] {
+  osmd.render();
+  renderedWidth = window.innerWidth;
+  notes = new Map();
   const ids: string[] = [];
   osmd.Sheet.SourceMeasures.forEach((measure, measureIndex) => {
     for (const vertical of measure.VerticalSourceStaffEntryContainers) {
@@ -99,18 +112,25 @@ async function load(musicxml: string): Promise<void> {
       }
     }
   });
-  send({ type: "ready", note_ids: ids });
+  for (const [id, fill] of marked) {
+    color(id, fill);
+  }
+  for (const id of highlighted) {
+    color(id, POSITION_COLOR);
+  }
+  return ids;
 }
 
 function position(noteIds: string[], driverTimeUs: number | undefined): void {
-  for (const note of highlighted) {
-    color(note, marked.get(note));
+  for (const id of highlighted) {
+    color(id, marked.get(id));
   }
-  highlighted = noteIds.flatMap((id) => notes.get(id) ?? []);
-  for (const note of highlighted) {
-    color(note, POSITION_COLOR);
+  highlighted = noteIds;
+  for (const id of highlighted) {
+    color(id, POSITION_COLOR);
   }
-  highlighted[0]
+  noteIds
+    .flatMap((id) => notes.get(id) ?? [])[0]
     ?.getSVGGElement()
     ?.scrollIntoView({ block: "center", behavior: "auto" });
   if (driverTimeUs !== undefined) {
@@ -135,21 +155,29 @@ function handle(message: HostMessage): void {
       break;
     case "mark": {
       const fill = MARK_COLORS[message.kind] ?? MARK_COLORS.wrong;
-      for (const note of notes.get(message.note_id) ?? []) {
-        marked.set(note, fill);
-        color(note, fill);
-      }
+      marked.set(message.note_id, fill);
+      color(message.note_id, fill);
       break;
     }
     case "reset":
-      for (const note of [...highlighted, ...marked.keys()]) {
-        color(note, undefined);
+      for (const id of [...highlighted, ...marked.keys()]) {
+        color(id, undefined);
       }
       highlighted = [];
       marked.clear();
       break;
   }
 }
+
+// Window resizing and Ctrl+wheel zoom both change the width in CSS pixels:
+// break the systems anew so the score fills the width.
+let resizeTimer: number | undefined;
+window.addEventListener("resize", () => {
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => {
+    if (loaded && window.innerWidth !== renderedWidth) render();
+  }, 150);
+});
 
 window.legatoReceive = (json: string) => {
   try {
