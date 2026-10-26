@@ -3,6 +3,7 @@
 //! a `pthmm`, and the posterior over them decides.
 
 pub mod edit_distance;
+pub mod fingerprint;
 
 use std::sync::Arc;
 
@@ -32,6 +33,8 @@ pub enum RecognitionMethod {
     Exhaustive,
     /// Edit distance to the beginning of every candidate.
     EditDistance,
+    /// Transposition- and tempo-invariant fingerprints of tone triples.
+    Fingerprint,
 }
 
 /// Pitches played or notated together; `time` in seconds when played, in beats in a reference.
@@ -83,6 +86,7 @@ enum Preselection {
     Exhaustive,
     /// Reference onsets of every candidate.
     EditDistance(Arc<Vec<Vec<Onset>>>),
+    Fingerprint(Arc<fingerprint::Index>),
 }
 
 impl Repertoire {
@@ -117,6 +121,10 @@ impl Repertoire {
         let preselection = match method {
             RecognitionMethod::Exhaustive => Preselection::Exhaustive,
             RecognitionMethod::EditDistance => Preselection::EditDistance(Arc::new(onsets())),
+            RecognitionMethod::Fingerprint => {
+                let keys: Vec<Candidate> = candidates.iter().map(|(c, _, _)| c.clone()).collect();
+                Preselection::Fingerprint(Arc::new(fingerprint::Index::new(&keys, &onsets())))
+            }
         };
         let (candidates, references) = candidates.into_iter().map(|(c, n, _)| (c, n)).unzip();
         Repertoire {
@@ -156,6 +164,9 @@ impl Repertoire {
             }),
             Preselection::EditDistance(references) => {
                 Box::new(edit_distance::EditDistance::new(Arc::clone(references)))
+            }
+            Preselection::Fingerprint(index) => {
+                Box::new(fingerprint::Fingerprint::new(Arc::clone(index)))
             }
         }
     }
