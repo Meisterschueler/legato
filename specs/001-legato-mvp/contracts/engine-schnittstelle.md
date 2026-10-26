@@ -24,7 +24,7 @@ Framework-neutrale Schnittstelle von `legato-engine` (`engine/src/api.rs`). Flut
 | `render_score` | `{ piece, transposition, variation, display_variant }` | MusicXML (String) | FR-011 |
 | `get_settings` / `set_settings` | `Settings` | `Settings` | [data-model.md](../data-model.md#settings-einstellungen-persistiert) |
 
-`PieceInfo`: `{ id, work, title, number?, has_fingering, display_variants: [..] }`
+`PieceInfo`: `{ id, work, composer?, title, number?, has_fingering, display_variants: [..] }`
 
 ## Ereignisse (`Event`)
 

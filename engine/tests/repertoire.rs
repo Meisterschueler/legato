@@ -81,6 +81,39 @@ fn valid_and_invalid_files_are_loaded_and_rejected() {
 
     let piece = engine.load_piece(no_fingering).unwrap();
     assert!(!piece.has_fingering);
+    assert_eq!(engine.repertoire(), vec![piece], "replaces the same piece");
+
+    std::fs::remove_dir_all(data_dir).unwrap();
+}
+
+#[test]
+fn bundled_piece_replaces_copy_of_older_app_version() {
+    let data_dir = temp_dir("upgrade");
+    let xml = fs::read_to_string(resource_dir().join("pieces/hanon-01.musicxml")).unwrap();
+    let old = data_dir.join("pieces/0x0000000000000001.musicxml");
+    fs::create_dir_all(old.parent().unwrap()).unwrap();
+    fs::write(
+        &old,
+        xml.replace("<fingering>", "<dummy>")
+            .replace("</fingering>", "</dummy>"),
+    )
+    .unwrap();
+
+    let engine = Engine::start(
+        StartConfig {
+            data_dir: data_dir.clone(),
+            resource_dir: resource_dir(),
+            locale: "de-DE".into(),
+        },
+        Box::new(NoMidi),
+    )
+    .unwrap();
+
+    let repertoire = engine.repertoire();
+    assert_eq!(repertoire.len(), 1);
+    assert!(repertoire[0].has_fingering);
+    assert_eq!(repertoire[0].composer.as_deref(), Some("Hanon"));
+    assert!(!old.exists());
 
     std::fs::remove_dir_all(data_dir).unwrap();
 }
