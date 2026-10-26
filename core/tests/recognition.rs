@@ -237,3 +237,84 @@ fn change_after_completion_is_recognized() {
         ]
     );
 }
+
+/// The final note ("Ende") is no part of the performance; the next performance may follow it
+/// and start on the same pitches.
+#[test]
+fn next_performance_after_the_final_note_is_recognized() {
+    let (score, range) = hanon();
+    let candidates = HanonRules.candidates("h1");
+    let first = find(&candidates, Variation::BothHands, 0);
+    for second in [
+        first.clone(),
+        find(&candidates, Variation::BothHands, 5),
+        find(&candidates, Variation::RightHandOnly, 0),
+    ] {
+        let once = synth::clean(&score, &first, range, 2.0);
+        let step = once[2].0 - once[0].0;
+        let end = once.last().unwrap().0 + step;
+        let ende: Vec<(f64, u8)> = score.onsets[range.end as usize + 1]
+            .notes
+            .iter()
+            .map(|n| (end, n.pitch))
+            .collect();
+        // The final note is a half note: eight steps.
+        let offset = end + 8.0 * step;
+        let notes: Vec<(f64, u8)> = once
+            .iter()
+            .copied()
+            .chain(ende)
+            .chain(
+                synth::clean(&score, &second, range, 2.0)
+                    .into_iter()
+                    .map(|(t, p)| (t + offset, p)),
+            )
+            .collect();
+
+        let setups = candidates
+            .iter()
+            .map(|c| Setup::new(&score, c.clone(), range))
+            .collect();
+        let limits = Limits {
+            pause: 4.0,
+            rest: 10.0,
+        };
+        let mut performances = Performances::new(setups, HanonRules.recognition_length(), limits);
+        let mut preprocessor = Preprocessor::new(Grouping::Window { period: 0.01 });
+        let mut events = Vec::new();
+        for (time, pitch) in notes {
+            events.extend(performances.tick(time));
+            if let Some(observation) = preprocessor.note_on(time, pitch) {
+                events.extend(performances.observe(&observation));
+            }
+        }
+        if let Some(observation) = preprocessor.finish() {
+            events.extend(performances.observe(&observation));
+        }
+        let deviations = events
+            .iter()
+            .filter(|e| matches!(e, Event::Deviation(_)))
+            .count();
+        let lifecycle: Vec<Event> = events
+            .into_iter()
+            .filter(|e| {
+                matches!(
+                    e,
+                    Event::Recognized(_) | Event::Completed | Event::Aborted(_)
+                )
+            })
+            .collect();
+        let case = format!("{:?} {}", second.variation, second.transposition);
+        assert_eq!(
+            lifecycle,
+            [
+                Event::Recognized(first.clone()),
+                Event::Completed,
+                Event::Recognized(second.clone()),
+                Event::Completed
+            ],
+            "{case}"
+        );
+        assert_eq!(deviations, 0, "{case}");
+    }
+}
