@@ -64,7 +64,7 @@ Eine zulässige Kombination für die Erkennung.
 | `variation` | `BothHands` \| `LeftHandOnly` \| `RightHandOnly` | |
 | `transposition` | i8 | Halbtöne; Hanon 0–11 (FR-015) |
 
-`WorkRules` liefert die zulässigen Kandidaten; der `RecognitionFilter` (FR-018) filtert sie.
+`WorkRules` liefert die zulässigen Kandidaten; der `RecognitionFilter` (FR-018) filtert sie. Die Vorauswahl (`RecognitionMethod`, [research.md R15](research.md#r15--vorauswahl-bei-der-erkennung-fr-085)) bestimmt, welche davon während der Erkennung verfolgt werden.
 
 ## Üben
 
@@ -131,6 +131,7 @@ Die Ereignisse `PerformanceCompleted`, `PerformanceAborted`, `Stopped` und `Conn
 | Eingabe | `midi_device` (Name, Art USB/Bluetooth, Bluetooth-Kennung) | keins |
 | Eingabe | `signal_device` | = `midi_device` (US 1, Szenario 14) |
 | Erkennung | `recognition_filter` (Stücke, Variationen, Tonarten) | keiner |
+| Erkennung | `recognition_method` (FR-085) | vorläufig `EditDistance`, endgültig nach S3 Teil 2; Alternativen `Exhaustive`, `Fingerprint` |
 | Zuordnung | `pause_limit_ms` | 4000 |
 | Zuordnung | `rest_limit_ms` | 10000 |
 | Übeeinheit | `session_idle_timeout_ms` (Ruhezeit) | 600000 |

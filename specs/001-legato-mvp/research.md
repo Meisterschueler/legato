@@ -145,7 +145,7 @@ Weitere Verfahren (`hmm`, `dixon`) bei Bedarf später. Das Standardverfahren wir
 | Verhältnis zum zweitbesten Kandidaten | ≥ 20 : 1 |
 | Entscheidung spätestens nach der Erkennungslänge | bester Kandidat, wenn Wahrscheinlichkeit ≥ 0,5; sonst kein Durchlauf |
 
-Die A-posteriori-Wahrscheinlichkeit der Kandidaten kommt aus der Evidenz je eines `pthmm` (gleichverteilte A-priori-Wahrscheinlichkeit), unabhängig vom eingestellten Folgeverfahren: `outerhmm` (Viterbi) und `arzt` liefern keine Evidenz. Der erkannte `pthmm` folgt weiter; bei anderem Folgeverfahren wird es mit den bisherigen Tönen gestartet (`core/src/recognition.rs`).
+Die A-posteriori-Wahrscheinlichkeit der Kandidaten kommt aus der Evidenz je eines `pthmm` (gleichverteilte A-priori-Wahrscheinlichkeit), unabhängig vom eingestellten Folgeverfahren: `outerhmm` (Viterbi) und `arzt` liefern keine Evidenz. Der erkannte `pthmm` folgt weiter; bei anderem Folgeverfahren wird es mit den bisherigen Tönen gestartet (`core/src/recognition.rs`). Welche Kandidaten ein `pthmm` erhalten, bestimmt die Vorauswahl ([R15](#r15--vorauswahl-bei-der-erkennung-fr-085)).
 
 Abweichungen (FR-012, FR-013) ordnet ein eigener Abgleich ein, nicht die Position des Folgeverfahrens: Nach einer Lücke springt `pthmm` kurz zu weit und meldete falsche Auslassungen. Jeder Ton sucht seine Note im aktuellen und den drei folgenden Anschlagszeitpunkten; übersprungene Noten sind Auslassungen, ein Ton bis 2 Halbtöne neben einer offenen Note ist ein falscher Ton, sonst ein Zusatzton. Das Folgeverfahren liefert den Startpunkt und setzt den Abgleich neu, wenn er weiter zurückliegt (`core/src/following/deviations.rs`).
 
@@ -209,3 +209,44 @@ Teil 2 (Erweiterungen, 10 aufgezeichnete Durchläufe von Hanon Nr. 1) braucht Au
 ## R14 – Repositories
 
 **Entscheidung**: Vorerst ein Monorepo (Cargo-Workspace, Flutter-App, Web-Bundle, Werkzeuge). Eine Aufteilung wird mit dem Backend ([007](../007-konto-backend/spec.md)) neu bewertet.
+
+## R15 – Vorauswahl bei der Erkennung (FR-085)
+
+**Problem**: Die Erkennung aus R8 verfolgt jeden Kandidaten mit einem dichten `pthmm` ($O(N^2)$ je Beobachtung und Kandidat, $N$ Zustände). Für Hanon Nr. 1 (36 Kandidaten) genügt das; bei 20 Stücken (720 Kandidaten, SC-014) sprengt es Rechenzeit und Speicher.
+
+**Entscheidung**: Die Erkennung arbeitet zweistufig. Eine wählbare Vorauswahl (`RecognitionMethod`) bestimmt nach jedem Anschlag höchstens $k$ Kandidaten; nur sie verfolgt je ein `pthmm`, und die Entscheidung bleibt wie in R8 (A-posteriori-Wahrscheinlichkeit, Schwellen, Übergabe an den Folger).
+
+| `RecognitionMethod` | Vorauswahl | Quelle |
+|---|---|---|
+| `Exhaustive` | keine: alle Kandidaten (Verfahren aus R8, Referenz für die Messung) | R8 |
+| `EditDistance` | Edit-Distanz der gespielten Anschläge zum Anfang jedes Kandidaten | [Sellers, 1980](../../docs/literatur.md); Idee aus dem Matchmaker von [Meisterschueler](https://github.com/Meisterschueler/meisterschueler-gdx) (Intervalle mit Levenshtein) |
+| `Fingerprint` | transpositionsinvariante Fingerprints aus Tontripeln, Abstimmung über Kandidat und Versatz | [Arzt et al., 2012](../../docs/literatur.md), angepasst |
+
+**Gemeinsame Regeln**:
+- *Anschläge*: Die Vorauswahl erhält dieselben Beobachtungen wie `pthmm` und fasst Beobachtungen innerhalb von 35 ms nach dem ersten Ton zu einem Anschlag zusammen (wie `arzt`). Referenz sind die Anschläge des `Setup` (transponiert, nur gespielte Hände), Wiederholungen einmal aufgelöst, die ersten $2 \cdot$ Erkennungslänge Anschläge.
+- *Start*: Ein Durchlauf beginnt am Anfang seines Bereichs, wie bei `pthmm` (Anfangsverteilung mit wenigen Zuständen Spielraum). Ein Einstieg mitten im Stück ist nicht verlangt; ein freier Start würde bei Hanon diatonisch versetzte Figuren mit anderen Tonarten verwechseln.
+- *Vorauswahl*: höchstens $k = 6$ Kandidaten (Startwert), beste zuerst, gleichwertige in der Reihenfolge der Kandidaten (deterministisch). Kandidaten unter einer Mindestqualität kommen nicht hinein; ist die Vorauswahl leer, bleibt die Entscheidung `Pending` und wird nach der Erkennungslänge `NoPerformance`.
+- *Nachführen*: Neu aufgenommene Kandidaten erhalten ein `pthmm`, das die gepufferten Beobachtungen der laufenden Erkennung nachspielt; ausgeschiedene werden verworfen. Die Übergangsmatrix hängt nicht von der Tonart ab und wird je Stück und Variation geteilt.
+- *Aufbau*: Referenzfolgen und Index entstehen einmal je Repertoire und Einstellung (`Performances::new`), nicht je Erkennung.
+- *Determinismus* (Constitution VI, VIII): Kosten und Stimmen sind ganzzahlig.
+
+**`EditDistance`**:
+- Tabelle mit einer Zeile je gespieltem Anschlag und einer Spalte je Referenzanschlag; jeder neue Anschlag berechnet eine Zeile je Kandidat ([Sellers, 1980](../../docs/literatur.md)).
+- Kosten: Auslassen eines Referenzanschlags $|B|$, Zusatzanschlag $|A|$, Ersetzen $\max(|A \setminus B|, |B \setminus A|)$; ein falscher Ton kostet also 1, ein fehlender Ton eines Akkords ebenfalls.
+- Fester Anfang (erste Zeile: Summe der Auslassungen), freies Ende: Abstand = Minimum der aktuellen Zeile.
+- Mindestqualität: Abstand $\le$ halbe Zahl der gespielten Töne (Startwert).
+- Aufwand: Kandidaten $\times\ 2 \cdot$ Erkennungslänge Zellen je Anschlag, bei 720 Kandidaten rund 23 000.
+- Die Tonart steckt im Kandidaten (12 Zeilen je Stück und Variation); Intervalle statt Tonhöhen werden nicht verwendet, weil ein falscher Ton sonst zwei Fehler kostet.
+
+**`Fingerprint`**:
+- Je Anschlag zählen der tiefste und der höchste Ton. Ein Tripel sind Töne $a, b, c$ aus Anschlägen $g_0 < g_1 < g_2$ mit $g_1 - g_0 \le F$ und $g_2 - g_1 \le F$, $F = 2$ (Startwert).
+- Hash: $(b - a,\ c - b,\ r)$ mit $r$ = Verhältnis der Anschlagsabstände $\frac{t_2 - t_1}{t_1 - t_0}$, logarithmisch in 5 Stufen quantisiert und auf $[\frac14, 4]$ begrenzt (Spiel: Sekunden, Referenz: Schläge). Durch die Intervalle unabhängig von der Tonart, durch das Verhältnis unabhängig vom Tempo.
+- Index je Stück und Variation (nicht je Tonart): Hash → Liste von (Referenzanschlag $g_0$, Tonhöhe $a$).
+- Abstimmung: Jeder Treffer stimmt für (Stück, Variation, Transposition $= a_{\text{Spiel}} - a_{\text{Referenz}}$), sofern zugelassen (FR-018, Werkregeln), und nur bei einem Versatz der Anschläge von höchstens 4 (fester Anfang). Jedes gespielte Tripel zählt je Kandidat höchstens einmal.
+- Mindestqualität: 2 Stimmen (Startwert).
+- Abweichung vom Original: Arzt et al. stimmen über die Position im ganzen Stück ab (Einstieg überall); Legato beschränkt den Versatz wegen des festen Anfangs und braucht nur den Anfang im Index.
+- Bei Hanon (gleichmäßige Sechzehntel) ist $r$ stets 1; die Hashes sind dann reine Intervallpaare. Der Vorteil des Verfahrens zeigt sich erst bei rhythmisch vielfältigen Stücken und großem Repertoire.
+
+**Standard**: vorläufig `EditDistance`; endgültig nach der Messung von SC-002 und SC-014 mit allen drei Verfahren (S3 Teil 2).
+
+**Verworfen**: transpositionsinvariantes String-Matching nach Mäkinen/Navarro/Ukkonen (bei 12 Tonarten kein Gewinn gegenüber 12 Zeilen); geometrisches Matching (P1–P3, SIA) wegen Tempo und Aufwand; gebänderte `pthmm`-Bank ohne Vorauswahl (wächst weiter linear mit Stücken × Tonarten, bleibt als Optimierung für T102 offen).

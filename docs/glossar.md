@@ -99,6 +99,7 @@ Bezeichner im Code sind englisch (Constitution, Entwicklungsprinzipien). Für Be
 | Zuordnung (während des Spiels / nachträglich) | `Alignment` (`ScoreFollowing` / `OfflineAlignment`) |
 | Folgeverfahren | `ScoreFollower` |
 | Erkennung | `Recognition` |
+| Verfahren für die Erkennung (alle Kandidaten, Edit-Distanz, Fingerprints) | `RecognitionMethod` (`Exhaustive`, `EditDistance`, `Fingerprint`) |
 | Erkennungslänge | `RecognitionLength` |
 | Zuordnungsverlust | `AlignmentLoss` |
 | Abweichung | `Deviation` |

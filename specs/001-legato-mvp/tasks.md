@@ -182,8 +182,10 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [x] T075 [P] [US3] Tests in `core/tests/performance_lifecycle.rs`: Abbruch nach `PauseLimit` außerhalb notierter Pausen; Warten bis `RestLimit` an notierten Pausen; Abbruch bei `AlignmentLoss` (< 30 % der letzten *n* Töne zugeordnet); kurzzeitiger Tonartwechsel ergibt Abweichungen, kein Wechsel des Kandidaten; Pedal (CC 64) ohne Einfluss; einhändig keine Auslassungen der anderen Hand; dieselbe Zuordnung bei 0,5- bis 3-fachem Tempo und mit Agogik (FR-017)
 - [ ] T076 [P] [US3] Messung SC-001 in `core/tests/reference_sc001.rs` über alle Referenzdaten (synthetisch und echt); Ziel ≥ 99 %
 - [ ] T077 [P] [US3] Tests in `score-view-web/test/score_view.test.ts`: Positionsmarke folgt `position`; Fehlermarkierung über `mark`; Scrollen hält die nächste Zeile sichtbar; Wechsel der Anzeigevariante behält die Position; Übergänge 150–400 ms, nie sofort gesetzt; bei `prefers-reduced-motion` Überblenden statt Bewegung (FR-023)
-- [ ] T102 [P] [US3] Benchmark in `core/benches/following.rs` (criterion): Kern ≤ 2 ms pro Ton bei 36 Kandidaten (plan.md „Leistungsziele“) auf Desktop und über den plattformübergreifenden Lauf (T045) auf iOS/Android
+- [ ] T102 [P] [US3] Benchmark in `core/benches/following.rs` (criterion): Kern ≤ 2 ms pro Ton bei 36 Kandidaten und je Verfahren für die Erkennung bei 720 Kandidaten (20 Stücke aus T108; `Exhaustive` nur informativ) (plan.md „Leistungsziele“, SC-014) auf Desktop und über den plattformübergreifenden Lauf (T045) auf iOS/Android
 - [ ] T103 [P] [US3] Test in `app/test/no_interruptions_test.dart`: während eines simulierten Durchlaufs erscheinen keine Meldungen, Dialoge oder Animationen außer den in FR-024 erlaubten (SC-004)
+- [ ] T108 [P] [US3] Generator für 20 Hanon-artige Stücke in `core/tests/support/hanon_like.rs` (Referenz für SC-014): je eine andere Figur aus 8 Tönen, diatonisch aufwärts und abwärts versetzt, beide Hände im Oktavabstand, Werkregeln wie Hanon (12 Tonarten, 3 Variationen); deterministisch
+- [ ] T109 [P] [US3] Tests in `core/tests/recognition_methods.rs` für `Exhaustive`, `EditDistance` und `Fingerprint`: SC-002 mit Hanon Nr. 1 (synthetische Durchläufe aus T072 in allen Tonarten und Variationen, mit Abweichungen, 0,5- bis 3-faches Tempo) und SC-014 mit den Stücken aus T108; Einschränkung (FR-018) wird beachtet; ohne passenden Kandidaten kein Durchlauf; gleiche Eingabe ergibt gleiche Vorauswahl; Einheitentests für Kosten (falscher Ton 1, fehlender Akkordton 1) und Hashes (unabhängig von Tonart und Tempo)
 
 ### Implementierung für User Story 3
 
@@ -197,10 +199,14 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 - [ ] T085 [US3] Positionsmarke und Scrollen mit `requestAnimationFrame`, flüssige Farbwechsel (150–400 ms), Überblenden bei „Bewegung reduzieren“, dezente Fehlermarkierung während bzw. nach dem Durchlauf in `score-view-web/src/markers.ts` und `score-view-web/src/scroll.ts` (FR-023, FR-025)
 - [x] T086 [US3] Ereignisse der Engine an `score-view-web` weiterreichen und beim erkannten Durchlauf Stück und Tonart zeigen in `app/lib/src/score_view/score_view.dart` und `app/lib/src/practice/practice_screen.dart` (US 3 Szenario 18; Anzeigevariante mit T083)
 - [ ] T087 [P] [US3] Einstellungen in `app/lib/src/settings/settings_screen.dart`: Grenzzeiten (FR-020), Fehlermarkierung während/nach je Abweichungsart (FR-025), Einschränkung der Erkennung (FR-018), Anzeigevariante (FR-011)
-- [ ] T088 [P] [US3] Experteneinstellungen mit Auswahl des Folgeverfahrens (`Pthmm`, `OuterHmm`, `Arzt`) in `app/lib/src/settings/expert_settings_screen.dart` (FR-032)
-- [ ] T089 [US3] S3 Teil 2: Verfahren mit Erweiterungen gegen SC-001 und SC-002 messen; Standardverfahren festlegen und in `specs/001-legato-mvp/research.md` (R8) sowie als Standard in `engine/src/storage.rs` und [data-model.md](data-model.md) eintragen
+- [ ] T088 [P] [US3] Experteneinstellungen mit Auswahl des Folgeverfahrens (`Pthmm`, `OuterHmm`, `Arzt`, FR-032) und des Verfahrens für die Erkennung (`Exhaustive`, `EditDistance`, `Fingerprint`, FR-085; nach T113) in `app/lib/src/settings/expert_settings_screen.dart`; Texte in `app/l10n/app_de.arb` und `app/l10n/app_en.arb`
+- [ ] T089 [US3] S3 Teil 2: Verfahren mit Erweiterungen gegen SC-001 und SC-002 sowie die Verfahren für die Erkennung gegen SC-002 und SC-014 messen; Standardverfahren für Zuordnung und Erkennung festlegen und in `specs/001-legato-mvp/research.md` (R8, R15) sowie als Standard in `engine/src/storage.rs` und [data-model.md](data-model.md) eintragen
+- [ ] T110 [US3] Zweistufige Erkennung laut research.md R15: `core/src/recognition.rs` nach `core/src/recognition/mod.rs` verschieben; Trait `Preselector` (Anschläge mit 35 ms gruppieren, `observe`, Vorauswahl von höchstens 6 Kandidaten mit Mindestqualität); Beobachtungen puffern, `pthmm` nur für die Vorauswahl (neu aufgenommene nachführen, ausgeschiedene verwerfen), Übergangsmatrix je Stück und Variation teilen; `Exhaustive` verhält sich wie bisher (`core/tests/recognition.rs` unverändert grün); `Performances::new` in `core/src/performance.rs` erhält `RecognitionMethod` und baut Referenzen bzw. Index einmal
+- [ ] T111 [P] [US3] Vorauswahl `EditDistance` in `core/src/recognition/edit_distance.rs` (nach T110): eine Zeile je Anschlag und Kandidat, ganzzahlige Kosten, fester Anfang, freies Ende
+- [ ] T112 [P] [US3] Vorauswahl `Fingerprint` in `core/src/recognition/fingerprint.rs` (nach T110): Tripel aus tiefstem und höchstem Ton je Anschlag, Hash aus zwei Intervallen und quantisiertem Abstandsverhältnis, Index je Stück und Variation, Abstimmung mit Versatz ≤ 4
+- [ ] T113 [US3] Einstellung `recognition_method` in `engine/src/storage.rs` (Standard `EditDistance`, Test in `engine/tests/storage.rs`) und Weitergabe an `Performances` in `engine/src/session.rs`; Änderung gilt ab der nächsten Erkennung (FR-085); Brücke in `app/rust/` neu erzeugen
 
-**Checkpoint**: Hanon Nr. 1 wird in beliebiger Tonart, beid- und einhändig erkannt und verfolgt; Abbrüche funktionieren; SC-001 und SC-002 erfüllt.
+**Checkpoint**: Hanon Nr. 1 wird in beliebiger Tonart, beid- und einhändig erkannt und verfolgt, mit jedem Verfahren für die Erkennung; Abbrüche funktionieren; SC-001, SC-002 und SC-014 erfüllt.
 
 ---
 
@@ -291,7 +297,7 @@ Task: "arzt nach core/src/following/arzt.rs portieren"          (T043)
 
 **US1**: T054 und T055 parallel; danach T058, T063, T065 parallel zu T056/T057; T105 nach T058; T107 nach T105.
 
-**US3**: T072, T074, T075, T076, T077 parallel; danach T087 und T088 parallel zur Kern-Implementierung.
+**US3**: T072, T074, T075, T076, T077, T108, T109 parallel; danach T087 und T088 parallel zur Kern-Implementierung. T110 vor T111 und T112 (parallel); T113 nach T110; T088 (Erkennung) nach T113.
 
 ## Umsetzungsstrategie
 

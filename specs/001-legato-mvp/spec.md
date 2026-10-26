@@ -83,7 +83,7 @@ Ein Pianist verbindet sein Digitalpiano per MIDI und beginnt zu spielen. Die App
 12. **Angenommen** ein Durchlauf läuft, **wenn** der Pianist außerhalb einer notierten Pause länger als eine Grenzzeit nicht spielt, **dann** gilt der Durchlauf als abgebrochen.
 13. **Angenommen** ein Durchlauf läuft, **wenn** der Pianist nahtlos etwas anderes spielt, bis ein Zuordnungsverlust eintritt, **dann** gilt der Durchlauf als abgebrochen, und die App beginnt mit der Erkennung eines neuen Durchlaufs.
 14. **Angenommen** der Pianist hat in den Einstellungen die Grenzzeiten geändert, **wenn** der nächste Durchlauf beginnt, **dann** gelten die neuen Werte.
-15. **Angenommen** der Pianist hat in den Experteneinstellungen ein anderes Verfahren für die Zuordnung während des Spiels gewählt, **wenn** der nächste Durchlauf beginnt, **dann** verwendet die App dieses Verfahren.
+15. **Angenommen** der Pianist hat in den Experteneinstellungen ein anderes Verfahren für die Zuordnung während des Spiels oder für die Erkennung gewählt, **wenn** der nächste Durchlauf beginnt, **dann** verwendet die App dieses Verfahren.
 16. **Angenommen** keine Onlineverbindung besteht, **wenn** der Pianist ein lokal verfügbares Stück spielt, **dann** funktionieren alle Schritte dieser Story uneingeschränkt.
 17. **Angenommen** der Pianist benutzt das Sustain-Pedal, **wenn** er spielt, **dann** wird das Pedal für Zuordnung und Abweichungen nicht ausgewertet. Zuordnung und Abweichungen beziehen sich nur auf die Tasten.
 18. **Angenommen** die Werkspezifikation legt mehrere Anzeigevarianten fest (z. B. Hanon), **wenn** der Pianist eine andere Variante wählt, **dann** zeigt das Notenblatt das Stück fließend in dieser Variante an, und die Positionsmarkierung folgt dem Spiel weiterhin.
@@ -197,6 +197,7 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 **Experteneinstellungen**
 
 - **FR-032**: Die App MUSS in einem eigenen Bereich für Experteneinstellungen mehrere Verfahren für die Zuordnung während des Spiels zur Wahl anbieten. Ein Standardverfahren MUSS voreingestellt sein. Eine Änderung gilt ab dem nächsten Durchlauf.
+- **FR-085**: Die App MUSS in den Experteneinstellungen mehrere Verfahren für die Erkennung von Stück, Variation und Tonart (FR-016) zur Wahl anbieten. Ein Standardverfahren MUSS voreingestellt sein. Eine Änderung gilt ab der nächsten Erkennung; eine laufende Erkennung und ein laufender Durchlauf bleiben unberührt.
 
 ### Nicht-funktionale Anforderungen
 
@@ -219,10 +220,11 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 ## Erfolgskriterien
 
 - **SC-001**: Bei MIDI-Eingabe werden mindestens 99 % der Töne in Referenz-Durchläufen (einschließlich absichtlicher Abweichungen) korrekt zugeordnet, gemessen an einer manuell erstellten Referenz-Zuordnung.
-- **SC-002**: Bei MIDI-Eingabe erkennt die App Stück, Variation und Tonart in Referenz-Durchläufen zu Beginn jedes Durchlaufs innerhalb der Erkennungslänge korrekt (z. B. 8 Töne je Hand bei Hanon Nr. 1), sofern sich die zugelassenen Stücke, Variationen und Tonarten innerhalb dieser Länge unterscheiden.
+- **SC-002**: Bei MIDI-Eingabe erkennt die App Stück, Variation und Tonart in Referenz-Durchläufen zu Beginn jedes Durchlaufs innerhalb der Erkennungslänge korrekt (z. B. 8 Töne je Hand bei Hanon Nr. 1), sofern sich die zugelassenen Stücke, Variationen und Tonarten innerhalb dieser Länge unterscheiden. Das gilt für jedes wählbare Verfahren für die Erkennung (FR-085).
 - **SC-003**: Nach der Trennung einer MIDI-Verbindung ertönt die Warnung innerhalb von 2 s. Bei kabellosen Verbindungen (z. B. Bluetooth-MIDI) gilt die Frist ab dem Zeitpunkt, zu dem das Betriebssystem die Trennung meldet.
 - **SC-004**: Während eines Durchlaufs erscheint keinerlei unaufgeforderte Meldung.
 - **SC-005**: Die App versendet keine Benachrichtigungen außerhalb der laufenden App.
+- **SC-014**: Mit 20 Stücken im Repertoire, die wie Hanon in jeder Tonart und Variation zugelassen sind, erfüllt jedes wählbare Verfahren für die Erkennung SC-002 und NFR-003.
 
 ## Annahmen
 

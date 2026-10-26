@@ -22,11 +22,11 @@ Das MVP ist eine plattformübergreifende App (Priorität iOS/iPad, dann Android,
 
 **Projekttyp**: plattformübergreifende App mit portablem Rust-Kern
 
-**Leistungsziele**: Latenz vom Anschlag bis zur Anzeige ≤ 50 ms (95 %), nie > 100 ms (NFR-003); Kern ≤ 2 ms pro Ton bei 36 Kandidaten; Scrollen und Markierung mit 60 fps
+**Leistungsziele**: Latenz vom Anschlag bis zur Anzeige ≤ 50 ms (95 %), nie > 100 ms (NFR-003); Kern ≤ 2 ms pro Ton bei 36 Kandidaten, mit Vorauswahl ([R15](research.md#r15--vorauswahl-bei-der-erkennung-fr-085)) auch bei 720 Kandidaten (20 Stücke × 3 Variationen × 12 Tonarten, SC-014); Scrollen und Markierung mit 60 fps
 
 **Rahmenbedingungen**: vollständig offline (NFR-002); Warnung binnen 2 s nach Meldung der Trennung (SC-003); Zuordnung ≥ 99 % (SC-001); plattformübergreifend identische Ergebnisse im Rahmen der Toleranzen aus [R2](research.md#r2--gemeinsamer-kern-in-rust); keine Fachlogik in Dart ([R3](research.md#r3--austauschbarkeit-des-frameworks-flutter--tauri))
 
-**Umfang**: 4 User Stories, 1 mitgeliefertes Stück, ca. 5 Bildschirme (Notenblatt, Eingabe-Auswahl, Repertoire, Einstellungen, Experteneinstellungen), 2 Sprachen, 3 portierte Folgeverfahren
+**Umfang**: 4 User Stories, 1 mitgeliefertes Stück, ca. 5 Bildschirme (Notenblatt, Eingabe-Auswahl, Repertoire, Einstellungen, Experteneinstellungen), 2 Sprachen, 3 portierte Folgeverfahren, 3 Verfahren für die Erkennung
 
 ## Constitution Check
 
@@ -43,7 +43,7 @@ Das MVP ist eine plattformübergreifende App (Priorität iOS/iPad, dann Android,
 | VII. Datensparsamkeit | Keine Datenübertragung | ✅ |
 | VIII. Plattformübergreifende Konsistenz | Ein Rust-Kern für App, Backend und Web-App; Toleranzen festgelegt und plattformübergreifend getestet ([R2](research.md#r2--gemeinsamer-kern-in-rust), [R13](research.md#r13--tests)) | ✅ |
 | Testbarkeit | Referenzdaten aus Matchmaker und eigene Referenz-Durchläufe; Tests vor bzw. mit der Implementierung | ✅ |
-| Einfachheit | Monorepo; Werkregeln als Code; drei Folgeverfahren (FR-032 verlangt mehrere). Zusätzliche Schichten (Engine, native MIDI, Web-Bundle) sind begründet, siehe Komplexitätsnachweis | ✅ |
+| Einfachheit | Monorepo; Werkregeln als Code; drei Folgeverfahren (FR-032 verlangt mehrere); drei Verfahren für die Erkennung (FR-085 verlangt mehrere), alle ohne neue Abhängigkeiten. Zusätzliche Schichten (Engine, native MIDI, Web-Bundle) sind begründet, siehe Komplexitätsnachweis | ✅ |
 | Lizenzen | Flutter BSD-3, `flutter_rust_bridge` MIT, OSMD BSD-3, Matchmaker Apache-2.0 (Herkunftshinweis, `NOTICE`); Lizenz jeder weiteren Abhängigkeit wird vor Aufnahme geprüft | ✅ |
 | Sprache | Bezeichner, Pfade und Schlüssel in Datenmodell und Contracts englisch laut [Glossar](../../docs/glossar.md#bezeichner-im-code); Dokumentation deutsch | ✅ |
 
@@ -70,7 +70,7 @@ flowchart LR
         end
         subgraph Kern["legato-core (ohne I/O)"]
             Vor["Vorverarbeitung"]
-            Erk["Erkennung"]
+            Erk["Erkennung<br/>Vorauswahl: alle · Edit-Distanz · Fingerprints"]
             Folge["Folgeverfahren<br/>pthmm · outerhmm · arzt"]
             Dl["Durchlauf"]
             Noten["Notentext, Werkregeln,<br/>MusicXML"]
@@ -128,7 +128,7 @@ core/                            # legato-core
 │   ├── works/                   # WorkRules trait, generic.rs, hanon.rs
 │   ├── preprocessing.rs         # pedal, echo
 │   ├── following/               # ScoreFollower trait, pthmm.rs, outer_hmm.rs, arzt.rs
-│   ├── recognition.rs           # candidates, decision
+│   ├── recognition/             # mod.rs (candidates, decision), edit_distance.rs, fingerprint.rs
 │   └── performance.rs           # states, abort, deviations
 └── tests/
     ├── matchmaker/              # 1:1 übertragene Tests, Vergleich mit Erwartungsdateien

@@ -63,3 +63,4 @@ flutter run -d windows                     # bzw. macos, linux
 | 18 | „Bewegung reduzieren“ am Gerät einschalten, spielen | Positionsmarke und Scrollen überblenden statt sich zu bewegen | FR-023 |
 | 19 | Verbindung trennen und nicht wiederherstellen | Warnung sofort, nach 10 s und nach 30 s (iPhone/Android zusätzlich Vibration), danach nur noch das Symbol | FR-005 |
 | 20 | Wie 15 unter Windows mit einem in Windows gekoppelten Bluetooth-MIDI-Gerät | wie 15, sonst manueller Weg über das Symbol in höchstens 2 Tippaktionen | US 1/15, FR-006 |
+| 21 | In den Experteneinstellungen nacheinander jedes Verfahren für die Erkennung wählen und Hanon Nr. 1 in Es-Dur spielen | jeweils nach höchstens 8 Tönen je Hand erkannt; Wechsel gilt ab der nächsten Erkennung | US 3/15, FR-085 |
