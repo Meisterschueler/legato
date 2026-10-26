@@ -33,8 +33,9 @@ Framework-neutrale Schnittstelle von `legato-engine` (`engine/src/api.rs`). Flut
 | `InputStateChanged` | `{ state: Disconnected \| MidiConnected \| ConnectionLost, device?, receiving, warning_active }` | FR-005, FR-007 |
 | `BluetoothDeviceFound` | `{ id, name }` | FR-006 |
 | `PerformanceRecognized` | `{ piece, variation, transposition }` | FR-016 |
-| `Position` | `{ note_ids: [..], driver_time_us }` | US 3; Latenzmessung (R9) |
-| `DeviationDetected` | `{ kind, note_id?, pitch? }` | FR-025, nur wenn Fehlermarkierung während des Spiels an |
+| `Position` | `{ note_ids: [..], beat, driver_time_us }`; `beat` in Vierteln ab Beginn des Stücks | US 3; Latenzmessung (R9); Tempo in der Debug-Ansicht |
+| `Tone` | `{ pitch, velocity, driver_time_us }` je Anschlag der gewählten Eingabe | Debug-Ansicht |
+| `DeviationDetected` | `{ kind, note_id?, pitch? }` | FR-025; jede Abweichung, die Hülle markiert laut `error_marking_during` |
 | `PerformanceEnded` | `{ outcome: Completed \| Aborted, reason?, deviations: [..] }` | FR-025, US 4 |
 | `BackgroundNotice` | `{ performance_discarded }` | US 1/8 |
 | `PracticeSessionChanged` | `{ active }` | NFR-005 (Bildschirmsperre) |
@@ -46,8 +47,8 @@ Die Hülle reicht Notenbild und Ereignisse unverändert als JSON per `postMessag
 | Nachricht | Inhalt |
 |---|---|
 | `load` | `{ musicxml, display_variant }` |
-| `position` | `{ note_ids, driver_time_us? }` |
-| `mark` | `{ note_id, kind }` |
+| `position` | `{ note_ids, driver_time_us? }` (halbtransparenter blauer Balken über alle Systeme der Zeile) |
+| `mark` | `{ note_id, kind: correct \| wrong \| missing }` (Farbe des Notenkopfs) |
 | `zoom` | `{ percent }` (Notenbild neu umbrechen) |
 | `reset` | – |
 

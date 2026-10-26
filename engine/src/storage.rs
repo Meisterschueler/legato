@@ -39,9 +39,11 @@ pub enum ScoreFollowerKind {
     Arzt,
 }
 
-/// Error marking per deviation kind.
+/// Error marking per deviation kind; `correct` colors the notes played as notated.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct ErrorMarking {
+    pub correct: bool,
     pub omission: bool,
     pub wrong_note: bool,
     pub addition: bool,

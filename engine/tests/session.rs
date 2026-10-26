@@ -91,6 +91,11 @@ fn performance_is_recognized_followed_and_completed() {
     let seen = until(&events, |e| matches!(e, Event::PerformanceEnded { .. }));
 
     assert!(seen.contains(&Event::PracticeSessionChanged { active: true }));
+    assert!(seen.contains(&Event::Tone {
+        pitch: notes(Variation::BothHands, 2)[0].1,
+        velocity: 64,
+        driver_time_us: 0,
+    }));
     assert!(seen.contains(&Event::PerformanceRecognized {
         piece,
         variation: Variation::BothHands,

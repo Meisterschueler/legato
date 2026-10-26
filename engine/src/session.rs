@@ -11,7 +11,7 @@ use legato_core::score::model::{Candidate, Score};
 use serde::Serialize;
 
 use crate::runtime::Event;
-use crate::storage::{ErrorMarking, Settings};
+use crate::storage::Settings;
 
 /// Observation windows of `pthmm` (research.md R8).
 const WINDOW: Grouping = Grouping::Window { period: 0.01 };
@@ -54,8 +54,6 @@ pub(crate) struct Session {
     stopped: bool,
     running: Option<Candidate>,
     deviations: Vec<DeviationInfo>,
-    /// Error marking during the performance (FR-025).
-    marking: ErrorMarking,
     /// Arrival minus driver time of the last tone (µs); maps the engine clock onto driver time.
     offset_us: i64,
     last_tone_ms: u64,
@@ -107,7 +105,6 @@ impl Session {
             stopped: false,
             running: None,
             deviations: Vec::new(),
-            marking: settings.error_marking_during,
             offset_us: 0,
             last_tone_ms: 0,
             ticked_ms: 0,
@@ -130,6 +127,11 @@ impl Session {
             self.active = true;
             events.push(Event::PracticeSessionChanged { active: true });
         }
+        events.push(Event::Tone {
+            pitch,
+            velocity: data[2],
+            driver_time_us: driver_us,
+        });
         self.offset_us = now_ms as i64 * 1000 - driver_us as i64;
         self.last_tone_ms = now_ms;
         self.ticked_ms = now_ms;
@@ -232,20 +234,13 @@ impl Session {
                         .filter(|n| plays(candidate.variation, n.hand))
                         .map(|n| n.display_id(candidate.transposition))
                         .collect(),
+                    beat: onset.time.numerator as f64 / onset.time.denominator as f64,
                     driver_time_us: (time * 1e6) as u64,
                 }
             }
             Performance::Deviation(deviation) => {
                 let info = self.info(deviation)?;
                 self.deviations.push(info.clone());
-                let marked = match info.kind {
-                    DeviationKind::Omission => self.marking.omission,
-                    DeviationKind::Substitution => self.marking.wrong_note,
-                    DeviationKind::Addition => self.marking.addition,
-                };
-                if !marked {
-                    return None;
-                }
                 Event::DeviationDetected(info)
             }
             Performance::Completed => self.ended(Outcome::Completed, None),

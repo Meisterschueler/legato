@@ -37,8 +37,17 @@ pub enum Event {
     /// Display ids of the notes at the current position.
     Position {
         note_ids: Vec<String>,
+        /// Quarter notes since the start of the piece.
+        beat: f64,
         driver_time_us: u64,
     },
+    /// A note-on of the selected input.
+    Tone {
+        pitch: u8,
+        velocity: u8,
+        driver_time_us: u64,
+    },
+    /// Every deviation; the shell decides what it marks (FR-025).
     DeviationDetected(DeviationInfo),
     PerformanceEnded {
         outcome: Outcome,

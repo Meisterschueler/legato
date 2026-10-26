@@ -138,8 +138,8 @@ Die Ereignisse `PerformanceCompleted`, `PerformanceAborted`, `Stopped` und `Conn
 | Zuordnung | `score_follower` | nach Spike S3 (`Pthmm` oder `OuterHmm`); Alternative `Arzt` |
 | Anzeige | `display_variant` je Werk | `Full` |
 | Anzeige | `score_zoom_percent` (50–200 in 25er-Schritten) | 100 |
-| Anzeige | `error_marking_during` je Abweichungsart | aus |
-| Anzeige | `error_marking_after` je Abweichungsart | aus |
+| Anzeige | `error_marking_during` je Abweichungsart und `correct` (richtige Töne) | aus |
+| Anzeige | `error_marking_after` je Abweichungsart und `correct` (richtige Töne) | aus |
 | Signale | `connect_signal` | `On` |
 | Signale | `ok_signal` | `WhenStopped` (Alternativen `EveryPerformance`, `Off`) |
 | Signale | `abort_signal` | `Immediately` (Alternative `Off`) |
