@@ -4,7 +4,7 @@ mod synth;
 use legato_core::following::ScoreFollower;
 use legato_core::performance::{Event, Limits, Performances, Setup};
 use legato_core::preprocessing::{Grouping, Preprocessor};
-use legato_core::recognition::{Decision, Recognition, reference};
+use legato_core::recognition::{Decision, Recognition, RecognitionMethod, reference};
 use legato_core::score::model::{Candidate, Score, Variation};
 use legato_core::score::musicxml_read::read;
 use legato_core::works::hanon::HanonRules;
@@ -207,7 +207,12 @@ fn change_after_completion_is_recognized() {
         pause: 4.0,
         rest: 10.0,
     };
-    let mut performances = Performances::new(setups, HanonRules.recognition_length(), limits);
+    let mut performances = Performances::new(
+        setups,
+        HanonRules.recognition_length(),
+        limits,
+        RecognitionMethod::Exhaustive,
+    );
     let mut preprocessor = Preprocessor::new(Grouping::Window { period: 0.01 });
     let mut events = Vec::new();
     for (time, pitch) in notes {
@@ -279,7 +284,12 @@ fn next_performance_after_the_final_note_is_recognized() {
             pause: 4.0,
             rest: 10.0,
         };
-        let mut performances = Performances::new(setups, HanonRules.recognition_length(), limits);
+        let mut performances = Performances::new(
+            setups,
+            HanonRules.recognition_length(),
+            limits,
+            RecognitionMethod::Exhaustive,
+        );
         let mut preprocessor = Preprocessor::new(Grouping::Window { period: 0.01 });
         let mut events = Vec::new();
         for (time, pitch) in notes {

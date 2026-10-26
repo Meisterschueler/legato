@@ -4,6 +4,8 @@
 
 //! `pthmm`: pitch HMM with inserted states between the onsets (method `pthmm` for MIDI).
 
+use std::sync::Arc;
+
 use super::repeats::Repeats;
 use super::{ReferenceNote, ScoreFollower, unique_onsets};
 
@@ -15,10 +17,13 @@ const EPS: f64 = 0.01;
 /// negligible beyond.
 const REDIRECTED: usize = 8;
 
+/// Row `i`: probabilities of going from state `i` to every state. It does not depend on the
+/// pitches, so the keys of a piece share it (research.md R15).
+pub type Transition = Arc<Vec<Vec<f64>>>;
+
 pub struct PitchHmm {
     score_positions: Vec<f64>,
-    /// Row `i`: probabilities of going from state `i` to every state.
-    transition: Vec<Vec<f64>>,
+    transition: Transition,
     initial: Vec<f64>,
     /// Bernoulli probability of every piano key per state.
     pitch_profiles: Vec<[f64; PIANO_KEYS]>,
@@ -35,17 +40,32 @@ impl PitchHmm {
 
     /// Transitions past the end of a repeat section also lead to its start (FR-014).
     pub fn with_repeats(notes: &[ReferenceNote], has_insertions: bool, repeats: &Repeats) -> Self {
-        let (onsets, chords) = unique_onsets(notes);
-        let mut score_positions = Vec::with_capacity(2 * onsets.len());
-        for (i, &onset) in onsets.iter().enumerate() {
-            if has_insertions && i > 0 {
-                score_positions.push(onsets[i - 1] + 0.5 * (onset - onsets[i - 1]));
-            }
-            score_positions.push(onset);
-        }
+        let transition = Self::transition_for(notes, has_insertions, repeats);
+        Self::with_transition(notes, has_insertions, transition)
+    }
+
+    /// The transition matrix of [`PitchHmm::with_repeats`].
+    pub fn transition_for(
+        notes: &[ReferenceNote],
+        has_insertions: bool,
+        repeats: &Repeats,
+    ) -> Transition {
+        let n = score_positions(notes, has_insertions).len();
+        Arc::new(transition_matrix(n, has_insertions, repeats))
+    }
+
+    /// `transition` from [`PitchHmm::transition_for`] with notes at the same onsets.
+    pub fn with_transition(
+        notes: &[ReferenceNote],
+        has_insertions: bool,
+        transition: Transition,
+    ) -> Self {
+        let (_, chords) = unique_onsets(notes);
+        let score_positions = score_positions(notes, has_insertions);
         let n = score_positions.len();
+        assert_eq!(transition.len(), n, "transition matrix of other onsets");
         PitchHmm {
-            transition: transition_matrix(n, has_insertions, repeats),
+            transition,
             initial: initial_distribution(n),
             pitch_profiles: pitch_profiles(&chords, has_insertions),
             score_positions,
@@ -90,7 +110,7 @@ impl ScoreFollower for PitchHmm {
                 .map(|j| {
                     forward
                         .iter()
-                        .zip(&self.transition)
+                        .zip(self.transition.iter())
                         .map(|(f, row)| row[j] * f)
                         .sum()
                 })
@@ -130,6 +150,19 @@ impl ScoreFollower for PitchHmm {
     fn state(&self) -> Option<&[f64]> {
         self.forward.as_deref()
     }
+}
+
+/// Score position of every state: the onsets and, with insertions, the points halfway between.
+fn score_positions(notes: &[ReferenceNote], has_insertions: bool) -> Vec<f64> {
+    let (onsets, _) = unique_onsets(notes);
+    let mut positions = Vec::with_capacity(2 * onsets.len());
+    for (i, &onset) in onsets.iter().enumerate() {
+        if has_insertions && i > 0 {
+            positions.push(onsets[i - 1] + 0.5 * (onset - onsets[i - 1]));
+        }
+        positions.push(onset);
+    }
+    positions
 }
 
 /// First index of the maximum, like `numpy.argmax`.

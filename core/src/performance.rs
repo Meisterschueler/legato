@@ -2,13 +2,14 @@
 //! completion and aborts (FR-016, FR-020, FR-021).
 
 use std::collections::VecDeque;
+use std::sync::Arc;
 
 use crate::following::deviations::{Deviation, Deviations};
 use crate::following::pthmm::PitchHmm;
 use crate::following::repeats::Repeats;
 use crate::following::{ReferenceNote, ScoreFollower};
 use crate::preprocessing::Observation;
-use crate::recognition::{Decision, Recognition, hands, plays};
+use crate::recognition::{Decision, Recognition, RecognitionMethod, Repertoire, hands, plays};
 use crate::score::model::{Candidate, Note, Score};
 use crate::works::Range;
 
@@ -144,6 +145,8 @@ enum State {
 /// `Completed` and `Aborted`.
 pub struct Performances {
     setups: Vec<Setup>,
+    /// The candidates of `setups` in the same order.
+    repertoire: Arc<Repertoire>,
     /// Tones per hand.
     recognition_length: usize,
     limits: Limits,
@@ -152,8 +155,14 @@ pub struct Performances {
 }
 
 impl Performances {
-    pub fn new(setups: Vec<Setup>, recognition_length: usize, limits: Limits) -> Self {
+    pub fn new(
+        setups: Vec<Setup>,
+        recognition_length: usize,
+        limits: Limits,
+        method: RecognitionMethod,
+    ) -> Self {
         Performances {
+            repertoire: Arc::new(Repertoire::for_setups(&setups, recognition_length, method)),
             setups,
             recognition_length,
             limits,
@@ -165,10 +174,7 @@ impl Performances {
     pub fn observe(&mut self, observation: &Observation) -> Vec<Event> {
         self.last_tone = observation.time;
         if matches!(self.state, State::Idle) {
-            self.state = State::Recognizing(Recognition::for_setups(
-                &self.setups,
-                self.recognition_length,
-            ));
+            self.state = State::Recognizing(Recognition::start(Arc::clone(&self.repertoire)));
         }
         match &mut self.state {
             State::Idle => Vec::new(),

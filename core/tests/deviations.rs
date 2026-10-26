@@ -4,7 +4,7 @@ mod synth;
 use legato_core::following::deviations::DeviationKind;
 use legato_core::performance::{Event, Limits, Performances, Setup};
 use legato_core::preprocessing::{Grouping, Preprocessor};
-use legato_core::recognition::reference;
+use legato_core::recognition::{RecognitionMethod, reference};
 use legato_core::score::model::{Candidate, Score, Variation};
 use legato_core::score::musicxml_read::read;
 use legato_core::works::hanon::HanonRules;
@@ -41,7 +41,12 @@ fn deviations(
         pause: 4.0,
         rest: 10.0,
     };
-    let mut performances = Performances::new(setups, HanonRules.recognition_length(), limits);
+    let mut performances = Performances::new(
+        setups,
+        HanonRules.recognition_length(),
+        limits,
+        RecognitionMethod::Exhaustive,
+    );
     let mut notes = synth::clean(&score, &PLAYED, range, 2.0);
     change(&mut notes);
     let mut preprocessor = Preprocessor::new(Grouping::Window { period: 0.01 });

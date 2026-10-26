@@ -3,7 +3,7 @@ mod synth;
 
 use legato_core::performance::{AbortReason, Event, Limits, Performances, Setup};
 use legato_core::preprocessing::{Grouping, Preprocessor};
-use legato_core::recognition::reference;
+use legato_core::recognition::{RecognitionMethod, reference};
 use legato_core::score::model::{Candidate, Hand, Score, Variation};
 use legato_core::score::musicxml_read::read;
 use legato_core::works::hanon::HanonRules;
@@ -32,7 +32,12 @@ fn performances(score: &Score, range: Range) -> Performances {
         .into_iter()
         .map(|c| Setup::new(score, c, range))
         .collect();
-    Performances::new(setups, HanonRules.recognition_length(), LIMITS)
+    Performances::new(
+        setups,
+        HanonRules.recognition_length(),
+        LIMITS,
+        RecognitionMethod::Exhaustive,
+    )
 }
 
 fn candidate(variation: Variation, transposition: i8) -> Candidate {

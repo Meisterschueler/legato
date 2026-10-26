@@ -8,7 +8,7 @@ use legato_core::following::repeats::Repeats;
 use legato_core::following::{ReferenceNote, ScoreFollower};
 use legato_core::performance::{Event, Limits, Performances, Setup};
 use legato_core::preprocessing::{Grouping, Preprocessor};
-use legato_core::recognition::reference;
+use legato_core::recognition::{RecognitionMethod, reference};
 use legato_core::score::model::{Candidate, Score, Variation};
 use legato_core::score::musicxml_read::read;
 use legato_core::works::generic::GenericRules;
@@ -202,6 +202,7 @@ fn a_performance_goes_through_the_repeat_section() {
             pause: 4.0,
             rest: 10.0,
         },
+        RecognitionMethod::Exhaustive,
     );
     let mut preprocessor = Preprocessor::new(Grouping::Window { period: 0.01 });
     let mut events = Vec::new();
