@@ -110,7 +110,7 @@ jobs:
           git push
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-  rust:
+  rust-linux:
     needs: generate
     runs-on: ubuntu-latest
     steps:
@@ -137,7 +137,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test -p legato-core -p legato-engine --locked
 
-  web:
+  score-view:
     needs: generate
     runs-on: ubuntu-latest
     defaults:
@@ -163,8 +163,33 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  flutter:
-    needs: [generate, web]
+  # Widget and unit tests run in the Dart VM without the Rust library.
+  app-test:
+    needs: [generate, score-view]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.generate.outputs.sha }}
+      # Declared as an asset in pubspec.yaml, so flutter test needs it.
+      - uses: actions/download-artifact@v8
+        with:
+          name: score-view-web
+          path: app/assets/score-view-web
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+
+  app-linux:
+    needs: [generate, score-view]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -186,9 +211,6 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get --enforce-lockfile
-      - run: dart format --output=none --set-exit-if-changed lib test
-      - run: flutter analyze
-      - run: flutter test
       - run: flutter build linux --debug
       # tar keeps the executable bits that a zip artifact would lose.
       - run: tar -czf legato-linux-x64-debug.tar.gz -C build/linux/x64/debug bundle
@@ -199,8 +221,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  android:
-    needs: [generate, web]
+  app-android:
+    needs: [generate, score-view]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -245,8 +267,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  apple:
-    needs: [generate, web]
+  # iOS only; the macOS build is left out while no Mac is available to test it.
+  app-ios:
+    needs: [generate, score-view]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
@@ -261,41 +284,28 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Swift package (macOS)
-        working-directory: native/apple/LegatoMidi
-        run: swift build
       - name: Swift package (iOS)
         working-directory: native/apple/LegatoMidi
         run: xcodebuild build -scheme LegatoMidi -destination 'generic/platform=iOS'
-      # Profile build with the S2 spike page (debug builds do not start on iOS without a debugger).
-      - name: Flutter iOS (spike S2)
+      # Profile, not debug: debug builds do not start on iOS without a debugger.
+      # Unsigned IPA, to be signed and installed with e.g. Sideloadly.
+      - name: Flutter iOS
         working-directory: app
         run: |
           flutter pub get --enforce-lockfile
-          flutter build ios --profile --no-codesign --dart-define=SPIKE_S2=true
+          flutter build ios --profile --no-codesign
           mkdir Payload
           cp -R build/ios/iphoneos/Runner.app Payload/
-          zip -qr legato-s2-ios-unsigned.ipa Payload
+          zip -qr legato-ios-profile-unsigned.ipa Payload
       - uses: actions/upload-artifact@v7
         with:
-          path: app/legato-s2-ios-unsigned.ipa
-          archive: false
-          if-no-files-found: error
-          retention-days: 14
-      - name: Flutter macOS
-        working-directory: app
-        run: |
-          flutter build macos --debug
-          ditto -c -k --keepParent build/macos/Build/Products/Debug/legato.app legato-macos-debug.zip
-      - uses: actions/upload-artifact@v7
-        with:
-          path: app/legato-macos-debug.zip
+          path: app/legato-ios-profile-unsigned.ipa
           archive: false
           if-no-files-found: error
           retention-days: 14
 
   # Spike S1 (iOS): unsigned IPA, to be signed and installed with e.g. Sideloadly.
-  spike-ios:
+  spike-s1-ios:
     needs: generate
     runs-on: macos-latest
     steps:
@@ -323,8 +333,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  windows:
-    needs: [generate, web]
+  app-windows:
+    needs: [generate, score-view]
     runs-on: windows-latest
     defaults:
       run:
