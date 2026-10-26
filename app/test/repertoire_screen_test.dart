@@ -10,9 +10,24 @@ class _Engine implements EngineClient {
   Future<List<Map<String, dynamic>>> repertoire() async => [
     {
       'id': 'a',
+      'composer': 'Hanon',
       'title': 'The Virtuoso Pianist',
       'number': '1',
       'has_fingering': true,
+    },
+    {
+      'id': 'c',
+      'composer': 'Brahms',
+      'title': '51 Exercises',
+      'number': '1a',
+      'has_fingering': false,
+    },
+    {
+      'id': 'd',
+      'composer': 'Brahms',
+      'title': '51 Exercises',
+      'number': '1b',
+      'has_fingering': false,
     },
     {'id': 'b', 'title': 'Etude', 'number': null, 'has_fingering': false},
   ];
@@ -31,6 +46,24 @@ void _english(WidgetTester tester) {
 }
 
 void main() {
+  testWidgets('pieces are grouped by work', (tester) async {
+    _english(tester);
+    await tester.pumpWidget(
+      LegatoApp(home: RepertoireScreen(engine: _Engine())),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hanon: The Virtuoso Pianist'), findsOneWidget);
+    expect(find.text('Brahms: 51 Exercises'), findsOneWidget);
+    expect(find.text('No. 1a'), findsNothing);
+
+    await tester.tap(find.text('Brahms: 51 Exercises'));
+    await tester.pumpAndSettle();
+    expect(find.text('No. 1a'), findsOneWidget);
+    expect(find.text('No. 1b'), findsOneWidget);
+    expect(find.text('No. 1'), findsNothing);
+  });
+
   testWidgets('pieces without fingering are marked', (tester) async {
     _english(tester);
     await tester.pumpWidget(
@@ -38,7 +71,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('The Virtuoso Pianist No. 1'), findsOneWidget);
     expect(find.text('Etude'), findsOneWidget);
     expect(
       find.text('No fingering: analyses that need fingering are not available'),

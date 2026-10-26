@@ -23,6 +23,19 @@
       "number": {"type": "String"}
     }
   },
+  "workWithComposer": "{composer}: {title}",
+  "@workWithComposer": {
+    "placeholders": {
+      "composer": {"type": "String"},
+      "title": {"type": "String"}
+    }
+  },
+  "pieceNumber": "No. {number}",
+  "@pieceNumber": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
   "noFingering": "No fingering: analyses that need fingering are not available",
   "invalidUnreadable": "The file could not be read. Please choose a MusicXML file (.musicxml, .xml or .mxl).",
   "invalidNotPartwise": "This MusicXML layout (score-timewise) is not supported. Please export the piece as score-partwise.",

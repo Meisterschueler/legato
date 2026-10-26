@@ -72,25 +72,43 @@ class _RepertoireScreenState extends State<RepertoireScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // One node per work (composer and title), in the engine's order.
+    final works = <(String?, String), List<Map<String, dynamic>>>{};
+    for (final piece in _pieces) {
+      works
+          .putIfAbsent((
+            piece['composer'] as String?,
+            piece['title'] as String,
+          ), () => [])
+          .add(piece);
+    }
     return Scaffold(
       appBar: AppBar(title: Text(l10n.repertoire)),
       body: ListView(
         children: [
-          for (final piece in _pieces)
-            ListTile(
-              title: Text(
-                piece['number'] == null
-                    ? piece['title'] as String
-                    : l10n.pieceWithNumber(
-                        piece['title'] as String,
-                        piece['number'] as String,
-                      ),
+          for (final MapEntry(key: (composer, title), value: pieces)
+              in works.entries)
+            if (pieces.length == 1 && pieces.single['number'] == null)
+              _pieceTile(
+                context,
+                pieces.single,
+                _workTitle(l10n, composer, title),
+              )
+            else
+              ExpansionTile(
+                title: Text(_workTitle(l10n, composer, title)),
+                initiallyExpanded: works.length == 1,
+                children: [
+                  for (final piece in pieces)
+                    _pieceTile(
+                      context,
+                      piece,
+                      piece['number'] == null
+                          ? title
+                          : l10n.pieceNumber(piece['number'] as String),
+                    ),
+                ],
               ),
-              subtitle: piece['has_fingering'] == true
-                  ? null
-                  : Text(l10n.noFingering),
-              onTap: () => Navigator.of(context).pop(piece['id'] as String),
-            ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -100,4 +118,22 @@ class _RepertoireScreenState extends State<RepertoireScreen> {
       ),
     );
   }
+
+  static String _workTitle(
+    AppLocalizations l10n,
+    String? composer,
+    String title,
+  ) => composer == null ? title : l10n.workWithComposer(composer, title);
+
+  Widget _pieceTile(
+    BuildContext context,
+    Map<String, dynamic> piece,
+    String label,
+  ) => ListTile(
+    title: Text(label),
+    subtitle: piece['has_fingering'] == true
+        ? null
+        : Text(AppLocalizations.of(context).noFingering),
+    onTap: () => Navigator.of(context).pop(piece['id'] as String),
+  );
 }

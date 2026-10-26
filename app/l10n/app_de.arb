@@ -17,6 +17,8 @@
   "repertoire": "Repertoire",
   "loadFile": "Datei laden",
   "pieceWithNumber": "{title} Nr. {number}",
+  "workWithComposer": "{composer}: {title}",
+  "pieceNumber": "Nr. {number}",
   "noFingering": "Ohne Fingersatz: Analysen, die einen Fingersatz voraussetzen, sind nicht verfügbar",
   "invalidUnreadable": "Die Datei konnte nicht gelesen werden. Bitte eine MusicXML-Datei wählen (.musicxml, .xml oder .mxl).",
   "invalidNotPartwise": "Dieses MusicXML-Format (score-timewise) wird nicht unterstützt. Bitte das Stück als score-partwise exportieren.",
