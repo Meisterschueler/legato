@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use legato_core::following::deviations::{Deviation, DeviationKind};
 use legato_core::performance::{AbortReason, Event as Performance, Limits, Performances, Setup};
 use legato_core::preprocessing::{Grouping, Observation, Preprocessor, played_pitch};
-use legato_core::recognition::{RecognitionMethod, plays};
+use legato_core::recognition::plays;
 use legato_core::score::model::{Candidate, Score};
 use serde::Serialize;
 
@@ -93,12 +93,11 @@ impl Session {
                 .iter()
                 .map(|p| (p.id.clone(), p.score.clone()))
                 .collect(),
-            // shortcut: all candidates until the setting arrives (T113).
             performances: Performances::new(
                 setups,
                 recognition_length,
                 limits,
-                RecognitionMethod::Exhaustive,
+                settings.recognition_method,
             ),
             preprocessor: Preprocessor::new(WINDOW),
             running: None,

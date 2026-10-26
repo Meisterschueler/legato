@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use legato_core::recognition::RecognitionMethod;
 use legato_engine::storage::{
     AbortSignal, ConnectSignal, ErrorMarking, OkSignal, ScoreFollowerKind, Settings,
 };
@@ -23,6 +24,7 @@ fn defaults_as_in_the_data_model() {
     assert_eq!(settings.error_marking_after, ErrorMarking::default());
     assert!(!settings.error_marking_during.wrong_note);
     assert_eq!(settings.score_follower, ScoreFollowerKind::Pthmm);
+    assert_eq!(settings.recognition_method, RecognitionMethod::EditDistance);
     assert_eq!(settings.midi_device, None);
     assert_eq!(settings.signal_tones.notes, vec![96, 100]);
     assert_eq!(settings.signal_tones.velocity, 30);
@@ -42,6 +44,7 @@ fn save_and_load() {
     let settings = Settings {
         pause_limit_ms: 5000,
         ok_signal: OkSignal::EveryPerformance,
+        recognition_method: RecognitionMethod::Fingerprint,
         ..Settings::default()
     };
     settings.save(&dir).unwrap();

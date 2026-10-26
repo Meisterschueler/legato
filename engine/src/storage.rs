@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::io;
 use std::path::Path;
 
+use legato_core::recognition::RecognitionMethod;
 use legato_core::score::model::Variation;
 use legato_core::works::DisplayVariant;
 use serde::{Deserialize, Serialize};
@@ -83,6 +84,8 @@ pub struct Settings {
     pub rest_limit_ms: u32,
     pub session_idle_timeout_ms: u32,
     pub score_follower: ScoreFollowerKind,
+    /// Preselection of the recognition (FR-085).
+    pub recognition_method: RecognitionMethod,
     /// Per work id; missing works show `Complete`.
     pub display_variant: BTreeMap<String, DisplayVariant>,
     pub error_marking_during: ErrorMarking,
@@ -104,6 +107,8 @@ impl Default for Settings {
             session_idle_timeout_ms: 600_000,
             // Matchmaker's default for MIDI; final choice after spike S3 (FR-032).
             score_follower: ScoreFollowerKind::Pthmm,
+            // Final choice with T089 (research.md R15).
+            recognition_method: RecognitionMethod::EditDistance,
             display_variant: BTreeMap::new(),
             error_marking_during: ErrorMarking::default(),
             error_marking_after: ErrorMarking::default(),
