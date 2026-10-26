@@ -48,6 +48,7 @@ Die Hülle reicht Notenbild und Ereignisse unverändert als JSON per `postMessag
 | `load` | `{ musicxml, display_variant }` |
 | `position` | `{ note_ids, driver_time_us? }` |
 | `mark` | `{ note_id, kind }` |
+| `zoom` | `{ percent }` (Notenbild neu umbrechen) |
 | `reset` | – |
 
 Rückmeldungen des Bundles: `ready { note_ids }` (nach jedem `load`, IDs in Notenreihenfolge), `error { message }`, `frame_shown { driver_time_us }` und `frame_stats { fps, max_frame_ms }` (nur Entwicklungs-Builds, Messungen R7/R9).

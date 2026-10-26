@@ -4,6 +4,7 @@ export type HostMessage =
   | { type: "load"; musicxml: string; display_variant?: string }
   | { type: "position"; note_ids: string[]; driver_time_us?: number }
   | { type: "mark"; note_id: string; kind: string }
+  | { type: "zoom"; percent: number }
   | { type: "reset" };
 
 export type ViewMessage =
@@ -30,6 +31,10 @@ export function parseHostMessage(json: string): HostMessage {
         typeof message.note_id !== "string" ||
         typeof message.kind !== "string"
       )
+        break;
+      return message as HostMessage;
+    case "zoom":
+      if (typeof message.percent !== "number" || !(message.percent > 0))
         break;
       return message as HostMessage;
     case "reset":

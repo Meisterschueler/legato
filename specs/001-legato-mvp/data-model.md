@@ -137,6 +137,7 @@ Die Ereignisse `PerformanceCompleted`, `PerformanceAborted`, `Stopped` und `Conn
 | Übeeinheit | `session_idle_timeout_ms` (Ruhezeit) | 600000 |
 | Zuordnung | `score_follower` | nach Spike S3 (`Pthmm` oder `OuterHmm`); Alternative `Arzt` |
 | Anzeige | `display_variant` je Werk | `Full` |
+| Anzeige | `score_zoom_percent` (50–200 in 25er-Schritten) | 100 |
 | Anzeige | `error_marking_during` je Abweichungsart | aus |
 | Anzeige | `error_marking_after` je Abweichungsart | aus |
 | Signale | `connect_signal` | `On` |

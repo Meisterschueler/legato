@@ -26,6 +26,7 @@ fn defaults_as_in_the_data_model() {
     assert_eq!(settings.score_follower, ScoreFollowerKind::Pthmm);
     assert_eq!(settings.recognition_method, RecognitionMethod::EditDistance);
     assert_eq!(settings.midi_device, None);
+    assert_eq!(settings.score_zoom_percent, 100);
     assert_eq!(settings.signal_tones.notes, vec![96, 100]);
     assert_eq!(settings.signal_tones.velocity, 30);
 }

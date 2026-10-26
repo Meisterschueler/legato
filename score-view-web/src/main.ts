@@ -159,6 +159,10 @@ function handle(message: HostMessage): void {
       color(message.note_id, fill);
       break;
     }
+    case "zoom":
+      osmd.Zoom = message.percent / 100;
+      if (loaded) render();
+      break;
     case "reset":
       for (const id of [...highlighted, ...marked.keys()]) {
         color(id, undefined);

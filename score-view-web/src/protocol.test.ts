@@ -30,6 +30,19 @@ describe("parseHostMessage", () => {
     );
   });
 
+  it("accepts a zoom", () => {
+    expect(parseHostMessage('{"type":"zoom","percent":150}')).toEqual({
+      type: "zoom",
+      percent: 150,
+    });
+  });
+
+  it("rejects a zoom without a positive percent", () => {
+    expect(() => parseHostMessage('{"type":"zoom","percent":0}')).toThrow(
+      "invalid message",
+    );
+  });
+
   it("rejects unknown types", () => {
     expect(() => parseHostMessage('{"type":"play"}')).toThrow(
       "invalid message: play",

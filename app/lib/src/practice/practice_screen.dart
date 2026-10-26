@@ -11,6 +11,8 @@ import 'package:legato/src/repertoire/repertoire_screen.dart';
 import 'package:legato/src/score_view/score_view.dart';
 import 'package:legato/src/settings/settings_screen.dart';
 
+const _zooms = [50, 75, 100, 125, 150, 175, 200];
+
 /// Practice screen with the score and the input symbol.
 class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key, this.engine});
@@ -31,6 +33,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   String? _work;
   List<String> _variants = const [];
   String _variant = 'Complete';
+  int _zoom = 100;
   final _input = ValueNotifier<Map<String, dynamic>>({'state': 'Disconnected'});
   final _scoreMessages = StreamController<Map<String, dynamic>>.broadcast();
   StreamSubscription<Map<String, dynamic>>? _events;
@@ -45,6 +48,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _events = engine.events().listen(_handle);
       _wakelock = keepScreenOn(engine);
       _lifecycle = LifecycleAdapter(engine, onDiscarded: _backgroundNotice);
+      _loadZoom(engine);
     }
     // Until the first performance is recognized, the first piece is shown.
     widget.engine?.repertoire().then((pieces) {
@@ -60,6 +64,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _input.dispose();
     _scoreMessages.close();
     super.dispose();
+  }
+
+  Future<void> _loadZoom(EngineClient engine) async {
+    final zoom = (await engine.getSettings())['score_zoom_percent'];
+    if (mounted && _zooms.contains(zoom)) setState(() => _zoom = zoom as int);
+  }
+
+  Future<void> _setZoom(int zoom) async {
+    setState(() => _zoom = zoom);
+    final engine = widget.engine!;
+    final settings = await engine.getSettings();
+    await engine.setSettings({...settings, 'score_zoom_percent': zoom});
   }
 
   /// Engine events for the input symbol and the score (US 3 scenario 18).
@@ -172,6 +188,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
             icon: const Icon(Icons.library_music),
             onPressed: widget.engine == null ? null : _openRepertoire,
           ),
+          Tooltip(
+            message: l10n.zoom,
+            child: DropdownButton<int>(
+              value: _zoom,
+              underline: const SizedBox.shrink(),
+              items: [
+                for (final z in _zooms)
+                  DropdownMenuItem(value: z, child: Text('$z %')),
+              ],
+              onChanged: widget.engine == null ? null : (z) => _setZoom(z!),
+            ),
+          ),
           if (_variants.length > 1)
             PopupMenuButton<String>(
               tooltip: l10n.display,
@@ -202,7 +230,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
       ),
       body: musicxml == null
           ? Center(child: Text(l10n.scorePlaceholder))
-          : ScoreView(musicxml: musicxml, messages: _scoreMessages.stream),
+          : ScoreView(
+              musicxml: musicxml,
+              messages: _scoreMessages.stream,
+              zoomPercent: _zoom,
+            ),
     );
   }
 }

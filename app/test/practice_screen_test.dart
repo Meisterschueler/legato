@@ -7,9 +7,11 @@ import 'package:legato/src/practice/practice_screen.dart';
 
 /// Stands in for the Rust engine, which is not loaded in widget tests.
 class _Engine implements EngineClient {
-  _Engine({this.displayVariant = const {}});
+  _Engine({this.displayVariant = const {}, this.zoom});
 
   final Map<String, dynamic> displayVariant;
+  final int? zoom;
+  final saved = <Map<String, dynamic>>[];
   final engineEvents = StreamController<Map<String, dynamic>>.broadcast();
   final rendered = <(String, int, String)>[];
 
@@ -28,7 +30,16 @@ class _Engine implements EngineClient {
   @override
   Future<Map<String, dynamic>> getSettings() async => {
     'display_variant': displayVariant,
+    if (zoom != null) 'score_zoom_percent': zoom,
   };
+
+  @override
+  Future<Map<String, dynamic>> setSettings(
+    Map<String, dynamic> settings,
+  ) async {
+    saved.add(settings);
+    return settings;
+  }
 
   /// Never completes, so no WebView is created in the test.
   @override
@@ -80,5 +91,19 @@ void main() {
     await tester.pumpWidget(LegatoApp(home: PracticeScreen(engine: engine)));
     await tester.pumpAndSettle();
     expect(engine.rendered, [('h1', 0, 'Abbreviated')]);
+  });
+
+  testWidgets('the zoom comes from the settings and is saved', (tester) async {
+    final engine = _Engine(zoom: 150);
+    await tester.pumpWidget(LegatoApp(home: PracticeScreen(engine: engine)));
+    await tester.pumpAndSettle();
+    expect(find.text('150 %'), findsOneWidget);
+
+    await tester.tap(find.text('150 %'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('75 %').last);
+    await tester.pumpAndSettle();
+    expect(engine.saved.single['score_zoom_percent'], 75);
+    expect(find.text('75 %'), findsOneWidget);
   });
 }

@@ -88,6 +88,8 @@ pub struct Settings {
     pub recognition_method: RecognitionMethod,
     /// Per work id; missing works show `Complete`.
     pub display_variant: BTreeMap<String, DisplayVariant>,
+    /// Size of the score: 50 to 200 in steps of 25.
+    pub score_zoom_percent: u16,
     pub error_marking_during: ErrorMarking,
     pub error_marking_after: ErrorMarking,
     pub connect_signal: ConnectSignal,
@@ -110,6 +112,7 @@ impl Default for Settings {
             // Final choice with T089 (research.md R15).
             recognition_method: RecognitionMethod::EditDistance,
             display_variant: BTreeMap::new(),
+            score_zoom_percent: 100,
             error_marking_during: ErrorMarking::default(),
             error_marking_after: ErrorMarking::default(),
             connect_signal: ConnectSignal::On,
