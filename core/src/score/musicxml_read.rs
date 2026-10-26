@@ -106,12 +106,14 @@ fn read_score(root: &Element) -> Result<Score, InvalidScoreFile> {
     let mut indices: Vec<u32> = Vec::new();
 
     for (part_index, part) in parts.iter().enumerate() {
+        let hands = hand_source(part, part_index, two_parts);
         let mut divisions = 1i64;
         let mut measure_start = Fraction::ZERO;
         for (measure_index, measure) in part.children("measure").enumerate() {
             if part_index == 0 {
                 measures.push(Measure {
                     number: measure.attribute("number").unwrap_or_default().to_owned(),
+                    double_bar: false,
                 });
             }
             if indices.len() <= measure_index {
@@ -138,6 +140,12 @@ fn read_score(root: &Element) -> Result<Score, InvalidScoreFile> {
                     "backup" => position -= duration(),
                     "forward" => position += duration(),
                     "barline" if part_index == 0 => {
+                        if child.attribute("location").unwrap_or("right") == "right"
+                            && child.child_text("bar-style") == Some("light-light")
+                            && let Some(last) = measures.last_mut()
+                        {
+                            last.double_bar = true;
+                        }
                         if let Some(repeat) = child.child("repeat") {
                             let forward = repeat.attribute("direction") == Some("forward");
                             let pos = if forward { position } else { position.max(end) };
@@ -172,8 +180,7 @@ fn read_score(root: &Element) -> Result<Score, InvalidScoreFile> {
                                     at(start),
                                     note(
                                         child,
-                                        part_index,
-                                        two_parts,
+                                        hands,
                                         measure_index,
                                         index,
                                         pitch,
@@ -264,23 +271,50 @@ fn read_score(root: &Element) -> Result<Score, InvalidScoreFile> {
     })
 }
 
+/// Where a part takes the hand of its notes from.
+#[derive(Clone, Copy)]
+enum HandSource {
+    /// One part per hand: the part index is the staff.
+    Part(u8),
+    /// Voices 1–4 right, 5–8 left, as the notation programs number them; notes may change to
+    /// the other staff.
+    Voice,
+    Staff,
+}
+
+fn hand_source(part: &Element, part_index: usize, two_parts: bool) -> HandSource {
+    if two_parts {
+        HandSource::Part(part_index as u8)
+    } else if part
+        .children("measure")
+        .flat_map(|m| m.children("note"))
+        .any(|n| voice(n).is_some_and(|v| v > 4))
+    {
+        HandSource::Voice
+    } else {
+        HandSource::Staff
+    }
+}
+
+fn voice(note: &Element) -> Option<u8> {
+    note.child_text("voice").and_then(|v| v.parse().ok())
+}
+
 fn note(
     element: &Element,
-    part_index: usize,
-    two_parts: bool,
+    hands: HandSource,
     measure: usize,
     index: u32,
     pitch: u8,
     onset_in_measure: Fraction,
 ) -> Note {
-    let staff = if two_parts {
-        part_index as u8
-    } else {
-        element
+    let staff = match hands {
+        HandSource::Part(part) => part,
+        _ => element
             .child_text("staff")
             .and_then(|s| s.parse::<u8>().ok())
             .unwrap_or(1)
-            .saturating_sub(1)
+            .saturating_sub(1),
     };
     let finger = element
         .child("notations")
@@ -288,17 +322,19 @@ fn note(
         .and_then(|t| t.child_text("fingering"))
         .and_then(|f| f.parse::<u8>().ok())
         .filter(|f| (1..=5).contains(f));
+    let voice = voice(element);
+    let right = match (hands, voice) {
+        (HandSource::Voice, Some(v)) => v <= 4,
+        _ => staff == 0,
+    };
     Note {
         id: NoteId {
             measure: measure as u32,
-            voice: element
-                .child_text("voice")
-                .and_then(|v| v.parse().ok())
-                .unwrap_or(1),
+            voice: voice.unwrap_or(1),
             index,
         },
         pitch,
-        hand: if staff == 0 { Hand::Right } else { Hand::Left },
+        hand: if right { Hand::Right } else { Hand::Left },
         finger,
         staff,
         onset_in_measure,

@@ -57,7 +57,7 @@ fn performance_is_the_repeat_section_without_ende() {
 }
 
 #[test]
-fn ascending_and_descending_are_the_halves_of_the_measures() {
+fn ascending_and_descending_split_at_the_double_barline() {
     let score = read(&hanon()).unwrap().score;
     let [ascending, descending] = HanonRules.directions(&score);
     // 29 measures: 14 ascending, 15 descending, 8 onsets each.
@@ -75,6 +75,35 @@ fn ascending_and_descending_are_the_halves_of_the_measures() {
             end: 231
         }
     );
+
+    // No. 17: 14 measures ascending, 13 descending; not the halves.
+    let score = read(&hanon_17()).unwrap().score;
+    assert!(score.measures[13].double_bar);
+    let [ascending, descending] = HanonRules.directions(&score);
+    assert_eq!(ascending.end, 14 * 8 - 1);
+    assert_eq!(descending.start, 14 * 8);
+}
+
+#[test]
+fn without_double_barline_ascending_and_descending_are_the_halves() {
+    let xml = String::from_utf8(hanon_17()).unwrap().replace(
+        "<bar-style>light-light</bar-style>",
+        "<bar-style>regular</bar-style>",
+    );
+    let score = read(xml.as_bytes()).unwrap().score;
+    assert!(score.measures.iter().all(|m| !m.double_bar));
+    let [ascending, descending] = HanonRules.directions(&score);
+    // 27 measures: the descending half has one measure more.
+    assert_eq!(ascending.end, 13 * 8 - 1);
+    assert_eq!(descending.start, 13 * 8);
+}
+
+fn hanon_17() -> Vec<u8> {
+    std::fs::read(format!(
+        "{}/../testdata/legato/hanon/hanon-17.musicxml",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap()
 }
 
 #[test]

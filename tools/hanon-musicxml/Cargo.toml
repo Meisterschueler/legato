@@ -1,0 +1,16 @@
+[package]
+name = "hanon-musicxml"
+description = "Generates MusicXML for Hanon exercises from docs/werke/hanon-teil1.toml"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+serde.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+legato-core.workspace = true

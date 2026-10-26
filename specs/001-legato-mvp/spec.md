@@ -224,7 +224,7 @@ Die Schlüsselwörter MUSS, SOLL, DARF NICHT usw. sind im [Glossar](../../docs/g
 - **SC-003**: Nach der Trennung einer MIDI-Verbindung ertönt die Warnung innerhalb von 2 s. Bei kabellosen Verbindungen (z. B. Bluetooth-MIDI) gilt die Frist ab dem Zeitpunkt, zu dem das Betriebssystem die Trennung meldet.
 - **SC-004**: Während eines Durchlaufs erscheint keinerlei unaufgeforderte Meldung.
 - **SC-005**: Die App versendet keine Benachrichtigungen außerhalb der laufenden App.
-- **SC-014**: Mit 20 Stücken im Repertoire, die wie Hanon in jeder Tonart und Variation zugelassen sind, erfüllt jedes wählbare Verfahren für die Erkennung SC-002 und NFR-003.
+- **SC-014**: Mit Hanon Nr. 1–20 im Repertoire (je 12 Tonarten und 3 Variationen) erfüllt jedes wählbare Verfahren für die Erkennung SC-002 und NFR-003.
 
 ## Annahmen
 

@@ -74,7 +74,8 @@ pub struct Note {
     pub id: NoteId,
     /// MIDI note number, in C major as notated.
     pub pitch: u8,
-    /// From the staff (lower = left).
+    /// From the voice (1–4 right, 5–8 left) if the part uses voices 5–8, otherwise from the
+    /// staff (lower = left); with two parts from the part.
     pub hand: Hand,
     /// 1–5.
     pub finger: Option<u8>,
@@ -128,6 +129,8 @@ pub struct Section {
 pub struct Measure {
     /// `number` attribute of the MusicXML measure.
     pub number: String,
+    /// Ends with a double barline (`light-light`), e.g. at the turning point in Hanon, part 1.
+    pub double_bar: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Default)]

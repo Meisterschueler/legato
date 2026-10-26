@@ -29,7 +29,7 @@ Bezeichner sind englisch und folgen dem [Glossar](../../docs/glossar.md#bezeichn
 | `onsets` | Liste von `Onset` | zeitlich geordnet |
 | `sections` | Liste von `Section` | aus Wiederholungszeichen |
 | `rests_before` | Menge von Onset-Indizes | Anschlagszeitpunkte, vor denen eine notierte Pause liegt (FR-020) |
-| `measures` | Liste von `Measure` | für Anzeige und Noten-IDs |
+| `measures` | Liste von `Measure` | für Anzeige und Noten-IDs; je Takt die Nummer und ob er mit einem Doppelstrich endet |
 
 ### `Onset` (Anschlagszeitpunkt)
 Alle gleichzeitig zu spielenden Noten.
@@ -45,7 +45,7 @@ Alle gleichzeitig zu spielenden Noten.
 |---|---|---|
 | `id` | `NoteId` | `(measure, voice, index)`; stabil, nur intern; die Oberfläche adressiert Noten über die Anzeige-ID ([contracts/engine-schnittstelle.md](contracts/engine-schnittstelle.md#nachrichten-an-score-view-web)) |
 | `pitch` | u8 | MIDI-Notennummer, in C-Dur wie notiert |
-| `hand` | `Left` \| `Right` | aus Notensystem (unteres = links) |
+| `hand` | `Left` \| `Right` | aus der Stimme (5–8 = links), ohne Stimmen 5–8 aus dem Notensystem (unteres = links); siehe [contracts/notendatei.md](contracts/notendatei.md) |
 | `finger` | u8? | 1–5 |
 
 ### `Section` (Abschnitt)
@@ -53,7 +53,7 @@ Alle gleichzeitig zu spielenden Noten.
 |---|---|---|
 | `kind` | `Repeat` \| `Ending` | |
 | `start`, `end` | Onset-Index | |
-| `parts` | Liste benannter Bereiche | Hanon: `Ascending`, `Descending` (Aufwärts, Abwärts; erste/zweite Hälfte der Takte) |
+| `parts` | Liste benannter Bereiche | Hanon: `Ascending`, `Descending` (Aufwärts, Abwärts; getrennt am Doppelstrich, ohne Doppelstrich erste/zweite Hälfte der Takte) |
 
 ### `Candidate` (Kandidat)
 Eine zulässige Kombination für die Erkennung.

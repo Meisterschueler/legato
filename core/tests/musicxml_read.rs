@@ -165,7 +165,9 @@ fn hanon_no_1() {
     assert_eq!((score.sections[0].start, score.sections[0].end), (0, 231));
     assert_eq!(score.onsets[231].successors, vec![232, 0]);
 
-    // The same ids as score-view-web computes from OSMD (checked in the browser, spike S2).
+    // Display ids by the rule score-view-web applies to OSMD (checked in the browser, spike S2):
+    // the staff is the note's `<staff>`. Both hands start on the lower staff; the hand follows from
+    // the voice.
     let ids: Vec<String> = score.onsets[..3]
         .iter()
         .flat_map(|o| &o.notes)
@@ -174,18 +176,56 @@ fn hanon_no_1() {
     assert_eq!(
         ids,
         [
-            "0/0/0:1/48",
+            "0/1/0:1/48",
             "0/1/0:1/36",
-            "0/0/1:16/52",
+            "0/1/1:16/52",
             "0/1/1:16/40",
-            "0/0/1:8/53",
+            "0/1/1:8/53",
             "0/1/1:8/41"
         ]
     );
+    let hands: Vec<Hand> = score.onsets[0].notes.iter().map(|n| n.hand).collect();
+    assert_eq!(hands, [Hand::Right, Hand::Left]);
     let last: Vec<String> = score.onsets[232]
         .notes
         .iter()
         .map(|n| n.display_id(0))
         .collect();
-    assert_eq!(last, ["29/0/0:1/48", "29/1/0:1/36"]);
+    assert_eq!(last, ["29/1/0:1/48", "29/1/0:1/36"]);
+}
+
+fn piano(notes: &str) -> Vec<u8> {
+    format!(
+        "<score-partwise><part-list><score-part id=\"P1\"/></part-list><part id=\"P1\"><measure number=\"1\">\
+         <attributes><divisions>1</divisions><staves>2</staves></attributes>{notes}</measure></part></score-partwise>"
+    )
+    .into_bytes()
+}
+
+fn piano_note(step: &str, voice: u8, staff: u8, backup: bool) -> String {
+    let backup = if backup {
+        "<backup><duration>1</duration></backup>"
+    } else {
+        ""
+    };
+    format!(
+        "{backup}<note><pitch><step>{step}</step><octave>4</octave></pitch><duration>1</duration><voice>{voice}</voice><staff>{staff}</staff></note>"
+    )
+}
+
+#[test]
+fn hand_follows_the_voice_across_staves() {
+    // Voice 1 (right hand) on the lower staff, voice 5 (left hand) on the upper one.
+    let xml = piano(&(piano_note("G", 1, 2, false) + &piano_note("C", 5, 1, true)));
+    let notes = &read(&xml).unwrap().score.onsets[0].notes;
+    let hands: Vec<_> = notes.iter().map(|n| (n.hand, n.staff)).collect();
+    assert_eq!(hands, [(Hand::Right, 1), (Hand::Left, 0)]);
+}
+
+#[test]
+fn without_voices_5_to_8_the_staff_gives_the_hand() {
+    let xml = piano(&(piano_note("G", 1, 1, false) + &piano_note("C", 1, 2, true)));
+    let notes = &read(&xml).unwrap().score.onsets[0].notes;
+    let hands: Vec<_> = notes.iter().map(|n| n.hand).collect();
+    assert_eq!(hands, [Hand::Right, Hand::Left]);
 }

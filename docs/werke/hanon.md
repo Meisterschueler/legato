@@ -6,7 +6,13 @@ Begriffe wie Durchlauf, Figur, Erkennungslänge, Transposition und Variation sin
 
 ## Teil 1 (Übungen 1–20)
 
-Alle Übungen des 1. Teils folgen einem strengen Schema: Eine Figur aus 8 Tönen je Hand wird gespielt. Danach wird diese Figur so lange diatonisch nach oben versetzt, bis ungefähr 2 Oktaven gespielt wurden. Dann wird die Figur gespiegelt und diatonisch nach unten versetzt, bis der Ausgangspunkt erreicht ist. Linke und rechte Hand spielen parallel dieselben Töne im Abstand einer Oktave. Beide Hände sind notiert.
+Alle Übungen des 1. Teils folgen einem Schema: Eine Figur aus 8 Tönen je Hand wird gespielt. Danach wird diese Figur so lange diatonisch nach oben versetzt, bis ungefähr 2 Oktaven gespielt wurden („Aufwärts“). Dann folgt eine zweite Figur, meist die Spiegelung der ersten, die diatonisch nach unten versetzt wird, bis der Ausgangspunkt erreicht ist („Abwärts“). Linke und rechte Hand spielen parallel dieselben Töne im Abstand einer Oktave. Beide Hände sind notiert.
+
+Vom Schema weichen einzelne Übungen geringfügig ab:
+- Der erste oder letzte Takt von „Aufwärts“ bzw. „Abwärts“ kann eine eigene Figur haben (z. B. ein anderer Schlusston, um zum nächsten Takt überzuleiten).
+- Die Zahl der Takte je Richtung schwankt (13–15).
+
+Zwischen „Aufwärts“ und „Abwärts“ steht ein Doppelstrich (Wendepunkt). Maßgeblich für alle Abweichungen ist der Notentext.
 
 Die Oktavangaben in den Beispielen sind relativ und dienen nur der Veranschaulichung; maßgeblich ist der Notentext.
 
@@ -14,6 +20,8 @@ Beispielsweise sieht die linke Hand der 1. Übung so aus (die rechte Hand spielt
 - Aufwärts: C1 E F G A G F E - D F G A H A G F - E G A H C2 H1 A G --- A2 C3 D E F E D C - H2 D3 E F G F E D
 - Abwärts: G3 E D C H2 C3 D E - F D C H2 A H C3 D - E C H2 A G A H C3 --- A1 F E D C D E F - G E D C H0 C1 D E
 - Ende: C1
+
+Figuren, Stufen und Fingersätze aller Übungen von Teil 1 stehen in [hanon-teil1.toml](hanon-teil1.toml); das Werkzeug `tools/hanon-musicxml` erzeugt daraus den Notentext als MusicXML.
 
 ### Fingersatz
 
@@ -25,7 +33,7 @@ Beispielsweise sieht der Fingersatz für die 1. Übung so aus:
 
 ### Wiederholungen
 
-„Aufwärts“ und „Abwärts“ bilden gemeinsam einen Wiederholungsabschnitt zwischen einem linken und einem rechten Wiederholungszeichen. Er kann beliebig oft wiederholt werden, muss aber nicht. „Ende“ folgt nach der letzten Wiederholung und wird nur aus harmonischen Gründen gespielt; es ist der Grundton der jeweiligen Tonart.
+„Aufwärts“ und „Abwärts“ bilden gemeinsam einen Wiederholungsabschnitt zwischen einem linken und einem rechten Wiederholungszeichen; der Doppelstrich trennt sie. Fehlt der Doppelstrich (z. B. in einer anderen Ausgabe), gilt die erste Hälfte der Takte als „Aufwärts“, bei ungerader Zahl hat „Abwärts“ einen Takt mehr. Der Abschnitt kann beliebig oft wiederholt werden, muss aber nicht. „Ende“ folgt nach der letzten Wiederholung und wird nur aus harmonischen Gründen gespielt; es ist der Grundton der jeweiligen Tonart.
 
 ### Durchlauf
 

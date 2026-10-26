@@ -7,16 +7,19 @@ use crate::score::model::{Candidate, Hand, Score};
 pub struct HanonRules;
 
 impl HanonRules {
-    /// "Ascending" and "Descending": first and second half of the measures of the repeat
-    /// section (with an odd count, descending has one measure more).
+    /// "Ascending" and "Descending": the repeat section split after the measure ending with a
+    /// double barline (turning point); without one, at half of its measures (with an odd count,
+    /// descending has one measure more).
     pub fn directions(&self, score: &Score) -> [Range; 2] {
         let section = self.performance_range(score);
         let measure = |index: u32| score.onsets[index as usize].notes[0].id.measure;
         let first = measure(section.start);
-        let measures = measure(section.end) + 1 - first;
-        let half = measures / 2;
+        let last = measure(section.end);
+        let descending = (first..last)
+            .find(|&m| score.measures.get(m as usize).is_some_and(|m| m.double_bar))
+            .map_or(first + (last + 1 - first) / 2, |turn| turn + 1);
         let split = (section.start..=section.end)
-            .find(|&i| measure(i) >= first + half)
+            .find(|&i| measure(i) >= descending)
             .unwrap_or(section.end + 1);
         [
             Range {
