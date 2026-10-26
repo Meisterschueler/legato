@@ -9,6 +9,7 @@ import 'package:legato/src/platform/lifecycle_adapter.dart';
 import 'package:legato/src/platform/wakelock_adapter.dart';
 import 'package:legato/src/repertoire/repertoire_screen.dart';
 import 'package:legato/src/score_view/score_view.dart';
+import 'package:legato/src/settings/settings_screen.dart';
 
 /// Practice screen with the score and the input symbol.
 class PracticeScreen extends StatefulWidget {
@@ -114,6 +115,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
     builder: (_) => InputPicker(engine: widget.engine!, status: _input),
   );
 
+  void _openSettings() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => SettingsScreen(engine: widget.engine!),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -133,6 +140,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
               state: input['state'] as String,
               onTap: widget.engine == null ? null : _openInputPicker,
             ),
+          ),
+          IconButton(
+            tooltip: l10n.settings,
+            icon: const Icon(Icons.settings),
+            onPressed: widget.engine == null ? null : _openSettings,
           ),
         ],
       ),

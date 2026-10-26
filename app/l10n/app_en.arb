@@ -28,5 +28,38 @@
   "invalidNotPartwise": "This MusicXML layout (score-timewise) is not supported. Please export the piece as score-partwise.",
   "invalidNoPitchedNotes": "The file contains no notes.",
   "invalidUnpairedRepeats": "The repeat signs in the file do not match up.",
-  "invalidIncompatibleWithWork": "The file does not match the specification of its work."
+  "invalidIncompatibleWithWork": "The file does not match the specification of its work.",
+  "settings": "Settings",
+  "timeLimits": "Time limits",
+  "pauseLimit": "Pause",
+  "restLimit": "Pause at a notated rest",
+  "seconds": "{seconds} s",
+  "@seconds": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "errorMarkingDuring": "Mark errors while playing",
+  "errorMarkingAfter": "Mark errors after the performance",
+  "omissions": "Missing notes",
+  "wrongNotes": "Wrong notes",
+  "additions": "Extra notes",
+  "recognizeOnly": "Recognize only",
+  "nothingSelectedMeansAll": "Nothing selected: everything is recognized",
+  "bothHands": "Both hands",
+  "rightHand": "Right hand",
+  "leftHand": "Left hand",
+  "keyNames": "C,D♭,D,E♭,E,F,F♯,G,A♭,A,B♭,B",
+  "signals": "Signals on the instrument",
+  "connectSignal": "Connection signal",
+  "okSignal": "OK signal",
+  "okEveryPerformance": "After every performance",
+  "okWhenStopped": "When you stop",
+  "off": "Off",
+  "abortSignal": "Abort signal",
+  "signalTones": "Tones",
+  "signalVolume": "Volume",
+  "expertSettings": "Expert settings",
+  "scoreFollower": "Score following",
+  "recognitionMethod": "Recognition"
 }
