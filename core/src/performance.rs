@@ -5,6 +5,7 @@ use std::collections::VecDeque;
 
 use crate::following::deviations::{Deviation, Deviations};
 use crate::following::pthmm::PitchHmm;
+use crate::following::repeats::Repeats;
 use crate::following::{ReferenceNote, ScoreFollower};
 use crate::preprocessing::Observation;
 use crate::recognition::{Decision, Recognition, hands, plays};
@@ -34,12 +35,15 @@ pub struct Expected {
 pub struct Setup {
     pub candidate: Candidate,
     pub onsets: Vec<Expected>,
+    /// Repeat sections as positions in `onsets` (FR-014).
+    pub repeats: Repeats,
 }
 
 impl Setup {
-    /// Onsets of `range` without notes of the candidate's hands are left out.
+    /// Onsets of `range` without notes of the candidate's hands are left out. A repeat from the
+    /// last onset of `range` is a new performance, not an edge (Hanon).
     pub fn new(score: &Score, candidate: Candidate, range: Range) -> Self {
-        let onsets = score.onsets[range.start as usize..=range.end as usize]
+        let onsets: Vec<Expected> = score.onsets[range.start as usize..=range.end as usize]
             .iter()
             .filter_map(|onset| {
                 let notes: Vec<Note> = onset
@@ -60,7 +64,25 @@ impl Setup {
                 })
             })
             .collect();
-        Setup { candidate, onsets }
+        let jumps = score.onsets[range.start as usize..range.end as usize]
+            .iter()
+            .flat_map(|o| {
+                o.successors
+                    .iter()
+                    .filter(move |&&s| s <= o.index && s >= range.start)
+                    .map(move |&s| (o.index, s))
+            })
+            .filter_map(|(end, start)| {
+                let end = onsets.iter().rposition(|o| o.index <= end)?;
+                let start = onsets.iter().position(|o| o.index >= start)?;
+                (start <= end).then_some((end, start))
+            })
+            .collect();
+        Setup {
+            candidate,
+            onsets,
+            repeats: Repeats::new(jumps),
+        }
     }
 
     pub fn reference(&self) -> Vec<ReferenceNote> {
@@ -143,12 +165,10 @@ impl Performances {
     pub fn observe(&mut self, observation: &Observation) -> Vec<Event> {
         self.last_tone = observation.time;
         if matches!(self.state, State::Idle) {
-            let candidates = self
-                .setups
-                .iter()
-                .map(|s| (s.candidate.clone(), s.reference()))
-                .collect();
-            self.state = State::Recognizing(Recognition::new(candidates, self.recognition_length));
+            self.state = State::Recognizing(Recognition::for_setups(
+                &self.setups,
+                self.recognition_length,
+            ));
         }
         match &mut self.state {
             State::Idle => Vec::new(),
@@ -195,8 +215,12 @@ impl Performances {
                 Vec::new()
             }
             State::Running { setup, current, .. } => {
-                let next = self.setups[*setup].onsets.get(current + 1);
-                let limit = if next.is_some_and(|o| o.rest_before) {
+                let setup = &self.setups[*setup];
+                let rest_next = setup
+                    .repeats
+                    .successors(*current, setup.onsets.len())
+                    .any(|next| setup.onsets[next].rest_before);
+                let limit = if rest_next {
                     self.limits.rest
                 } else {
                     self.limits.pause
@@ -238,7 +262,7 @@ impl Performances {
         let beat = follower.score_positions()[follower.current_index()];
         // Inserted states between onsets match no onset.
         let found = onsets.iter().position(|o| o.beat == beat);
-        let (found_deviations, assigned) = deviations.step(onsets, found, pitches);
+        let (found_deviations, assigned) = deviations.step(&self.setups[*setup], found, pitches);
         let mut events: Vec<Event> = found_deviations.into_iter().map(Event::Deviation).collect();
         let n = self.recognition_length * hands(self.setups[*setup].candidate.variation);
         for a in assigned {

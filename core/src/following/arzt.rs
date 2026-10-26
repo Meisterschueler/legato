@@ -4,6 +4,7 @@
 
 //! `arzt`: event-level online time warping after Arzt & Widmer, one step per chord onset.
 
+use super::repeats::{Repeats, way};
 use super::{ReferenceNote, ScoreFollower, unique_onsets};
 
 const PIANO_LOW: usize = 21;
@@ -19,14 +20,28 @@ pub struct ArztEvent {
     /// Accumulated costs of the previous input step, row `k + 1` = reference onset `k`.
     /// Stored as `f32` like Matchmaker's cost matrix.
     previous: Vec<f32>,
+    /// Reference steps on the best way to every row of `previous`; the onset index without
+    /// repeats, as Matchmaker normalizes with.
+    previous_steps: Vec<usize>,
+    repeats: Repeats,
     input_index: usize,
     current_index: usize,
+    /// Reference steps up to `current_index`; the index itself without repeats.
+    current_steps: usize,
 }
 
 impl ArztEvent {
     /// Matchmaker's defaults for `arzt` with MIDI: window 30, start window 5, step size 5.
     pub fn new(notes: &[ReferenceNote]) -> Self {
         Self::with_parameters(notes, 30, 5, 5)
+    }
+
+    /// The window and the steps also lead from the end of a repeat section to its start (FR-014).
+    pub fn with_repeats(notes: &[ReferenceNote], repeats: Repeats) -> Self {
+        ArztEvent {
+            repeats,
+            ..Self::new(notes)
+        }
     }
 
     pub fn with_parameters(
@@ -39,6 +54,8 @@ impl ArztEvent {
         let reference = chords.iter().map(|chord| vector(chord)).collect();
         ArztEvent {
             previous: vec![f32::INFINITY; score_positions.len() + 1],
+            previous_steps: vec![0; score_positions.len() + 1],
+            repeats: Repeats::default(),
             score_positions,
             reference,
             window_size,
@@ -46,6 +63,28 @@ impl ArztEvent {
             step_size,
             input_index: 0,
             current_index: 0,
+            current_steps: 0,
+        }
+    }
+
+    /// Matchmaker's `min_index.clamp(current, current + step_size)` along the graph: an onset
+    /// not ahead on its best way stays at the current one, one too far ahead is approached by
+    /// `step_size` steps. Returns the onset and its reference steps.
+    fn advance(&self, target: usize, target_steps: usize) -> (usize, usize) {
+        let current = (self.current_index, self.current_steps);
+        if target_steps <= self.current_steps {
+            return current;
+        }
+        let n = self.reference.len();
+        let reached = self
+            .repeats
+            .reachable(self.current_index, self.window_size, n);
+        let Some(i) = reached.iter().position(|r| r.onset == target) else {
+            return current;
+        };
+        match way(&reached, i).get(self.step_size) {
+            Some(&onset) if onset != target => (onset, self.current_steps + self.step_size),
+            _ => (target, target_steps),
         }
     }
 }
@@ -60,12 +99,20 @@ impl ScoreFollower for ArztEvent {
             self.window_size
         };
         let start = self.current_index.saturating_sub(self.step_size);
-        let end = (start + window).min(n);
+        // Without repeats `start..start + window`.
+        let cells: Vec<usize> = self
+            .repeats
+            .reachable(start, window.saturating_sub(1), n)
+            .into_iter()
+            .take(window)
+            .map(|r| r.onset)
+            .collect();
 
         let mut current = vec![f32::INFINITY; n + 1];
+        let mut steps = vec![0; n + 1];
         let mut min_cost = f64::INFINITY;
         let mut min_index = start;
-        for score_index in start..end {
+        for score_index in cells {
             let row = score_index + 1;
             let distance = cosine_distance(&self.reference[score_index], &input);
             if score_index == 0 && self.input_index == 0 {
@@ -74,11 +121,40 @@ impl ScoreFollower for ArztEvent {
                 min_index = 0;
                 continue;
             }
-            let best = (f64::from(current[row - 1]) + distance)
-                .min(f64::from(self.previous[row]) + distance)
-                .min(f64::from(self.previous[row - 1]) + distance);
+            // Matchmaker: from `current[row - 1]`, `previous[row]` and `previous[row - 1]`;
+            // the end of a repeat section ending before this onset is a previous row as well.
+            let jumps = self
+                .repeats
+                .jumps()
+                .iter()
+                .filter(|(_, s)| *s == score_index)
+                .map(|(e, _)| e + 1);
+            let mut best = (f64::from(current[row - 1]) + distance, steps[row - 1] + 1);
+            let mut consider = |cost: f64, length: usize| {
+                // Like `f64::min`.
+                if cost < best.0 || (best.0.is_nan() && !cost.is_nan()) {
+                    best = (cost, length);
+                }
+            };
+            consider(
+                f64::from(self.previous[row]) + distance,
+                self.previous_steps[row],
+            );
+            consider(
+                f64::from(self.previous[row - 1]) + distance,
+                self.previous_steps[row - 1] + 1,
+            );
+            for from in jumps {
+                consider(f64::from(current[from]) + distance, steps[from] + 1);
+                consider(
+                    f64::from(self.previous[from]) + distance,
+                    self.previous_steps[from] + 1,
+                );
+            }
+            let (best, length) = best;
             current[row] = best as f32;
-            let normalized = best / (self.input_index + score_index + 1) as f64;
+            steps[row] = length;
+            let normalized = best / (self.input_index + length + 1) as f64;
             if normalized < min_cost {
                 min_cost = normalized;
                 min_index = score_index;
@@ -86,11 +162,12 @@ impl ScoreFollower for ArztEvent {
         }
         self.previous = current;
 
-        self.current_index = if self.input_index > 0 {
-            min_index.clamp(self.current_index, self.current_index + self.step_size)
+        (self.current_index, self.current_steps) = if self.input_index > 0 {
+            self.advance(min_index, steps[min_index + 1])
         } else {
-            min_index
+            (min_index, steps[min_index + 1])
         };
+        self.previous_steps = steps;
         self.input_index += 1;
         Some(self.score_positions[self.current_index])
     }

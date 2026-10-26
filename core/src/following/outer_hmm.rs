@@ -5,6 +5,7 @@
 //! `outerhmm`: outer-product HMM after Nakamura et al. (2014), one Viterbi step per input note;
 //! notes closer than 35 ms form one chord observation.
 
+use super::repeats::Repeats;
 use super::{ReferenceNote, ScoreFollower, unique_onsets};
 
 const PIANO_LOW: usize = 21;
@@ -31,6 +32,8 @@ const D2: usize = 3;
 pub struct OuterProductHmm {
     score_positions: Vec<f64>,
     alpha: Vec<Vec<f64>>,
+    /// Per state, the states outside the band `D2`/`D1` that lead to it over a repeat.
+    repeat_sources: Vec<Vec<usize>>,
     /// Skip-from and skip-to probabilities (uniform).
     skip: f64,
     /// Emission probability of every MIDI pitch per state.
@@ -44,12 +47,19 @@ pub struct OuterProductHmm {
 
 impl OuterProductHmm {
     pub fn new(notes: &[ReferenceNote]) -> Self {
+        Self::with_repeats(notes, &Repeats::default())
+    }
+
+    /// Transitions past the end of a repeat section also lead to its start (FR-014).
+    pub fn with_repeats(notes: &[ReferenceNote], repeats: &Repeats) -> Self {
         let (score_positions, chords) = unique_onsets(notes);
         let n = score_positions.len();
         let mut probabilities = vec![0.0; n];
         probabilities[0] = 1.0;
+        let (alpha, repeat_sources) = transition_matrix(n, repeats);
         OuterProductHmm {
-            alpha: transition_matrix(n),
+            alpha,
+            repeat_sources,
             skip: 1.0 / n as f64,
             b_table: chords.iter().map(|c| pitch_probabilities(c)).collect(),
             pre_chord: probabilities.clone(),
@@ -89,6 +99,7 @@ impl OuterProductHmm {
         let mut next: Vec<f64> = (0..n)
             .map(|i| {
                 let local = (i.saturating_sub(D2)..n.min(i + D1 + 1))
+                    .chain(self.repeat_sources[i].iter().copied())
                     .map(|j| previous[j] * self.alpha[j][i])
                     .fold(0.0, |m: f64, v| if v > m { v } else { m });
                 let skip = self.skip * global_skip;
@@ -158,9 +169,12 @@ fn argmax(values: &[f64]) -> usize {
     best
 }
 
-/// `compute_transition_matrix` with the default transitions.
-fn transition_matrix(n: usize) -> Vec<Vec<f64>> {
-    (0..n)
+/// `compute_transition_matrix` with the default transitions; the probability of going `d`
+/// onsets ahead is shared among the onsets `d` steps ahead in the graph. Also returns the
+/// sources of every state outside the band.
+fn transition_matrix(n: usize, repeats: &Repeats) -> (Vec<Vec<f64>>, Vec<Vec<usize>>) {
+    let mut sources = vec![Vec::new(); n];
+    let alpha = (0..n)
         .map(|i| {
             let mut row = vec![1e-6; n];
             for (delta, p) in TRANSITIONS {
@@ -168,11 +182,38 @@ fn transition_matrix(n: usize) -> Vec<Vec<f64>> {
                     row[j] = p;
                 }
             }
+            if !repeats.is_empty() {
+                let mut moved = Vec::new();
+                for (delta, p) in TRANSITIONS.into_iter().filter(|(delta, _)| *delta > 0) {
+                    let d = delta as usize;
+                    let targets = repeats.ahead(i, d, n);
+                    let linear = if i + d < n {
+                        vec![(i + d, 1.0)]
+                    } else {
+                        vec![]
+                    };
+                    if targets != linear {
+                        if i + d < n {
+                            row[i + d] = 1e-6;
+                        }
+                        moved.extend(targets.into_iter().map(|(t, share)| (t, share * p)));
+                    }
+                }
+                for (t, p) in moved {
+                    row[t] += p;
+                    // `viterbi_step` takes the sources `t - D2..=t + D1` of state `t`.
+                    let outside = t + D1 < i || t > i + D2;
+                    if outside && !sources[t].contains(&i) {
+                        sources[t].push(i);
+                    }
+                }
+            }
             row.iter_mut().for_each(|v| *v += f64::EPSILON);
             let sum: f64 = row.iter().sum();
             row.into_iter().map(|v| v / sum).collect()
         })
-        .collect()
+        .collect();
+    (alpha, sources)
 }
 
 /// `compute_OuterProductHMM_pitch_probabilities` with the default pitch error probabilities.

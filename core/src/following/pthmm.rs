@@ -4,12 +4,16 @@
 
 //! `pthmm`: pitch HMM with inserted states between the onsets (method `pthmm` for MIDI).
 
+use super::repeats::Repeats;
 use super::{ReferenceNote, ScoreFollower, unique_onsets};
 
 const PIANO_LOW: usize = 21;
 const PIANO_KEYS: usize = 88;
 const PROFILE: [f64; 5] = [0.02, 0.02, 1.0, 0.02, 0.02];
 const EPS: f64 = 0.01;
+/// States ahead whose transition probability follows a repeat; the Gumbel density is
+/// negligible beyond.
+const REDIRECTED: usize = 8;
 
 pub struct PitchHmm {
     score_positions: Vec<f64>,
@@ -26,6 +30,11 @@ pub struct PitchHmm {
 impl PitchHmm {
     /// `has_insertions`: states halfway between consecutive onsets (Matchmaker default for `pthmm`).
     pub fn new(notes: &[ReferenceNote], has_insertions: bool) -> Self {
+        Self::with_repeats(notes, has_insertions, &Repeats::default())
+    }
+
+    /// Transitions past the end of a repeat section also lead to its start (FR-014).
+    pub fn with_repeats(notes: &[ReferenceNote], has_insertions: bool, repeats: &Repeats) -> Self {
         let (onsets, chords) = unique_onsets(notes);
         let mut score_positions = Vec::with_capacity(2 * onsets.len());
         for (i, &onset) in onsets.iter().enumerate() {
@@ -36,7 +45,7 @@ impl PitchHmm {
         }
         let n = score_positions.len();
         PitchHmm {
-            transition: transition_matrix(n, has_insertions),
+            transition: transition_matrix(n, has_insertions, repeats),
             initial: initial_distribution(n),
             pitch_profiles: pitch_profiles(&chords, has_insertions),
             score_positions,
@@ -140,8 +149,9 @@ fn gumbel_l_pdf(x: f64, loc: f64, scale: f64) -> f64 {
     (z - z.exp()).exp() / scale
 }
 
-/// `stable_transition_matrix` with `mp_trans_state = 1`, `scale = 1.0`.
-fn transition_matrix(n: usize, inserted_states: bool) -> Vec<Vec<f64>> {
+/// `stable_transition_matrix` with `mp_trans_state = 1`, `scale = 1.0`; the probability of
+/// going `d` states ahead is shared among the states `d` steps ahead in the graph.
+fn transition_matrix(n: usize, inserted_states: bool, repeats: &Repeats) -> Vec<Vec<f64>> {
     (0..n)
         .map(|i| {
             let loc = if inserted_states && i % 2 == 0 {
@@ -149,9 +159,70 @@ fn transition_matrix(n: usize, inserted_states: bool) -> Vec<Vec<f64>> {
             } else {
                 i + 1
             } as f64;
-            let row: Vec<f64> = (0..n).map(|k| gumbel_l_pdf(k as f64, loc, 1.0)).collect();
+            let mut row: Vec<f64> = (0..n).map(|k| gumbel_l_pdf(k as f64, loc, 1.0)).collect();
+            if !repeats.is_empty() {
+                let mut moved = Vec::new();
+                for d in 1..=REDIRECTED {
+                    let targets = states_ahead(i, d, n, inserted_states, repeats);
+                    let linear = if i + d < n {
+                        vec![(i + d, 1.0)]
+                    } else {
+                        vec![]
+                    };
+                    if targets != linear {
+                        if i + d < n {
+                            row[i + d] = 0.0;
+                        }
+                        let p = gumbel_l_pdf((i + d) as f64, loc, 1.0);
+                        moved.extend(targets.into_iter().map(|(t, share)| (t, share * p)));
+                    }
+                }
+                for (t, p) in moved {
+                    row[t] += p;
+                }
+            }
             let sum: f64 = row.iter().sum();
             row.into_iter().map(|p| p / sum).collect()
+        })
+        .collect()
+}
+
+/// States `d` steps after state `i` among `n` with the share of the ways leading there. Onset `k`
+/// is state `2k` with inserted states, `k` without; a jump back has no inserted state.
+fn states_ahead(
+    i: usize,
+    d: usize,
+    n: usize,
+    inserted_states: bool,
+    repeats: &Repeats,
+) -> Vec<(usize, f64)> {
+    if !inserted_states {
+        return repeats.ahead(i, d, n);
+    }
+    let onsets = n.div_ceil(2);
+    if i % 2 == 1 {
+        // An inserted state leads to the next onset only.
+        return match d {
+            1 => vec![(i + 1, 1.0)],
+            _ => states_ahead(i + 1, d - 1, n, inserted_states, repeats),
+        };
+    }
+    let reached = repeats.ahead(i / 2, d / 2, onsets);
+    if d.is_multiple_of(2) {
+        return reached
+            .into_iter()
+            .map(|(k, share)| (2 * k, share))
+            .collect();
+    }
+    reached
+        .into_iter()
+        .flat_map(|(k, share)| {
+            let successors: Vec<usize> = repeats.successors(k, onsets).collect();
+            let part = share / successors.len() as f64;
+            successors
+                .into_iter()
+                .filter(move |&s| s == k + 1)
+                .map(move |_| (2 * k + 1, part))
         })
         .collect()
 }

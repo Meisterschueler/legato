@@ -1,7 +1,8 @@
 //! Classification of deviations during a performance (FR-012, FR-013): omission, wrong note
 //! and addition, each with note, hand and finger (constitution VI).
 
-use crate::performance::Expected;
+use super::repeats::{Repeats, way};
+use crate::performance::{Expected, Setup};
 use crate::score::model::{Hand, Note};
 
 /// Largest distance in half tones at which a wrong tone replaces a note instead of being added.
@@ -47,6 +48,9 @@ impl Deviation {
 /// A tone equal to a note that a wrong tone has taken shows that the matching ran ahead (e.g.
 /// during a short change of key); it resynchronizes there instead of shifting every following
 /// tone onto the next onset.
+///
+/// "After" follows the repeats (FR-014): jumping back to the start of a repeat section judges
+/// the rest of the section and opens its notes again.
 pub struct Deviations {
     handled: Vec<Vec<bool>>,
     /// Notes taken by a wrong tone.
@@ -75,10 +79,11 @@ impl Deviations {
     /// deviations and whether each tone was assigned to a note.
     pub fn step(
         &mut self,
-        onsets: &[Expected],
+        setup: &Setup,
         found: Option<usize>,
         pitches: &[u8],
     ) -> (Vec<Deviation>, Vec<bool>) {
+        let (onsets, repeats) = (&setup.onsets, &setup.repeats);
         let mut deviations = Vec::new();
         match (self.current, found) {
             // `pitches` decided the recognition: they and everything before are not judged. The
@@ -101,23 +106,26 @@ impl Deviations {
                 return (deviations, vec![true; pitches.len()]);
             }
             (None, None) => return (deviations, vec![false; pitches.len()]),
-            (Some(current), Some(i)) if i > current + LOOKAHEAD => {
-                deviations.extend(self.skip(onsets, current, i));
+            (Some(current), Some(i)) => {
+                deviations.extend(self.resynchronize(onsets, repeats, current, i));
             }
             _ => {}
         }
         let mut assigned = Vec::with_capacity(pitches.len());
         for &pitch in pitches {
             let current = self.current.expect("set above");
-            let last = (current + LOOKAHEAD).min(onsets.len() - 1);
-            let exact = (current..=last).find_map(|k| {
-                let n = (0..onsets[k].pitches.len())
-                    .find(|&n| !self.handled[k][n] && onsets[k].pitches[n] == pitch)?;
-                Some((k, n))
+            // Onsets past the end of a repeat section are open again.
+            let ahead = repeats.reachable(current, LOOKAHEAD, onsets.len());
+            let exact = ahead.iter().enumerate().find_map(|(r, reached)| {
+                let k = reached.onset;
+                let n = (0..onsets[k].pitches.len()).find(|&n| {
+                    (reached.jumped || !self.handled[k][n]) && onsets[k].pitches[n] == pitch
+                })?;
+                Some((r, n))
             });
-            if let Some((k, n)) = exact {
-                deviations.extend(self.skip(onsets, current, k));
-                self.handled[k][n] = true;
+            if let Some((r, n)) = exact {
+                deviations.extend(self.walk(onsets, &way(&ahead, r)));
+                self.handled[ahead[r].onset][n] = true;
                 assigned.push(true);
                 continue;
             }
@@ -135,17 +143,21 @@ impl Deviations {
             assigned.push(false);
             // A wrong tone replaces a near note of this onset or, once it is complete, the next.
             let onset_done = self.handled[current].iter().all(|h| *h);
-            let target = if onset_done && current + 1 < onsets.len() {
-                current + 1
-            } else {
-                current
-            };
+            let next = repeats
+                .successors(current, onsets.len())
+                .next()
+                .filter(|_| onset_done);
+            let target = next.unwrap_or(current);
+            let jumped = next.is_some_and(|next| next <= current);
             let near = (0..onsets[target].pitches.len()).find(|&n| {
-                !self.handled[target][n]
+                (jumped || !self.handled[target][n])
                     && onsets[target].pitches[n].abs_diff(pitch) <= SUBSTITUTION_RANGE
             });
             if let Some(n) = near {
-                self.current = Some(target);
+                if let Some(next) = next {
+                    // The current onset is complete: no omissions.
+                    self.walk(onsets, &[current, next]);
+                }
                 self.handled[target][n] = true;
                 self.replaced[target][n] = true;
                 deviations.push(Deviation::new(
@@ -168,22 +180,55 @@ impl Deviations {
         (deviations, assigned)
     }
 
-    /// Moves from onset `from` to `to`; notes left unplayed before `to` are omissions.
-    fn skip(&mut self, onsets: &[Expected], from: usize, to: usize) -> Vec<Deviation> {
+    /// Follows the follower's onset `i` once it is more than [`LOOKAHEAD`] onsets ahead; an onset
+    /// nearer behind than ahead is not followed.
+    fn resynchronize(
+        &mut self,
+        onsets: &[Expected],
+        repeats: &Repeats,
+        current: usize,
+        i: usize,
+    ) -> Vec<Deviation> {
+        let n = onsets.len();
+        let reached = repeats.reachable(current, n, n);
+        let Some(r) = reached.iter().position(|r| r.onset == i) else {
+            return Vec::new();
+        };
+        let distance = reached[r].distance;
+        let behind = (i <= current).then(|| current - i);
+        if distance > LOOKAHEAD && behind.is_none_or(|b| distance < b) {
+            self.walk(onsets, &way(&reached, r))
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Moves along `way` (onsets from the current one); notes left unplayed on the way are
+    /// omissions. Jumping back to the start of a repeat section opens its notes again.
+    fn walk(&mut self, onsets: &[Expected], way: &[usize]) -> Vec<Deviation> {
         let mut omissions = Vec::new();
-        for (k, onset) in onsets.iter().enumerate().take(to).skip(from) {
+        for step in way.windows(2) {
+            let (k, next) = (step[0], step[1]);
             for (n, handled) in self.handled[k].iter_mut().enumerate() {
                 if !*handled {
                     *handled = true;
                     omissions.push(Deviation::new(
                         DeviationKind::Omission,
-                        &onset.notes[n],
+                        &onsets[k].notes[n],
                         None,
                     ));
                 }
             }
+            if next <= k {
+                for j in next..=k {
+                    self.handled[j].fill(false);
+                    self.replaced[j].fill(false);
+                }
+            }
         }
-        self.current = Some(to.max(from));
+        if let Some(&last) = way.last() {
+            self.current = Some(last);
+        }
         omissions
     }
 }

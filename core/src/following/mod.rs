@@ -4,6 +4,7 @@ pub mod arzt;
 pub mod deviations;
 pub mod outer_hmm;
 pub mod pthmm;
+pub mod repeats;
 
 /// One note of the reference, as in partitura's `note_array`.
 #[derive(Clone, Copy, Debug, PartialEq)]

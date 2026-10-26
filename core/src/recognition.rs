@@ -60,10 +60,27 @@ impl Recognition {
         candidates: Vec<(Candidate, Vec<ReferenceNote>)>,
         recognition_length: usize,
     ) -> Self {
-        let (candidates, followers) = candidates
+        let followers = candidates
             .into_iter()
             .map(|(c, notes)| (c, PitchHmm::new(&notes, true)))
-            .unzip();
+            .collect();
+        Self::with_followers(followers, recognition_length)
+    }
+
+    /// The candidates of `setups`, followed with their repeats (FR-014).
+    pub fn for_setups(setups: &[Setup], recognition_length: usize) -> Self {
+        let followers = setups
+            .iter()
+            .map(|s| {
+                let follower = PitchHmm::with_repeats(&s.reference(), true, &s.repeats);
+                (s.candidate.clone(), follower)
+            })
+            .collect();
+        Self::with_followers(followers, recognition_length)
+    }
+
+    fn with_followers(followers: Vec<(Candidate, PitchHmm)>, recognition_length: usize) -> Self {
+        let (candidates, followers) = followers.into_iter().unzip();
         Recognition {
             candidates,
             followers,
