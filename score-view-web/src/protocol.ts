@@ -34,8 +34,7 @@ export function parseHostMessage(json: string): HostMessage {
         break;
       return message as HostMessage;
     case "zoom":
-      if (typeof message.percent !== "number" || !(message.percent > 0))
-        break;
+      if (typeof message.percent !== "number" || !(message.percent > 0)) break;
       return message as HostMessage;
     case "reset":
       return { type: "reset" };
