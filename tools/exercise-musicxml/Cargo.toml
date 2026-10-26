@@ -1,6 +1,6 @@
 [package]
-name = "hanon-musicxml"
-description = "Generates MusicXML for Hanon exercises from docs/werke/hanon-teil1.toml"
+name = "exercise-musicxml"
+description = "Generates MusicXML for technical exercises (Hanon, Brahms) from docs/werke/*.toml"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

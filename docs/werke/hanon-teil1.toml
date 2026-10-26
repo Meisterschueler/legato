@@ -4,413 +4,362 @@
 # (GUIDO-Muster, Fingersätze, Stufen), übertragen am 2026-10-26; Fingersätze von Nr. 11, 12 und 16
 # (Abwärts) am Original korrigiert.
 #
-# Daraus erzeugt tools/hanon-musicxml je Übung eine MusicXML-Datei (testdata/legato/hanon/).
+# Daraus erzeugt tools/exercise-musicxml je Übung eine MusicXML-Datei (testdata/legato/hanon/); das
+# Format ist in tools/exercise-musicxml/src/lib.rs beschrieben.
 #
-# Format
-# - Tonhöhen der linken Hand in wissenschaftlicher Notation (C4 = eingestrichenes c = MIDI 60), in derselben
-#   Lage wie app/assets/pieces/hanon-01.musicxml. Die rechte Hand spielt dieselben Töne eine Oktave höher.
-#   meisterschueler-gdx notiert beide Hände eine Oktave höher (GUIDO c0 = MIDI 48 für die linke Hand).
-# - Jeder Ton ist eine Sechzehntel; eine Figur füllt einen Takt (8 Töne: 2/4, 16 Töne: 4/4).
-# - Ein Abschnitt wird für jede Stufe von `steps.from` bis `steps.to` (Schrittweite ±1) diatonisch in C-Dur
-#   versetzt; die Abschnitte folgen in der angegebenen Reihenfolge. `up` ergibt „Aufwärts“, `down` „Abwärts“.
-# - `left`, `right`: Fingersatz je Ton der Figur, in allen Stufen gleich.
-# - `end`: „Ende“, Grundton der linken Hand über einen ganzen Takt (rechte Hand eine Oktave höher), Finger 5
-#   links und 1 rechts. Nicht in meisterschueler-gdx enthalten, ergänzt nach docs/werke/hanon.md.
+# Besonderheiten
+# - Tonhöhen in derselben Lage wie app/assets/pieces/hanon-01.musicxml; die rechte Hand spielt dieselben
+#   Töne eine Oktave höher. meisterschueler-gdx notiert beide Hände eine Oktave höher (GUIDO c0 = MIDI 48
+#   für die linke Hand).
+# - C-Dur; jeder Ton ist eine Sechzehntel, eine Figur füllt einen 2/4-Takt (`rhythm = [4, 4]`).
+# - `end`: „Ende“, Grundton über einen ganzen Takt, Finger 1 rechts und 5 links. Nicht in
+#   meisterschueler-gdx enthalten, ergänzt nach docs/werke/hanon.md.
 # - Wiederholungszeichen umschließen „Aufwärts“ und „Abwärts“; „Ende“ folgt danach. Ein Doppelstrich trennt
 #   „Aufwärts“ von „Abwärts“ (Wendepunkt), wie im Original.
-# - Oberes System im Violin-, unteres im Bassschlüssel. Beide Hände beginnen im unteren System und wechseln
-#   ins andere, sobald ein Takt dort weniger Hilfslinien braucht, aber nicht für einen einzelnen Takt. Die
-#   Hand ergibt sich aus der Stimme (rechts 1, links 5), nicht aus dem System.
-# - `check`: Auffälligkeit beim Übertragen; gegen das Original prüfen, bevor daraus Notentext entsteht.
+# - Beide Hände beginnen im unteren System (Bassschlüssel) und wechseln ins obere (Violinschlüssel).
+
+work = "The Virtuoso Pianist"
+composer = "Hanon"
+change = "hand"
+repeat = true
+double_bar = true
 
 [[exercise]]
 number = 1
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 F2 G2 A2 G2 F2 E2"
-left = [5, 4, 3, 2, 1, 2, 3, 4]
-right = [1, 2, 3, 4, 5, 4, 3, 2]
+right = { notes = "C3 E3 F3 G3 A3 G3 F3 E3", rhythm = [4, 4], fingers = [1, 2, 3, 4, 5, 4, 3, 2] }
+left = { notes = "C2 E2 F2 G2 A2 G2 F2 E2", rhythm = [4, 4], fingers = [5, 4, 3, 2, 1, 2, 3, 4] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 E4 D4 C4 B3 C4 D4 E4"
-left = [1, 2, 3, 4, 5, 4, 3, 2]
-right = [5, 4, 3, 2, 1, 2, 3, 4]
+right = { notes = "G5 E5 D5 C5 B4 C5 D5 E5", rhythm = [4, 4], fingers = [5, 4, 3, 2, 1, 2, 3, 4] }
+left = { notes = "G4 E4 D4 C4 B3 C4 D4 E4", rhythm = [4, 4], fingers = [1, 2, 3, 4, 5, 4, 3, 2] }
 steps = { from = 0, to = -14 }
 
 [[exercise]]
 number = 2
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 A2 G2 F2 G2 F2 E2"
-left = [5, 3, 1, 2, 3, 2, 3, 4]
-right = [1, 2, 5, 4, 3, 4, 3, 2]
+right = { notes = "C3 E3 A3 G3 F3 G3 F3 E3", rhythm = [4, 4], fingers = [1, 2, 5, 4, 3, 4, 3, 2] }
+left = { notes = "C2 E2 A2 G2 F2 G2 F2 E2", rhythm = [4, 4], fingers = [5, 3, 1, 2, 3, 2, 3, 4] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 D4 B3 C4 D4 C4 D4 E4"
-left = [1, 3, 5, 4, 3, 4, 3, 2]
-right = [5, 2, 1, 2, 3, 2, 3, 4]
+right = { notes = "G5 D5 B4 C5 D5 C5 D5 E5", rhythm = [4, 4], fingers = [5, 2, 1, 2, 3, 2, 3, 4] }
+left = { notes = "G4 D4 B3 C4 D4 C4 D4 E4", rhythm = [4, 4], fingers = [1, 3, 5, 4, 3, 4, 3, 2] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 3
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 A2 G2 F2 E2 F2 G2"
-left = [5, 3, 1, 2, 3, 4, 3, 2]
-right = [1, 2, 5, 4, 3, 2, 3, 4]
+right = { notes = "C3 E3 A3 G3 F3 E3 F3 G3", rhythm = [4, 4], fingers = [1, 2, 5, 4, 3, 2, 3, 4] }
+left = { notes = "C2 E2 A2 G2 F2 E2 F2 G2", rhythm = [4, 4], fingers = [5, 3, 1, 2, 3, 4, 3, 2] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 D4 B3 C4 D4 E4 D4 C4"
-left = [1, 3, 5, 4, 3, 2, 3, 4]
-right = [5, 2, 1, 2, 3, 4, 3, 2]
+right = { notes = "G5 D5 B4 C5 D5 E5 D5 C5", rhythm = [4, 4], fingers = [5, 2, 1, 2, 3, 4, 3, 2] }
+left = { notes = "G4 D4 B3 C4 D4 E4 D4 C4", rhythm = [4, 4], fingers = [1, 3, 5, 4, 3, 2, 3, 4] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 4
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 D2 C2 E2 A2 G2 F2 E2"
-left = [5, 4, 5, 3, 1, 2, 3, 4]
-right = [1, 2, 1, 2, 5, 4, 3, 2]
+right = { notes = "C3 D3 C3 E3 A3 G3 F3 E3", rhythm = [4, 4], fingers = [1, 2, 1, 2, 5, 4, 3, 2] }
+left = { notes = "C2 D2 C2 E2 A2 G2 F2 E2", rhythm = [4, 4], fingers = [5, 4, 5, 3, 1, 2, 3, 4] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 F4 G4 D4 B3 C4 D4 E4"
-left = [1, 2, 1, 3, 5, 4, 3, 2]
-right = [5, 4, 5, 2, 1, 2, 3, 4]
+right = { notes = "G5 F5 G5 D5 B4 C5 D5 E5", rhythm = [4, 4], fingers = [5, 4, 5, 2, 1, 2, 3, 4] }
+left = { notes = "G4 F4 G4 D4 B3 C4 D4 E4", rhythm = [4, 4], fingers = [1, 2, 1, 3, 5, 4, 3, 2] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 5
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 A2 G2 A2 F2 G2 E2 F2"
-left = [5, 1, 2, 1, 3, 2, 4, 3]
-right = [1, 5, 4, 5, 3, 4, 2, 3]
+right = { notes = "C3 A3 G3 A3 F3 G3 E3 F3", rhythm = [4, 4], fingers = [1, 5, 4, 5, 3, 4, 2, 3] }
+left = { notes = "C2 A2 G2 A2 F2 G2 E2 F2", rhythm = [4, 4], fingers = [5, 1, 2, 1, 3, 2, 4, 3] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "C4 D4 C4 E4 D4 F4 E4 G4"
-left = [5, 4, 5, 3, 4, 2, 3, 1]
-right = [1, 2, 1, 3, 2, 4, 3, 5]
+right = { notes = "C5 D5 C5 E5 D5 F5 E5 G5", rhythm = [4, 4], fingers = [1, 2, 1, 3, 2, 4, 3, 5] }
+left = { notes = "C4 D4 C4 E4 D4 F4 E4 G4", rhythm = [4, 4], fingers = [5, 4, 5, 3, 4, 2, 3, 1] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 6
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 A2 G2 A2 F2 A2 E2 A2"
-left = [5, 1, 2, 1, 3, 1, 4, 1]
-right = [1, 5, 4, 5, 3, 5, 2, 5]
+right = { notes = "C3 A3 G3 A3 F3 A3 E3 A3", rhythm = [4, 4], fingers = [1, 5, 4, 5, 3, 5, 2, 5] }
+left = { notes = "C2 A2 G2 A2 F2 A2 E2 A2", rhythm = [4, 4], fingers = [5, 1, 2, 1, 3, 1, 4, 1] }
 steps = { from = 0, to = 12 }
 
 [[exercise.up]]
-figure = "C2 A2 G2 A2 F2 A2 E2 D2"
-left = [5, 1, 2, 1, 3, 1, 4, 5]
-right = [1, 5, 4, 5, 3, 5, 2, 1]
+right = { notes = "C3 A3 G3 A3 F3 A3 E3 D3", rhythm = [4, 4], fingers = [1, 5, 4, 5, 3, 5, 2, 1] }
+left = { notes = "C2 A2 G2 A2 F2 A2 E2 D2", rhythm = [4, 4], fingers = [5, 1, 2, 1, 3, 1, 4, 5] }
 steps = { from = 13, to = 13 }
 
 [[exercise.down]]
-figure = "G4 B3 C4 B3 D4 B3 E4 B3"
-left = [1, 5, 4, 5, 3, 5, 2, 5]
-right = [5, 1, 2, 1, 3, 1, 4, 1]
+right = { notes = "G5 B4 C5 B4 D5 B4 E5 B4", rhythm = [4, 4], fingers = [5, 1, 2, 1, 3, 1, 4, 1] }
+left = { notes = "G4 B3 C4 B3 D4 B3 E4 B3", rhythm = [4, 4], fingers = [1, 5, 4, 5, 3, 5, 2, 5] }
 steps = { from = 0, to = -12 }
 
 [[exercise.down]]
-figure = "G4 B3 C4 B3 D4 B3 E4 D4"
-left = [1, 5, 4, 5, 3, 5, 2, 3]
-right = [5, 1, 2, 1, 3, 1, 4, 3]
+right = { notes = "G5 B4 C5 B4 D5 B4 E5 D5", rhythm = [4, 4], fingers = [5, 1, 2, 1, 3, 1, 4, 3] }
+left = { notes = "G4 B3 C4 B3 D4 B3 E4 D4", rhythm = [4, 4], fingers = [1, 5, 4, 5, 3, 5, 2, 3] }
 steps = { from = -13, to = -13 }
 
 [[exercise]]
 number = 7
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 D2 F2 E2 G2 F2 E2"
-left = [5, 3, 4, 2, 3, 1, 2, 3]
-right = [1, 3, 2, 4, 3, 5, 4, 3]
+right = { notes = "C3 E3 D3 F3 E3 G3 F3 E3", rhythm = [4, 4], fingers = [1, 3, 2, 4, 3, 5, 4, 3] }
+left = { notes = "C2 E2 D2 F2 E2 G2 F2 E2", rhythm = [4, 4], fingers = [5, 3, 4, 2, 3, 1, 2, 3] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 E4 F4 D4 E4 C4 D4 E4"
-left = [1, 3, 2, 4, 3, 5, 4, 3]
-right = [5, 3, 4, 2, 3, 1, 3, 4]
+right = { notes = "G5 E5 F5 D5 E5 C5 D5 E5", rhythm = [4, 4], fingers = [5, 3, 4, 2, 3, 1, 3, 4] }
+left = { notes = "G4 E4 F4 D4 E4 C4 D4 E4", rhythm = [4, 4], fingers = [1, 3, 2, 4, 3, 5, 4, 3] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 8
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 G2 A2 F2 G2 E2 F2"
-left = [5, 4, 2, 1, 3, 2, 4, 3]
-right = [1, 2, 4, 5, 3, 4, 2, 3]
+right = { notes = "C3 E3 G3 A3 F3 G3 E3 F3", rhythm = [4, 4], fingers = [1, 2, 4, 5, 3, 4, 2, 3] }
+left = { notes = "C2 E2 G2 A2 F2 G2 E2 F2", rhythm = [4, 4], fingers = [5, 4, 2, 1, 3, 2, 4, 3] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 E4 C4 B3 D4 C4 E4 D4"
-left = [1, 2, 4, 5, 3, 4, 2, 3]
-right = [5, 4, 2, 1, 3, 2, 4, 3]
+right = { notes = "G5 E5 C5 B4 D5 C5 E5 D5", rhythm = [4, 4], fingers = [5, 4, 2, 1, 3, 2, 4, 3] }
+left = { notes = "G4 E4 C4 B3 D4 C4 E4 D4", rhythm = [4, 4], fingers = [1, 2, 4, 5, 3, 4, 2, 3] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 9
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 F2 E2 G2 F2 A2 G2"
-left = [5, 4, 3, 4, 2, 3, 1, 2]
-right = [1, 2, 3, 2, 4, 3, 5, 4]
+right = { notes = "C3 E3 F3 E3 G3 F3 A3 G3", rhythm = [4, 4], fingers = [1, 2, 3, 2, 4, 3, 5, 4] }
+left = { notes = "C2 E2 F2 E2 G2 F2 A2 G2", rhythm = [4, 4], fingers = [5, 4, 3, 4, 2, 3, 1, 2] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 E4 D4 E4 C4 D4 B3 C4"
-left = [1, 2, 3, 2, 4, 3, 5, 4]
-right = [5, 4, 3, 4, 2, 3, 1, 2]
+right = { notes = "G5 E5 D5 E5 C5 D5 B4 C5", rhythm = [4, 4], fingers = [5, 4, 3, 4, 2, 3, 1, 2] }
+left = { notes = "G4 E4 D4 E4 C4 D4 B3 C4", rhythm = [4, 4], fingers = [1, 2, 3, 2, 4, 3, 5, 4] }
 steps = { from = 0, to = -12 }
 
 [[exercise.down]]
-figure = "G4 E4 D4 E4 C4 D4 C4 D4"
-left = [1, 2, 3, 2, 4, 3, 4, 3]
-right = [5, 4, 3, 4, 2, 3, 2, 3]
+right = { notes = "G5 E5 D5 E5 C5 D5 C5 D5", rhythm = [4, 4], fingers = [5, 4, 3, 4, 2, 3, 2, 3] }
+left = { notes = "G4 E4 D4 E4 C4 D4 C4 D4", rhythm = [4, 4], fingers = [1, 2, 3, 2, 4, 3, 4, 3] }
 steps = { from = -13, to = -13 }
 
 [[exercise]]
 number = 10
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 A2 G2 F2 E2 F2 E2 F2"
-left = [5, 1, 2, 3, 4, 3, 4, 3]
-right = [1, 5, 4, 3, 2, 3, 2, 3]
+right = { notes = "C3 A3 G3 F3 E3 F3 E3 F3", rhythm = [4, 4], fingers = [1, 5, 4, 3, 2, 3, 2, 3] }
+left = { notes = "C2 A2 G2 F2 E2 F2 E2 F2", rhythm = [4, 4], fingers = [5, 1, 2, 3, 4, 3, 4, 3] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 B3 C4 D4 E4 D4 E4 D4"
-left = [1, 5, 4, 3, 2, 3, 2, 3]
-right = [5, 1, 2, 3, 4, 3, 4, 3]
+right = { notes = "G5 B4 C5 D5 E5 D5 E5 D5", rhythm = [4, 4], fingers = [5, 1, 2, 3, 4, 3, 4, 3] }
+left = { notes = "G4 B3 C4 D4 E4 D4 E4 D4", rhythm = [4, 4], fingers = [1, 5, 4, 3, 2, 3, 2, 3] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 11
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 A2 G2 A2 G2 F2 G2"
-left = [5, 3, 1, 2, 1, 2, 3, 2]
-right = [1, 2, 5, 4, 5, 4, 3, 4]
+right = { notes = "C3 E3 A3 G3 A3 G3 F3 G3", rhythm = [4, 4], fingers = [1, 2, 5, 4, 5, 4, 3, 4] }
+left = { notes = "C2 E2 A2 G2 A2 G2 F2 G2", rhythm = [4, 4], fingers = [5, 3, 1, 2, 1, 2, 3, 2] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 D4 B3 C4 B3 C4 D4 C4"
-left = [1, 3, 5, 4, 5, 4, 3, 4]
-right = [5, 2, 1, 2, 1, 2, 3, 2]
+right = { notes = "G5 D5 B4 C5 B4 C5 D5 C5", rhythm = [4, 4], fingers = [5, 2, 1, 2, 1, 2, 3, 2] }
+left = { notes = "G4 D4 B3 C4 B3 C4 D4 C4", rhythm = [4, 4], fingers = [1, 3, 5, 4, 5, 4, 3, 4] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 12
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "G2 C2 E2 D2 C2 D2 E2 C2"
-left = [1, 5, 3, 4, 5, 4, 3, 5]
-right = [5, 1, 3, 2, 1, 2, 3, 1]
+right = { notes = "G3 C3 E3 D3 C3 D3 E3 C3", rhythm = [4, 4], fingers = [5, 1, 3, 2, 1, 2, 3, 1] }
+left = { notes = "G2 C2 E2 D2 C2 D2 E2 C2", rhythm = [4, 4], fingers = [1, 5, 3, 4, 5, 4, 3, 5] }
 steps = { from = 0, to = 0 }
 
 [[exercise.up]]
-figure = "A2 C2 E2 D2 C2 D2 E2 C2"
-left = [1, 5, 3, 4, 5, 4, 3, 5]
-right = [5, 1, 3, 2, 1, 2, 3, 1]
+right = { notes = "A3 C3 E3 D3 C3 D3 E3 C3", rhythm = [4, 4], fingers = [5, 1, 3, 2, 1, 2, 3, 1] }
+left = { notes = "A2 C2 E2 D2 C2 D2 E2 C2", rhythm = [4, 4], fingers = [1, 5, 3, 4, 5, 4, 3, 5] }
 steps = { from = 1, to = 12 }
 
 [[exercise.up]]
-figure = "A2 C2 E2 D2 C2 D2 E2 F2"
-left = [1, 5, 3, 4, 5, 4, 3, 2]
-right = [5, 1, 3, 2, 1, 2, 3, 4]
+right = { notes = "A3 C3 E3 D3 C3 D3 E3 F3", rhythm = [4, 4], fingers = [5, 1, 3, 2, 1, 2, 3, 4] }
+left = { notes = "A2 C2 E2 D2 C2 D2 E2 F2", rhythm = [4, 4], fingers = [1, 5, 3, 4, 5, 4, 3, 2] }
 steps = { from = 13, to = 13 }
 
 [[exercise.down]]
-figure = "C4 A4 F4 G4 A4 G4 F4 A4"
-left = [5, 1, 3, 2, 1, 2, 3, 1]
-right = [1, 5, 3, 4, 5, 4, 3, 5]
+right = { notes = "C5 A5 F5 G5 A5 G5 F5 A5", rhythm = [4, 4], fingers = [1, 5, 3, 4, 5, 4, 3, 5] }
+left = { notes = "C4 A4 F4 G4 A4 G4 F4 A4", rhythm = [4, 4], fingers = [5, 1, 3, 2, 1, 2, 3, 1] }
 steps = { from = 0, to = -13 }
 
 [[exercise.down]]
-figure = "C2 G2 E2 F2 G2 F2 E2 F2"
-left = [5, 1, 3, 2, 1, 2, 3, 1]
-right = [1, 5, 3, 4, 5, 4, 3, 5]
+right = { notes = "C3 G3 E3 F3 G3 F3 E3 F3", rhythm = [4, 4], fingers = [1, 5, 3, 4, 5, 4, 3, 5] }
+left = { notes = "C2 G2 E2 F2 G2 F2 E2 F2", rhythm = [4, 4], fingers = [5, 1, 3, 2, 1, 2, 3, 1] }
 steps = { from = 0, to = 0 }
 
 [[exercise]]
 number = 13
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "E2 C2 F2 D2 G2 E2 F2 G2"
-left = [3, 5, 2, 4, 1, 3, 2, 1]
-right = [3, 1, 4, 2, 5, 3, 4, 5]
+right = { notes = "E3 C3 F3 D3 G3 E3 F3 G3", rhythm = [4, 4], fingers = [3, 1, 4, 2, 5, 3, 4, 5] }
+left = { notes = "E2 C2 F2 D2 G2 E2 F2 G2", rhythm = [4, 4], fingers = [3, 5, 2, 4, 1, 3, 2, 1] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "E4 G4 D4 F4 E4 C4 D4 E4"
-left = [3, 1, 4, 2, 3, 5, 4, 3]
-right = [3, 5, 2, 4, 3, 1, 3, 4]
+right = { notes = "E5 G5 D5 F5 E5 C5 D5 E5", rhythm = [4, 4], fingers = [3, 5, 2, 4, 3, 1, 3, 4] }
+left = { notes = "E4 G4 D4 F4 E4 C4 D4 E4", rhythm = [4, 4], fingers = [3, 1, 4, 2, 3, 5, 4, 3] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 14
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 D2 F2 E2 F2 E2 G2 F2"
-left = [5, 4, 2, 3, 2, 3, 1, 2]
-right = [1, 2, 4, 3, 4, 3, 5, 4]
+right = { notes = "C3 D3 F3 E3 F3 E3 G3 F3", rhythm = [4, 4], fingers = [1, 2, 4, 3, 4, 3, 5, 4] }
+left = { notes = "C2 D2 F2 E2 F2 E2 G2 F2", rhythm = [4, 4], fingers = [5, 4, 2, 3, 2, 3, 1, 2] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 F4 D4 E4 D4 E4 C4 D4"
-left = [1, 2, 4, 3, 4, 3, 5, 4]
-right = [5, 4, 2, 3, 2, 3, 1, 3]
+right = { notes = "G5 F5 D5 E5 D5 E5 C5 D5", rhythm = [4, 4], fingers = [5, 4, 2, 3, 2, 3, 1, 3] }
+left = { notes = "G4 F4 D4 E4 D4 E4 C4 D4", rhythm = [4, 4], fingers = [1, 2, 4, 3, 4, 3, 5, 4] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 15
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 D2 F2 E2 G2 F2 A2"
-left = [5, 3, 4, 2, 3, 1, 2, 1]
-right = [1, 2, 1, 3, 2, 4, 3, 5]
+right = { notes = "C3 E3 D3 F3 E3 G3 F3 A3", rhythm = [4, 4], fingers = [1, 2, 1, 3, 2, 4, 3, 5] }
+left = { notes = "C2 E2 D2 F2 E2 G2 F2 A2", rhythm = [4, 4], fingers = [5, 3, 4, 2, 3, 1, 2, 1] }
 steps = { from = 0, to = 12 }
 
 [[exercise.up]]
-figure = "C2 E2 D2 F2 E2 G2 F2 G2"
-left = [5, 3, 4, 2, 3, 1, 3, 2]
-right = [1, 2, 1, 3, 2, 4, 3, 4]
+right = { notes = "C3 E3 D3 F3 E3 G3 F3 G3", rhythm = [4, 4], fingers = [1, 2, 1, 3, 2, 4, 3, 4] }
+left = { notes = "C2 E2 D2 F2 E2 G2 F2 G2", rhythm = [4, 4], fingers = [5, 3, 4, 2, 3, 1, 3, 2] }
 steps = { from = 13, to = 13 }
 
 [[exercise.down]]
-figure = "G4 E4 F4 D4 E4 C4 D4 B3"
-left = [1, 2, 1, 3, 2, 4, 3, 5]
-right = [5, 3, 4, 2, 3, 1, 2, 1]
+right = { notes = "G5 E5 F5 D5 E5 C5 D5 B4", rhythm = [4, 4], fingers = [5, 3, 4, 2, 3, 1, 2, 1] }
+left = { notes = "G4 E4 F4 D4 E4 C4 D4 B3", rhythm = [4, 4], fingers = [1, 2, 1, 3, 2, 4, 3, 5] }
 steps = { from = 0, to = -12 }
 
 [[exercise.down]]
-figure = "G4 E4 F4 D4 E4 C4 D4 C4"
-left = [1, 2, 1, 3, 2, 4, 3, 4]
-right = [5, 3, 4, 2, 3, 1, 3, 2]
+right = { notes = "G5 E5 F5 D5 E5 C5 D5 C5", rhythm = [4, 4], fingers = [5, 3, 4, 2, 3, 1, 3, 2] }
+left = { notes = "G4 E4 F4 D4 E4 C4 D4 C4", rhythm = [4, 4], fingers = [1, 2, 1, 3, 2, 4, 3, 4] }
 steps = { from = -13, to = -13 }
 
 [[exercise]]
 number = 16
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 D2 E2 A2 G2 F2 G2"
-left = [5, 3, 4, 3, 1, 2, 3, 2]
-right = [1, 3, 2, 3, 5, 4, 3, 4]
+right = { notes = "C3 E3 D3 E3 A3 G3 F3 G3", rhythm = [4, 4], fingers = [1, 3, 2, 3, 5, 4, 3, 4] }
+left = { notes = "C2 E2 D2 E2 A2 G2 F2 G2", rhythm = [4, 4], fingers = [5, 3, 4, 3, 1, 2, 3, 2] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 D4 E4 D4 B3 C4 D4 C4"
-left = [1, 3, 2, 3, 5, 4, 3, 4]
-right = [5, 2, 3, 2, 1, 2, 3, 2]
+right = { notes = "G5 D5 E5 D5 B4 C5 D5 C5", rhythm = [4, 4], fingers = [5, 2, 3, 2, 1, 2, 3, 2] }
+left = { notes = "G4 D4 E4 D4 B3 C4 D4 C4", rhythm = [4, 4], fingers = [1, 3, 2, 3, 5, 4, 3, 4] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 17
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 E2 A2 G2 B2 A2 G2 A2"
-left = [5, 4, 2, 3, 1, 2, 3, 2]
-right = [1, 2, 4, 3, 5, 4, 3, 4]
+right = { notes = "C3 E3 A3 G3 B3 A3 G3 A3", rhythm = [4, 4], fingers = [1, 2, 4, 3, 5, 4, 3, 4] }
+left = { notes = "C2 E2 A2 G2 B2 A2 G2 A2", rhythm = [4, 4], fingers = [5, 4, 2, 3, 1, 2, 3, 2] }
 steps = { from = 0, to = 12 }
 
 [[exercise.up]]
-figure = "C2 E2 A2 G2 B2 A2 G2 F2"
-left = [5, 4, 2, 3, 1, 2, 3, 4]
-right = [1, 2, 4, 3, 5, 4, 3, 2]
+right = { notes = "C3 E3 A3 G3 B3 A3 G3 F3", rhythm = [4, 4], fingers = [1, 2, 4, 3, 5, 4, 3, 2] }
+left = { notes = "C2 E2 A2 G2 B2 A2 G2 F2", rhythm = [4, 4], fingers = [5, 4, 2, 3, 1, 2, 3, 4] }
 steps = { from = 13, to = 13 }
 
 [[exercise.down]]
-figure = "G4 D4 B3 C4 A3 B3 C4 A3"
-left = [1, 2, 4, 3, 5, 4, 3, 5]
-right = [5, 3, 2, 3, 1, 2, 3, 1]
+right = { notes = "G5 D5 B4 C5 A4 B4 C5 A4", rhythm = [4, 4], fingers = [5, 3, 2, 3, 1, 2, 3, 1] }
+left = { notes = "G4 D4 B3 C4 A3 B3 C4 A3", rhythm = [4, 4], fingers = [1, 2, 4, 3, 5, 4, 3, 5] }
 steps = { from = 0, to = -11 }
 
 [[exercise.down]]
-figure = "G4 D4 B3 C4 A3 B3 C4 B3"
-left = [1, 2, 4, 3, 5, 4, 3, 5]
-right = [5, 3, 2, 3, 1, 2, 3, 1]
+right = { notes = "G5 D5 B4 C5 A4 B4 C5 B4", rhythm = [4, 4], fingers = [5, 3, 2, 3, 1, 2, 3, 1] }
+left = { notes = "G4 D4 B3 C4 A3 B3 C4 B3", rhythm = [4, 4], fingers = [1, 2, 4, 3, 5, 4, 3, 5] }
 steps = { from = -12, to = -12 }
 
 [[exercise]]
 number = 18
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 D2 F2 E2 G2 F2 D2 E2"
-left = [5, 4, 2, 3, 1, 2, 4, 3]
-right = [1, 2, 4, 3, 5, 4, 2, 3]
+right = { notes = "C3 D3 F3 E3 G3 F3 D3 E3", rhythm = [4, 4], fingers = [1, 2, 4, 3, 5, 4, 2, 3] }
+left = { notes = "C2 D2 F2 E2 G2 F2 D2 E2", rhythm = [4, 4], fingers = [5, 4, 2, 3, 1, 2, 4, 3] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 F4 D4 E4 C4 D4 F4 E4"
-left = [1, 2, 4, 3, 5, 4, 2, 3]
-right = [5, 4, 2, 3, 1, 2, 4, 3]
+right = { notes = "G5 F5 D5 E5 C5 D5 F5 E5", rhythm = [4, 4], fingers = [5, 4, 2, 3, 1, 2, 4, 3] }
+left = { notes = "G4 F4 D4 E4 C4 D4 F4 E4", rhythm = [4, 4], fingers = [1, 2, 4, 3, 5, 4, 2, 3] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 19
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "C2 A2 F2 G2 A2 F2 E2 G2"
-left = [5, 1, 3, 2, 1, 3, 4, 2]
-right = [1, 5, 3, 4, 5, 3, 2, 4]
+right = { notes = "C3 A3 F3 G3 A3 F3 E3 G3", rhythm = [4, 4], fingers = [1, 5, 3, 4, 5, 3, 2, 4] }
+left = { notes = "C2 A2 F2 G2 A2 F2 E2 G2", rhythm = [4, 4], fingers = [5, 1, 3, 2, 1, 3, 4, 2] }
 steps = { from = 0, to = 13 }
 
 [[exercise.down]]
-figure = "G4 B3 D4 C4 B3 D4 E4 C4"
-left = [1, 5, 3, 4, 5, 3, 2, 4]
-right = [5, 1, 3, 2, 1, 3, 4, 2]
+right = { notes = "G5 B4 D5 C5 B4 D5 E5 C5", rhythm = [4, 4], fingers = [5, 1, 3, 2, 1, 3, 4, 2] }
+left = { notes = "G4 B3 D4 C4 B3 D4 E4 C4", rhythm = [4, 4], fingers = [1, 5, 3, 4, 5, 3, 2, 4] }
 steps = { from = 0, to = -13 }
 
 [[exercise]]
 number = 20
-end = "C2"
+end = { right = { note = "C3", finger = 1 }, left = { note = "C2", finger = 5 } }
 
 [[exercise.up]]
-figure = "E2 G2 C3 E3 C3 B2 C3 A2"
-left = [5, 4, 2, 1, 2, 3, 2, 4]
-right = [1, 2, 4, 5, 4, 3, 4, 2]
+right = { notes = "E3 G3 C4 E4 C4 B3 C4 A3", rhythm = [4, 4], fingers = [1, 2, 4, 5, 4, 3, 4, 2] }
+left = { notes = "E2 G2 C3 E3 C3 B2 C3 A2", rhythm = [4, 4], fingers = [5, 4, 2, 1, 2, 3, 2, 4] }
 steps = { from = 0, to = 13 }
 
 [[exercise.up]]
-figure = "E2 G2 C3 E3 C3 B2 C3 G2"
-left = [5, 4, 2, 1, 2, 3, 2, 4]
-right = [1, 2, 4, 5, 4, 3, 4, 2]
+right = { notes = "E3 G3 C4 E4 C4 B3 C4 G3", rhythm = [4, 4], fingers = [1, 2, 4, 5, 4, 3, 4, 2] }
+left = { notes = "E2 G2 C3 E3 C3 B2 C3 G2", rhythm = [4, 4], fingers = [5, 4, 2, 1, 2, 3, 2, 4] }
 steps = { from = 14, to = 14 }
 
 [[exercise.down]]
-figure = "E5 C5 G4 E4 G4 F4 G4 E4"
-left = [1, 2, 4, 5, 3, 4, 3, 5]
-right = [5, 4, 2, 1, 3, 2, 3, 1]
+right = { notes = "E6 C6 G5 E5 G5 F5 G5 E5", rhythm = [4, 4], fingers = [5, 4, 2, 1, 3, 2, 3, 1] }
+left = { notes = "E5 C5 G4 E4 G4 F4 G4 E4", rhythm = [4, 4], fingers = [1, 2, 4, 5, 3, 4, 3, 5] }
 steps = { from = 0, to = -13 }
 
 [[exercise.down]]
-figure = "E5 C5 G4 E4 G4 F4 G4 F4"
-left = [1, 2, 4, 5, 3, 4, 3, 4]
-right = [5, 4, 2, 1, 3, 2, 3, 2]
+right = { notes = "E6 C6 G5 E5 G5 F5 G5 F5", rhythm = [4, 4], fingers = [5, 4, 2, 1, 3, 2, 3, 2] }
+left = { notes = "E5 C5 G4 E4 G4 F4 G4 F4", rhythm = [4, 4], fingers = [1, 2, 4, 5, 3, 4, 3, 4] }
 steps = { from = -14, to = -14 }

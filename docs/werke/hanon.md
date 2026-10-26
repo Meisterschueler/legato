@@ -21,7 +21,7 @@ Beispielsweise sieht die linke Hand der 1. Übung so aus (die rechte Hand spielt
 - Abwärts: G3 E D C H2 C3 D E - F D C H2 A H C3 D - E C H2 A G A H C3 --- A1 F E D C D E F - G E D C H0 C1 D E
 - Ende: C1
 
-Figuren, Stufen und Fingersätze aller Übungen von Teil 1 stehen in [hanon-teil1.toml](hanon-teil1.toml); das Werkzeug `tools/hanon-musicxml` erzeugt daraus den Notentext als MusicXML.
+Figuren, Stufen und Fingersätze aller Übungen von Teil 1 stehen in [hanon-teil1.toml](hanon-teil1.toml); das Werkzeug `tools/exercise-musicxml` erzeugt daraus den Notentext als MusicXML.
 
 ### Fingersatz
 

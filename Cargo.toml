@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["core", "engine", "app/rust", "tools/hanon-musicxml"]
+members = ["core", "engine", "app/rust", "tools/exercise-musicxml"]
 
 [workspace.package]
 version = "0.1.0"

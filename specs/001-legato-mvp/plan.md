@@ -12,7 +12,7 @@ Das MVP ist eine plattformübergreifende App (Priorität iOS/iPad, dann Android,
 
 **Sprache/Version**: Rust (stable, Edition 2024) für Kern und Engine; Dart 3 / Flutter (stable) für die Oberfläche; Swift 5.9+ (iOS, macOS) und Kotlin (Android) für die MIDI-Schicht; TypeScript 5 für das Notenblatt-Bundle; Python 3.12 nur für das Referenz-Werkzeug
 
-**Wesentliche Abhängigkeiten**: `flutter_rust_bridge`, `quick-xml`, `zip`, `rodio`, `midir` (Windows mit WinRT, Linux), `webview_flutter`, `webview_windows` (Windows), `wakelock_plus`, `path_provider`, `file_selector`, OpenSheetMusicDisplay; Referenz: `pymatchmaker` (festgelegter Commit), `partitura`; Werkzeug `tools/hanon-musicxml`: `toml` (MIT/Apache-2.0)
+**Wesentliche Abhängigkeiten**: `flutter_rust_bridge`, `quick-xml`, `zip`, `rodio`, `midir` (Windows mit WinRT, Linux), `webview_flutter`, `webview_windows` (Windows), `wakelock_plus`, `path_provider`, `file_selector`, OpenSheetMusicDisplay; Referenz: `pymatchmaker` (festgelegter Commit), `partitura`; Werkzeug `tools/exercise-musicxml`: `toml` (MIT/Apache-2.0)
 
 **Speicherung**: Einstellungen als JSON und Kopien geladener Notendateien in einem App-Verzeichnis, verwaltet von der Engine. Keine Speicherung von Durchläufen (folgt in 003).
 
@@ -155,7 +155,7 @@ app/                             # Flutter-Hülle
 └── test/
 tools/
 ├── matchmaker-reference/        # Python (uv): erzeugt Erwartungsdateien
-└── hanon-musicxml/              # Rust: MusicXML für Hanon aus docs/werke/hanon-teil1.toml
+└── exercise-musicxml/           # Rust: MusicXML für Übungswerke (Hanon, Brahms) aus docs/werke/*.toml
 testdata/
 ├── matchmaker/                  # übernommene Matchmaker-Daten und Erwartungsdateien
 └── legato/                      # eigene Referenz-Durchläufe
