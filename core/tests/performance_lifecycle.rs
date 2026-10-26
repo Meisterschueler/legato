@@ -73,6 +73,20 @@ fn has_deviations(events: &[Event]) -> bool {
     events.iter().any(|e| matches!(e, Event::Deviation(_)))
 }
 
+/// Events in short form for failure messages.
+fn summary(events: &[Event]) -> String {
+    events
+        .iter()
+        .map(|e| match e {
+            Event::Recognized(c) => format!("R({:?} {})", c.variation, c.transposition),
+            Event::Position(i) => format!("{i}"),
+            Event::Deviation(d) => format!("{:?}", d.kind),
+            other => format!("{other:?}"),
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 /// FR-017: the same result at 0.5- to 3-fold tempo.
 #[test]
 fn clean_performance_is_followed_to_the_end_at_any_tempo() {
@@ -249,12 +263,13 @@ fn short_key_change_keeps_the_candidate() {
         .iter()
         .filter(|e| matches!(e, Event::Recognized(_)))
         .count();
-    assert_eq!(recognized, 1, "{events:?}");
+    assert_eq!(recognized, 1, "{}", summary(&events));
     assert_eq!(events[0], Event::Recognized(played));
     assert!(has_deviations(&events));
     assert!(
         !events.iter().any(|e| matches!(e, Event::Aborted(_))),
-        "{events:?}"
+        "{}",
+        summary(&events)
     );
     assert_eq!(events.last(), Some(&Event::Completed));
 }

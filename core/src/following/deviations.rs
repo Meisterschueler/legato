@@ -43,8 +43,14 @@ impl Deviation {
 /// Tones are matched greedily from the current onset on: the follower's position jumps ahead
 /// for a moment after a gap and would report false omissions. The follower only gives the
 /// start and resynchronizes when the matching falls behind by more than [`LOOKAHEAD`].
+///
+/// A tone equal to a note that a wrong tone has taken shows that the matching ran ahead (e.g.
+/// during a short change of key); it resynchronizes there instead of shifting every following
+/// tone onto the next onset.
 pub struct Deviations {
     handled: Vec<Vec<bool>>,
+    /// Notes taken by a wrong tone.
+    replaced: Vec<Vec<bool>>,
     /// Onset being played; `None` until the first position after the recognition.
     current: Option<usize>,
 }
@@ -54,11 +60,13 @@ const LOOKAHEAD: usize = 3;
 
 impl Deviations {
     pub fn new(onsets: &[Expected]) -> Self {
+        let open: Vec<Vec<bool>> = onsets
+            .iter()
+            .map(|o| vec![false; o.pitches.len()])
+            .collect();
         Deviations {
-            handled: onsets
-                .iter()
-                .map(|o| vec![false; o.pitches.len()])
-                .collect(),
+            handled: open.clone(),
+            replaced: open,
             current: None,
         }
     }
@@ -113,6 +121,17 @@ impl Deviations {
                 assigned.push(true);
                 continue;
             }
+            let taken = (current.saturating_sub(1)..=current).find_map(|k| {
+                let n = (0..onsets[k].pitches.len())
+                    .find(|&n| self.replaced[k][n] && onsets[k].pitches[n] == pitch)?;
+                Some((k, n))
+            });
+            if let Some((k, n)) = taken {
+                self.replaced[k][n] = false;
+                self.current = Some(k);
+                assigned.push(true);
+                continue;
+            }
             assigned.push(false);
             // A wrong tone replaces a near note of this onset or, once it is complete, the next.
             let onset_done = self.handled[current].iter().all(|h| *h);
@@ -128,6 +147,7 @@ impl Deviations {
             if let Some(n) = near {
                 self.current = Some(target);
                 self.handled[target][n] = true;
+                self.replaced[target][n] = true;
                 deviations.push(Deviation::new(
                     DeviationKind::Substitution,
                     &onsets[target].notes[n],
