@@ -22,6 +22,7 @@ Das Projekt wird nach Spec-Driven Development entwickelt: Constitution → Spec 
   - [009-playlist](specs/009-playlist/spec.md)
 - [Werke](docs/werke/): Fachliche Beschreibung der unterstützten Werke
   - [Hanon](docs/werke/hanon.md)
+  - [Brahms](docs/werke/brahms.md)
 
 ## Lizenz
 
