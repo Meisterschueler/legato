@@ -2,12 +2,14 @@ import {
   OpenSheetMusicDisplay,
   type VexFlowGraphicalNote,
 } from "opensheetmusicdisplay";
+import { Markers, paint } from "./markers";
 import {
   type HostMessage,
   type ViewMessage,
   noteId,
   parseHostMessage,
 } from "./protocol";
+import { Scroller, centerOn, type Viewport } from "./scroll";
 
 declare global {
   interface Window {
@@ -20,12 +22,6 @@ declare global {
   }
 }
 
-const POSITION_COLOR = "#1565c0";
-const MARK_COLORS: Record<string, string> = {
-  wrong: "#c62828",
-  missing: "#ef6c00",
-};
-
 const container = document.getElementById("score");
 if (container === null) {
   throw new Error("element #score is missing");
@@ -36,8 +32,28 @@ const osmd = new OpenSheetMusicDisplay(container, {
   drawTitle: false,
 });
 let notes = new Map<string, VexFlowGraphicalNote[]>();
-let highlighted: string[] = [];
-const marked = new Map<string, string>();
+const markers = new Markers((id, fill) =>
+  paint(
+    (notes.get(id) ?? []).flatMap((note) =>
+      note
+        .getNoteheadSVGs()
+        // The paths carry their own fill attribute, so styling the group is not enough.
+        .flatMap((head) => [head, ...head.querySelectorAll("path")]),
+    ),
+    fill,
+  ),
+);
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const viewport: Viewport = {
+  scrollY: () => window.scrollY,
+  height: () => window.innerHeight,
+  maxScrollY: () => document.documentElement.scrollHeight - window.innerHeight,
+  scrollTo: (y) => window.scrollTo({ top: y, behavior: "instant" }),
+  setOpacity: (opacity) => (container.style.opacity = String(opacity)),
+  reducedMotion: () => reducedMotion.matches,
+  requestFrame: (callback) => requestAnimationFrame(callback),
+};
+const scroller = new Scroller(viewport);
 let loaded = false;
 let renderedWidth = 0;
 
@@ -52,25 +68,28 @@ function send(message: ViewMessage): void {
   }
 }
 
-function color(id: string, fill: string | undefined): void {
-  for (const note of notes.get(id) ?? []) {
-    for (const head of note.getNoteheadSVGs()) {
-      // The paths carry their own fill attribute, so styling the group is not enough.
-      for (const element of [
-        head,
-        ...head.querySelectorAll<SVGElement>("path"),
-      ]) {
-        element.style.fill = fill ?? "";
-      }
-    }
-  }
+// Top and bottom of the system with the note in page coordinates, computed
+// like the OSMD cursor (10 px per unit).
+function lineOf(note: VexFlowGraphicalNote): [number, number] {
+  const system =
+    note.parentVoiceEntry.parentStaffEntry.parentMeasure.ParentMusicSystem;
+  const first = system.StaffLines[0];
+  const last = system.StaffLines[system.StaffLines.length - 1];
+  const y = system.PositionAndShape.AbsolutePosition.y;
+  const unit = 10 * osmd.Zoom;
+  const origin = container!.getBoundingClientRect().top + window.scrollY;
+  return [
+    origin + (y + first.PositionAndShape.RelativePosition.y) * unit,
+    origin +
+      (y + last.PositionAndShape.RelativePosition.y + last.StaffHeight) * unit,
+  ];
 }
 
+// The markers stay, so another display variant keeps the position; the shell
+// sends `reset` for another piece.
 async function load(musicxml: string): Promise<void> {
   loaded = false;
   await osmd.load(musicxml);
-  highlighted = [];
-  marked.clear();
   send({ type: "ready", note_ids: render() });
   loaded = true;
 }
@@ -112,27 +131,14 @@ function render(): string[] {
       }
     }
   });
-  for (const [id, fill] of marked) {
-    color(id, fill);
-  }
-  for (const id of highlighted) {
-    color(id, POSITION_COLOR);
-  }
+  markers.repaint();
   return ids;
 }
 
 function position(noteIds: string[], driverTimeUs: number | undefined): void {
-  for (const id of highlighted) {
-    color(id, marked.get(id));
-  }
-  highlighted = noteIds;
-  for (const id of highlighted) {
-    color(id, POSITION_COLOR);
-  }
-  noteIds
-    .flatMap((id) => notes.get(id) ?? [])[0]
-    ?.getSVGGElement()
-    ?.scrollIntoView({ block: "center", behavior: "auto" });
+  markers.position(noteIds);
+  const note = noteIds.flatMap((id) => notes.get(id) ?? [])[0];
+  if (note) scroller.scrollTo(centerOn(...lineOf(note), viewport));
   if (driverTimeUs !== undefined) {
     // The first callback runs before the paint, the second one after it.
     requestAnimationFrame(() =>
@@ -153,22 +159,15 @@ function handle(message: HostMessage): void {
     case "position":
       position(message.note_ids, message.driver_time_us);
       break;
-    case "mark": {
-      const fill = MARK_COLORS[message.kind] ?? MARK_COLORS.wrong;
-      marked.set(message.note_id, fill);
-      color(message.note_id, fill);
+    case "mark":
+      markers.mark(message.note_id, message.kind);
       break;
-    }
     case "zoom":
       osmd.Zoom = message.percent / 100;
       if (loaded) render();
       break;
     case "reset":
-      for (const id of [...highlighted, ...marked.keys()]) {
-        color(id, undefined);
-      }
-      highlighted = [];
-      marked.clear();
+      markers.reset();
       break;
   }
 }

@@ -13,6 +13,33 @@ import 'package:legato/src/settings/settings_screen.dart';
 
 const _zooms = [50, 75, 100, 125, 150, 175, 200];
 
+const _markingKeys = {
+  'Omission': 'omission',
+  'Substitution': 'wrong_note',
+  'Addition': 'addition',
+};
+
+/// `mark` message for a deviation; additions have no note to mark.
+Map<String, dynamic>? markMessage(Map<String, dynamic> deviation) =>
+    deviation['note_id'] == null
+    ? null
+    : {
+        'type': 'mark',
+        'note_id': deviation['note_id'],
+        'kind': deviation['kind'] == 'Omission' ? 'missing' : 'wrong',
+      };
+
+/// `mark` messages for the deviations of an ended performance that
+/// [marking] (`error_marking_after`) shows (FR-025).
+List<Map<String, dynamic>> marksAfter(
+  List<dynamic> deviations,
+  Map<String, dynamic> marking,
+) => [
+  for (final deviation in deviations.cast<Map<String, dynamic>>())
+    if (marking[_markingKeys[deviation['kind']]] == true)
+      ?markMessage(deviation),
+];
+
 /// Practice screen with the score and the input symbol.
 class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key, this.engine});
@@ -99,15 +126,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
           'driver_time_us': event['driver_time_us'],
         });
       // Additions have no note to mark.
-      case 'DeviationDetected'
-          when event['note_id'] != null && _variant == 'Complete':
-        final missing = event['kind'] == 'Omission';
-        _scoreMessages.add({
-          'type': 'mark',
-          'note_id': event['note_id'],
-          'kind': missing ? 'missing' : 'wrong',
-        });
+      case 'DeviationDetected' when _variant == 'Complete':
+        final mark = markMessage(event);
+        if (mark != null) _scoreMessages.add(mark);
+      case 'PerformanceEnded' when _variant == 'Complete':
+        _markAfter(event['deviations'] as List<dynamic>);
     }
+  }
+
+  /// Replaces the marks of the performance by those wanted after it.
+  Future<void> _markAfter(List<dynamic> deviations) async {
+    final settings = await widget.engine!.getSettings();
+    final marking = settings['error_marking_after'] as Map<String, dynamic>?;
+    _scoreMessages.add({'type': 'reset'});
+    marksAfter(deviations, marking ?? const {}).forEach(_scoreMessages.add);
   }
 
   void _backgroundNotice() {
@@ -115,7 +147,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  Future<void> _show(String piece, {int transposition = 0}) async {
+  /// Another display variant keeps the markers (score-view-web keeps them on
+  /// `load`); another piece or transposition clears them.
+  Future<void> _show(
+    String piece, {
+    int transposition = 0,
+    bool keepMarkers = false,
+  }) async {
+    if (!keepMarkers) _scoreMessages.add({'type': 'reset'});
     _shown = (piece, transposition);
     final engine = widget.engine!;
     final pieces = await engine.repertoire();
@@ -152,7 +191,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       },
     });
     final (piece, transposition) = _shown!;
-    await _show(piece, transposition: transposition);
+    await _show(piece, transposition: transposition, keepMarkers: true);
   }
 
   Future<void> _openRepertoire() async {
