@@ -220,14 +220,14 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 ### Tests für User Story 4
 
-- [ ] T090 [P] [US4] Tests in `engine/tests/signals.rs` mit simuliertem Port für alle Szenarien von US 4: „nach jedem Durchlauf“; „wenn der Pianist aufgehört hat“ genau einmal nach fünf nahtlosen Durchläufen; kein OK-Signal ohne abgeschlossenen Durchlauf seit dem letzten; Abbruch-Signal sofort; nachgespielte Töne ohne neuen Durchlauf sind kein Abbruch; kein Senden bei getrennter Verbindung oder ohne MIDI-Ausgang; Verbindungssignal bei Verbinden, Wiederverbinden und Wiederherstellen beim Start; identische Signale unabhängig von der Qualität; Änderungen ab dem nächsten Durchlauf
-- [ ] T091 [P] [US4] Tests in `core/tests/echo_filter.rs`: eingehende Note-On-Ereignisse mit einer in den letzten 300 ms selbst gesendeten Tonhöhe werden verworfen (FR-030)
+- [x] T090 [P] [US4] Tests in `engine/tests/signals.rs` mit simuliertem Port für alle Szenarien von US 4: „nach jedem Durchlauf“; „wenn der Pianist aufgehört hat“ genau einmal nach fünf nahtlosen Durchläufen; kein OK-Signal ohne abgeschlossenen Durchlauf seit dem letzten; Abbruch-Signal sofort; nachgespielte Töne ohne neuen Durchlauf sind kein Abbruch; kein Senden bei getrennter Verbindung oder ohne MIDI-Ausgang; Verbindungssignal bei Verbinden, Wiederverbinden und Wiederherstellen beim Start; identische Signale unabhängig von der Qualität; Änderungen ab dem nächsten Durchlauf
+- [x] T091 [P] [US4] Tests in `core/tests/echo_filter.rs`: eingehende Note-On-Ereignisse mit einer in den letzten 300 ms selbst gesendeten Tonhöhe werden verworfen (FR-030)
 
 ### Implementierung für User Story 4
 
-- [ ] T092 [US4] Erkennung von „Aufhören“ (Stille länger als `PauseLimit` nach einem abgeschlossenen Durchlauf; Töne ohne neuen Durchlauf zählen nicht als Weiterspielen) als Ereignis `Stopped` in `core/src/performance.rs`
-- [ ] T093 [US4] Echo-Filter mit Register der gesendeten Töne in `core/src/preprocessing.rs`; Engine meldet gesendete Töne in `engine/src/session.rs`
-- [ ] T094 [US4] `SignalPlanner` in `engine/src/signals.rs`: `ConnectSignal`, `OkSignal`, `AbortSignal` laut Einstellungen; Standard-Tonfolgen „höchstens 2 Töne, leise (Velocity 30), hohe Lage (C7/E7)“, aufsteigend für OK, absteigend für Abbruch, gleichbleibend für Verbindung; Ausgabe an das gewählte Gerät (US 1 Szenario 14)
+- [x] T092 [US4] Erkennung von „Aufhören“ (Stille länger als `PauseLimit` nach einem abgeschlossenen Durchlauf; Töne ohne neuen Durchlauf zählen nicht als Weiterspielen) als Ereignis `Stopped` in `core/src/performance.rs`
+- [x] T093 [US4] Echo-Filter mit Register der gesendeten Töne in `core/src/preprocessing.rs`; Engine meldet gesendete Töne in `engine/src/session.rs`
+- [x] T094 [US4] `SignalPlanner` in `engine/src/signals.rs`: `ConnectSignal`, `OkSignal`, `AbortSignal` laut Einstellungen; Standard-Tonfolgen „höchstens 2 Töne, leise (Velocity 30), hohe Lage (C7/E7)“, aufsteigend für OK, absteigend für Abbruch, gleichbleibend für Verbindung; Ausgabe an das gewählte Gerät (US 1 Szenario 14)
 - [ ] T095 [P] [US4] Signal-Einstellungen (an/aus bzw. Modus, Tonfolge, Lautstärke) in `app/lib/src/settings/signal_settings.dart`
 
 **Checkpoint**: Alle vier User Stories funktionieren zusammen; MVP vollständig.

@@ -7,6 +7,7 @@ pub mod input;
 pub mod repertoire;
 mod runtime;
 mod session;
+mod signals;
 pub mod storage;
 mod warning;
 

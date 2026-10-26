@@ -20,6 +20,7 @@ pub use crate::runtime::{Event, MidiInput, MidiOutput};
 use crate::runtime::{Input, Runtime};
 use crate::session::Session;
 pub use crate::session::{DeviationInfo, Outcome};
+use crate::signals::SignalPlanner;
 use crate::storage::Settings;
 use crate::warning::Speaker;
 
@@ -64,6 +65,7 @@ impl Engine {
             data_dir: config.data_dir,
             input: InputMachine::new(settings.midi_device.clone()),
             session: Session::new(&pieces, &settings),
+            signals: SignalPlanner::default(),
             pieces,
             settings,
             output: output(inputs.clone())?,

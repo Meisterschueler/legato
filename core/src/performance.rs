@@ -124,6 +124,9 @@ pub enum Event {
     Deviation(Deviation),
     Completed,
     Aborted(AbortReason),
+    /// The pianist stopped (glossary "Aufhören"): silence longer than the pause limit after
+    /// the end of a performance; tones that start no new performance do not count.
+    Stopped,
 }
 
 enum State {
@@ -152,6 +155,8 @@ pub struct Performances {
     limits: Limits,
     state: State,
     last_tone: f64,
+    /// A performance ended and no `Stopped` followed yet.
+    stop_pending: bool,
 }
 
 impl Performances {
@@ -168,6 +173,7 @@ impl Performances {
             limits,
             state: State::Idle,
             last_tone: 0.0,
+            stop_pending: false,
         }
     }
 
@@ -215,7 +221,7 @@ impl Performances {
     /// Clock heartbeat (seconds, same clock as the observations).
     pub fn tick(&mut self, now: f64) -> Vec<Event> {
         let silence = now - self.last_tone;
-        match &self.state {
+        let mut events = match &self.state {
             State::Recognizing(_) if silence > self.limits.pause => {
                 self.state = State::Idle;
                 Vec::new()
@@ -238,7 +244,15 @@ impl Performances {
                 }
             }
             _ => Vec::new(),
+        };
+        if self.stop_pending
+            && !matches!(self.state, State::Running { .. })
+            && silence > self.limits.pause
+        {
+            self.stop_pending = false;
+            events.push(Event::Stopped);
         }
+        events
     }
 
     /// Input changed or disconnected, app in the background (FR-002, FR-004, NFR-005).
@@ -297,6 +311,7 @@ impl Performances {
 
     fn end(&mut self, event: Event) -> Vec<Event> {
         self.state = State::Idle;
+        self.stop_pending = true;
         vec![event]
     }
 }

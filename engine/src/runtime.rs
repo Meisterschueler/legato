@@ -12,6 +12,7 @@ use legato_core::score::model::Variation;
 
 use crate::input::state::{Action, InputList, InputMachine, InputState, Status};
 use crate::session::{DeviationInfo, Outcome, PieceSetups, Session};
+use crate::signals::{SignalPlanner, Trigger};
 use crate::storage::{Settings, Transport};
 use crate::warning::Speaker;
 
@@ -102,6 +103,7 @@ pub(crate) struct Runtime {
     pub started: Instant,
     pub pieces: Vec<PieceSetups>,
     pub session: Session,
+    pub signals: SignalPlanner,
 }
 
 impl Runtime {
@@ -109,10 +111,14 @@ impl Runtime {
         let mut reported = self.input.status();
         self.emit_status(&reported);
         loop {
-            let deadline = [self.input.next_deadline(), self.session.next_deadline()]
-                .into_iter()
-                .flatten()
-                .min();
+            let deadline = [
+                self.input.next_deadline(),
+                self.session.next_deadline(),
+                self.signals.next_deadline(),
+            ]
+            .into_iter()
+            .flatten()
+            .min();
             let received = match deadline {
                 Some(due) => {
                     inputs.recv_timeout(Duration::from_millis(due.saturating_sub(self.now_ms())))
@@ -128,6 +134,7 @@ impl Runtime {
             self.apply(actions);
             let events = self.session.tick(self.now_ms());
             self.emit_all(events);
+            self.send_signals();
             let status = self.input.status();
             if status != reported {
                 self.emit_status(&status);
@@ -199,6 +206,7 @@ impl Runtime {
                 if !actions.is_empty() {
                     let events = self.session.interrupt();
                     self.emit_all(events);
+                    self.signals.cancel();
                 }
                 self.apply(actions);
             }
@@ -222,8 +230,14 @@ impl Runtime {
     fn apply(&mut self, actions: Vec<Action>) {
         for action in actions {
             match action {
-                Action::Connect(device) => self.output.connect(device),
-                Action::Disconnect(device) => self.output.disconnect(device),
+                Action::Connect(device) => {
+                    self.output.connect(device);
+                    self.signal(Trigger::Connected);
+                }
+                Action::Disconnect(device) => {
+                    self.output.disconnect(device);
+                    self.signals.cancel();
+                }
                 Action::Warn => {
                     self.speaker.play();
                     self.output.vibrate();
@@ -236,6 +250,28 @@ impl Runtime {
         self.started.elapsed().as_millis() as u64
     }
 
+    fn signal(&mut self, trigger: Trigger) {
+        let now = self.now_ms();
+        self.signals.trigger(trigger, &self.settings, now);
+    }
+
+    /// Due signal tones go to the connected input device; without connection they are dropped
+    /// (US 4 scenario 8).
+    /// shortcut: `signal_device` is ignored, signals always go to the input device (US 1
+    /// scenario 14); honor it once the settings offer another device.
+    fn send_signals(&mut self) {
+        let now = self.now_ms();
+        for data in self.signals.due(now) {
+            let Some(device) = self.input.connected() else {
+                continue;
+            };
+            if data[0] == 0x90 {
+                self.session.sent(data[1], now);
+            }
+            self.output.send(device, &data);
+        }
+    }
+
     fn emit_status(&self, status: &Status) {
         self.emit(Event::InputStateChanged {
             state: status.state,
@@ -245,8 +281,26 @@ impl Runtime {
         });
     }
 
-    fn emit_all(&self, events: Vec<Event>) {
-        events.into_iter().for_each(|e| self.emit(e));
+    /// Events of the session; performance ends and stopping trigger the signals.
+    fn emit_all(&mut self, events: Vec<Event>) {
+        for event in events {
+            match event {
+                Event::PerformanceEnded {
+                    outcome: Outcome::Completed,
+                    ..
+                } => self.signal(Trigger::Completed),
+                Event::PerformanceEnded {
+                    outcome: Outcome::Aborted,
+                    ..
+                } => self.signal(Trigger::Aborted),
+                _ => {}
+            }
+            self.emit(event);
+        }
+        if self.session.take_stopped() {
+            self.signal(Trigger::Stopped);
+        }
+        self.send_signals();
     }
 
     fn emit(&self, event: Event) {

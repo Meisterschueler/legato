@@ -4,6 +4,36 @@
 
 //! Turns the note-on stream into observations for the score followers (research.md R8).
 
+use std::collections::VecDeque;
+
+/// Seconds within which a note-on of a pitch the app sent is taken as its echo (FR-030).
+const ECHO_WINDOW: f64 = 0.3;
+
+/// Register of the tones the app sent itself (FR-030).
+#[derive(Default)]
+pub struct EchoFilter {
+    sent: VecDeque<(f64, u8)>,
+}
+
+impl EchoFilter {
+    /// A note-on the app sent at `time` (seconds).
+    pub fn sent(&mut self, time: f64, pitch: u8) {
+        self.sent.push_back((time, pitch));
+    }
+
+    /// Whether an incoming note-on of `pitch` at `time` is the echo of a sent tone.
+    pub fn is_echo(&mut self, time: f64, pitch: u8) -> bool {
+        while self
+            .sent
+            .front()
+            .is_some_and(|&(t, _)| time - t > ECHO_WINDOW)
+        {
+            self.sent.pop_front();
+        }
+        self.sent.iter().any(|&(_, p)| p == pitch)
+    }
+}
+
 /// Pitches played together and the time of the first of them (seconds).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Observation {

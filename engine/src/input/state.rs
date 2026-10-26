@@ -89,6 +89,10 @@ impl InputMachine {
         self.selected.as_ref()
     }
 
+    pub fn connected(&self) -> Option<u32> {
+        self.connected
+    }
+
     pub fn list(&self) -> InputList {
         InputList {
             midi: self.devices.values().cloned().collect(),

@@ -136,6 +136,36 @@ fn seamless_repetition_is_recognized_again() {
     assert_eq!(count(&events, &Event::Completed), 2);
 }
 
+/// Glossary "Aufhören": one `Stopped` after the last of seamless performances; tones that start
+/// no new performance do not count as playing on.
+#[test]
+fn stopping_follows_the_last_performance_once() {
+    let (score, range) = hanon();
+    let played = candidate(Variation::RightHandOnly, 0);
+    let once = synth::clean(&score, &played, range, 2.0);
+    let step = once[1].0 - once[0].0;
+    let offset = once.last().unwrap().0 + step;
+    let mut notes: Vec<(f64, u8)> = once
+        .iter()
+        .copied()
+        .chain(once.iter().map(|&(t, p)| (t + offset, p)))
+        .collect();
+    let end = notes.last().unwrap().0;
+    notes.extend(once[..3].iter().map(|&(t, p)| (t + end + 1.0, p)));
+    let last = notes.last().unwrap().0;
+
+    let mut performances = performances(&score, range);
+    let events = play(&mut performances, &notes);
+    assert_eq!(count(&events, &Event::Completed), 2);
+    assert_eq!(count(&events, &Event::Stopped), 0);
+    assert!(performances.tick(last + LIMITS.pause - 0.5).is_empty());
+    assert_eq!(
+        performances.tick(last + LIMITS.pause + 0.5),
+        [Event::Stopped]
+    );
+    assert!(performances.tick(last + 3.0 * LIMITS.pause).is_empty());
+}
+
 #[test]
 fn silence_longer_than_the_pause_limit_aborts() {
     let (score, range) = hanon();
@@ -149,7 +179,7 @@ fn silence_longer_than_the_pause_limit_aborts() {
     assert!(performances.tick(last + LIMITS.pause - 0.5).is_empty());
     assert_eq!(
         performances.tick(last + LIMITS.pause + 0.5),
-        [Event::Aborted(AbortReason::PauseLimit)]
+        [Event::Aborted(AbortReason::PauseLimit), Event::Stopped]
     );
 }
 
@@ -208,7 +238,7 @@ fn notated_rest_waits_until_the_rest_limit() {
     assert!(performances.tick(last + LIMITS.rest - 0.5).is_empty());
     assert_eq!(
         performances.tick(last + LIMITS.rest + 0.5),
-        [Event::Aborted(AbortReason::PauseLimit)]
+        [Event::Aborted(AbortReason::PauseLimit), Event::Stopped]
     );
 }
 

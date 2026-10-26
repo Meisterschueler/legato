@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 use legato_core::following::deviations::{Deviation, DeviationKind};
 use legato_core::performance::{AbortReason, Event as Performance, Limits, Performances, Setup};
-use legato_core::preprocessing::{Grouping, Observation, Preprocessor, played_pitch};
+use legato_core::preprocessing::{EchoFilter, Grouping, Observation, Preprocessor, played_pitch};
 use legato_core::recognition::plays;
 use legato_core::score::model::{Candidate, Score};
 use serde::Serialize;
@@ -49,6 +49,9 @@ pub(crate) struct Session {
     scores: BTreeMap<String, Score>,
     performances: Performances,
     preprocessor: Preprocessor,
+    echo: EchoFilter,
+    /// The pianist stopped (core `Stopped`); taken by the runtime for the signals.
+    stopped: bool,
     running: Option<Candidate>,
     deviations: Vec<DeviationInfo>,
     /// Error marking during the performance (FR-025).
@@ -100,6 +103,8 @@ impl Session {
                 settings.recognition_method,
             ),
             preprocessor: Preprocessor::new(WINDOW),
+            echo: EchoFilter::default(),
+            stopped: false,
             running: None,
             deviations: Vec::new(),
             marking: settings.error_marking_during,
@@ -117,6 +122,9 @@ impl Session {
         let Some(pitch) = played_pitch(data) else {
             return Vec::new();
         };
+        if self.echo.is_echo(now_ms as f64 / 1000.0, pitch) {
+            return Vec::new();
+        }
         let mut events = Vec::new();
         if !self.active {
             self.active = true;
@@ -130,6 +138,15 @@ impl Session {
             events.extend(self.observe(&observation));
         }
         events
+    }
+
+    /// A note-on the engine sent as a signal; its echo is not played (FR-030).
+    pub fn sent(&mut self, pitch: u8, now_ms: u64) {
+        self.echo.sent(now_ms as f64 / 1000.0, pitch);
+    }
+
+    pub fn take_stopped(&mut self) -> bool {
+        std::mem::take(&mut self.stopped)
     }
 
     pub fn next_deadline(&self) -> Option<u64> {
@@ -233,6 +250,10 @@ impl Session {
             }
             Performance::Completed => self.ended(Outcome::Completed, None),
             Performance::Aborted(reason) => self.ended(Outcome::Aborted, Some(reason)),
+            Performance::Stopped => {
+                self.stopped = true;
+                return None;
+            }
         })
     }
 
