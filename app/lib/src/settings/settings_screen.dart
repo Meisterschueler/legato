@@ -7,13 +7,13 @@ import 'package:legato/src/settings/signal_settings.dart';
 /// The engine's `Settings` as JSON; each change is saved at once and applies
 /// from the next performance on (data-model.md).
 class SettingsController extends ValueNotifier<Map<String, dynamic>> {
-  SettingsController(this._engine, super.value);
+  SettingsController(this.engine, super.value);
 
-  final EngineClient _engine;
+  final EngineClient engine;
 
   Future<void> set(String key, Object? setting) async {
     value = {...value, key: setting};
-    value = await _engine.setSettings(value);
+    value = await engine.setSettings(value);
   }
 }
 
@@ -119,13 +119,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final marking = controller.value[key] as Map<String, dynamic>;
     return [
       for (final (field, label) in [
+        ('correct', l10n.correctNotes),
         ('omission', l10n.omissions),
         ('wrong_note', l10n.wrongNotes),
         ('addition', l10n.additions),
       ])
         SwitchListTile(
           title: Text(label),
-          value: marking[field] as bool,
+          value: marking[field] == true,
           onChanged: (on) => controller.set(key, {...marking, field: on}),
         ),
     ];

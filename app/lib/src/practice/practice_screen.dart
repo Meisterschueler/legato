@@ -19,26 +19,38 @@ const _markingKeys = {
   'Addition': 'addition',
 };
 
-/// `mark` message for a deviation; additions have no note to mark.
-Map<String, dynamic>? markMessage(Map<String, dynamic> deviation) =>
-    deviation['note_id'] == null
-    ? null
-    : {
-        'type': 'mark',
-        'note_id': deviation['note_id'],
-        'kind': deviation['kind'] == 'Omission' ? 'missing' : 'wrong',
-      };
+/// `mark` message for a deviation that [marking] shows; additions have no note
+/// to mark.
+Map<String, dynamic>? markMessage(
+  Map<String, dynamic> deviation,
+  Map<String, dynamic> marking,
+) {
+  final id = deviation['note_id'];
+  if (id == null || marking[_markingKeys[deviation['kind']]] != true) {
+    return null;
+  }
+  final kind = deviation['kind'] == 'Omission' ? 'missing' : 'wrong';
+  return {'type': 'mark', 'note_id': id, 'kind': kind};
+}
 
-/// `mark` messages for the deviations of an ended performance that
-/// [marking] (`error_marking_after`) shows (FR-025).
+/// `mark` messages for the deviations of an ended performance and, if wanted,
+/// the [played] notes without deviation, as [marking] (`error_marking_after`)
+/// shows them (FR-025).
 List<Map<String, dynamic>> marksAfter(
   List<dynamic> deviations,
-  Map<String, dynamic> marking,
-) => [
-  for (final deviation in deviations.cast<Map<String, dynamic>>())
-    if (marking[_markingKeys[deviation['kind']]] == true)
-      ?markMessage(deviation),
-];
+  Map<String, dynamic> marking, [
+  Iterable<String> played = const [],
+]) {
+  final deviated = {for (final d in deviations) d['note_id']};
+  return [
+    for (final deviation in deviations.cast<Map<String, dynamic>>())
+      ?markMessage(deviation, marking),
+    if (marking['correct'] == true)
+      for (final id in {...played})
+        if (!deviated.contains(id))
+          {'type': 'mark', 'note_id': id, 'kind': 'correct'},
+  ];
+}
 
 /// Practice screen with the score and the input symbol.
 class PracticeScreen extends StatefulWidget {
@@ -61,6 +73,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
   List<String> _variants = const [];
   String _variant = 'Complete';
   int _zoom = 100;
+
+  /// `error_marking_during` of the running performance.
+  Map<String, dynamic> _marking = const {};
+
+  /// Notes at the position and all notes passed in the running performance,
+  /// and those with a deviation.
+  List<String> _position = const [];
+  final _passed = <String>[];
+  final _deviated = <String>{};
   final _input = ValueNotifier<Map<String, dynamic>>({'state': 'Disconnected'});
   final _scoreMessages = StreamController<Map<String, dynamic>>.broadcast();
   StreamSubscription<Map<String, dynamic>>? _events;
@@ -113,6 +134,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
       case 'PerformanceRecognized':
         final piece = event['piece'] as String;
         final transposition = event['transposition'] as int;
+        _position = const [];
+        _passed.clear();
+        _deviated.clear();
+        _loadMarking();
         if (_shown == (piece, transposition)) {
           _scoreMessages.add({'type': 'reset'});
         } else {
@@ -120,26 +145,48 @@ class _PracticeScreenState extends State<PracticeScreen> {
         }
       // Abbreviated variants are for advanced pianists: no marks.
       case 'Position' when _variant == 'Complete':
+        final ids = (event['note_ids'] as List).cast<String>();
+        // The notes the position left were played as notated.
+        if (_marking['correct'] == true) {
+          for (final id in _position) {
+            if (!ids.contains(id) && !_deviated.contains(id)) {
+              _scoreMessages.add({
+                'type': 'mark',
+                'note_id': id,
+                'kind': 'correct',
+              });
+            }
+          }
+        }
+        _position = ids;
+        _passed.addAll(ids);
         _scoreMessages.add({
           'type': 'position',
-          'note_ids': event['note_ids'],
+          'note_ids': ids,
           'driver_time_us': event['driver_time_us'],
         });
-      // Additions have no note to mark.
       case 'DeviationDetected' when _variant == 'Complete':
-        final mark = markMessage(event);
+        if (event['note_id'] case final String id) _deviated.add(id);
+        final mark = markMessage(event, _marking);
         if (mark != null) _scoreMessages.add(mark);
       case 'PerformanceEnded' when _variant == 'Complete':
-        _markAfter(event['deviations'] as List<dynamic>);
+        _markAfter(event['deviations'] as List<dynamic>, [..._passed]);
     }
   }
 
+  Future<void> _loadMarking() async {
+    final settings = await widget.engine!.getSettings();
+    final marking = settings['error_marking_during'];
+    _marking = marking is Map<String, dynamic> ? marking : const {};
+  }
+
   /// Replaces the marks of the performance by those wanted after it.
-  Future<void> _markAfter(List<dynamic> deviations) async {
+  Future<void> _markAfter(List<dynamic> deviations, List<String> played) async {
     final settings = await widget.engine!.getSettings();
     final marking = settings['error_marking_after'] as Map<String, dynamic>?;
     _scoreMessages.add({'type': 'reset'});
-    marksAfter(deviations, marking ?? const {}).forEach(_scoreMessages.add);
+    final marks = marksAfter(deviations, marking ?? const {}, played);
+    marks.forEach(_scoreMessages.add);
   }
 
   void _backgroundNotice() {

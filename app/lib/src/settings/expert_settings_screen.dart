@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:legato/src/debug/debug_screen.dart';
 import 'package:legato/src/l10n/generated/app_localizations.dart';
 import 'package:legato/src/settings/settings_screen.dart';
 
-/// Expert settings: score follower (FR-032) and recognition method (FR-085).
+/// Expert settings: score follower (FR-032), recognition method (FR-085) and
+/// the debug view.
 class ExpertSettingsScreen extends StatelessWidget {
   const ExpertSettingsScreen({super.key, required this.settings});
 
@@ -34,6 +36,16 @@ class ExpertSettingsScreen extends StatelessWidget {
               'Fingerprint',
               'Exhaustive',
             ]),
+            const Divider(),
+            ListTile(
+              title: Text(l10n.debugView),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => DebugScreen(engine: settings.engine),
+                ),
+              ),
+            ),
           ],
         ),
       ),

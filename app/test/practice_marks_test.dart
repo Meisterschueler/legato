@@ -23,4 +23,15 @@ void main() {
     ]);
     expect(marksAfter(deviations, {}), isEmpty);
   });
+
+  test('correct marks cover the played notes without deviation', () {
+    final deviations = [
+      {'kind': 'Substitution', 'note_id': 'b', 'pitch': 53},
+    ];
+    expect(marksAfter(deviations, {'correct': true}, ['a', 'b', 'a', 'c']), [
+      {'type': 'mark', 'note_id': 'a', 'kind': 'correct'},
+      {'type': 'mark', 'note_id': 'c', 'kind': 'correct'},
+    ]);
+    expect(marksAfter(deviations, {}, ['a']), isEmpty);
+  });
 }
