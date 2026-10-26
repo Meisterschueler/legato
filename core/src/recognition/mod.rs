@@ -2,11 +2,13 @@
 //! stages: a preselection picks a few candidates after every onset, each of them is followed by
 //! a `pthmm`, and the posterior over them decides.
 
+pub mod edit_distance;
+
 use std::sync::Arc;
 
 use crate::following::pthmm::{PitchHmm, Transition};
 use crate::following::repeats::Repeats;
-use crate::following::{ReferenceNote, ScoreFollower};
+use crate::following::{ReferenceNote, ScoreFollower, unique_onsets};
 use crate::performance::Setup;
 use crate::preprocessing::Observation;
 use crate::score::model::{Candidate, Hand, Score, Variation};
@@ -28,6 +30,8 @@ pub const PRESELECTED: usize = 6;
 pub enum RecognitionMethod {
     /// All candidates (research.md R8).
     Exhaustive,
+    /// Edit distance to the beginning of every candidate.
+    EditDistance,
 }
 
 /// Pitches played or notated together; `time` in seconds when played, in beats in a reference.
@@ -71,6 +75,14 @@ pub struct Repertoire {
     /// Tones per hand (`WorkRules::recognition_length`).
     recognition_length: usize,
     method: RecognitionMethod,
+    preselection: Preselection,
+}
+
+/// What the preselection of a [`RecognitionMethod`] builds once.
+enum Preselection {
+    Exhaustive,
+    /// Reference onsets of every candidate.
+    EditDistance(Arc<Vec<Vec<Onset>>>),
 }
 
 impl Repertoire {
@@ -95,6 +107,17 @@ impl Repertoire {
                 t
             })
             .collect();
+        // The first two recognition lengths of onsets.
+        let onsets = || -> Vec<Vec<Onset>> {
+            candidates
+                .iter()
+                .map(|(_, notes, repeats)| reference_onsets(notes, repeats, 2 * recognition_length))
+                .collect()
+        };
+        let preselection = match method {
+            RecognitionMethod::Exhaustive => Preselection::Exhaustive,
+            RecognitionMethod::EditDistance => Preselection::EditDistance(Arc::new(onsets())),
+        };
         let (candidates, references) = candidates.into_iter().map(|(c, n, _)| (c, n)).unzip();
         Repertoire {
             candidates,
@@ -102,6 +125,7 @@ impl Repertoire {
             transitions,
             recognition_length,
             method,
+            preselection,
         }
     }
 
@@ -121,11 +145,18 @@ impl Repertoire {
         &self.candidates
     }
 
+    pub fn method(&self) -> RecognitionMethod {
+        self.method
+    }
+
     fn preselector(&self) -> Box<dyn Preselector> {
-        match self.method {
-            RecognitionMethod::Exhaustive => Box::new(Exhaustive {
+        match &self.preselection {
+            Preselection::Exhaustive => Box::new(Exhaustive {
                 candidates: self.candidates.len(),
             }),
+            Preselection::EditDistance(references) => {
+                Box::new(edit_distance::EditDistance::new(Arc::clone(references)))
+            }
         }
     }
 
@@ -141,6 +172,33 @@ impl Repertoire {
 /// Notes of `range` as the candidate expects them: its hands, transposed.
 pub fn reference(score: &Score, candidate: &Candidate, range: Range) -> Vec<ReferenceNote> {
     Setup::new(score, candidate.clone(), range).reference()
+}
+
+/// The first `count` onsets of `notes` (`time` in beats), every repeat played once.
+pub fn reference_onsets(notes: &[ReferenceNote], repeats: &Repeats, count: usize) -> Vec<Onset> {
+    let (beats, chords) = unique_onsets(notes);
+    let mut repeated = vec![false; repeats.jumps().len()];
+    let mut onsets = Vec::with_capacity(count);
+    let (mut k, mut time, mut step) = (0, 0.0, 1.0);
+    while k < beats.len() && onsets.len() < count {
+        let mut pitches = chords[k].clone();
+        pitches.sort_unstable();
+        pitches.dedup();
+        onsets.push(Onset { time, pitches });
+        if let Some(next) = beats.get(k + 1) {
+            step = next - beats[k];
+        }
+        time += step;
+        let jump = (0..repeated.len()).find(|&j| !repeated[j] && repeats.jumps()[j].0 == k);
+        k = match jump {
+            Some(j) => {
+                repeated[j] = true;
+                repeats.jumps()[j].1
+            }
+            None => k + 1,
+        };
+    }
+    onsets
 }
 
 /// Whether the variation plays notes of `hand`.
@@ -210,6 +268,11 @@ impl Recognition {
 
     pub fn candidates(&self) -> &[Candidate] {
         &self.repertoire.candidates
+    }
+
+    /// The candidates followed by a `pthmm`, in their order.
+    pub fn followed(&self) -> Vec<usize> {
+        self.followers.iter().map(|(c, _)| *c).collect()
     }
 
     pub fn observe(&mut self, observation: &Observation) -> Decision {
