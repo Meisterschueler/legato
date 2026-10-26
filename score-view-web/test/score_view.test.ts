@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  COLOR_TRANSITION_MS,
-  Markers,
-  POSITION_COLOR,
-  paint,
-} from "../src/markers";
+import { COLOR_TRANSITION_MS, Markers, paint } from "../src/markers";
 import { SCROLL_MS, Scroller, centerOn } from "../src/scroll";
 
 function setup() {
@@ -14,36 +9,27 @@ function setup() {
 }
 
 describe("markers", () => {
-  it("move the position marker with position", () => {
+  it("color correct, wrong and missing notes differently", () => {
     const { markers, colors } = setup();
-    markers.position(["a", "b"]);
-    markers.position(["c"]);
-    expect(colors).toEqual(
-      new Map([
-        ["a", undefined],
-        ["b", undefined],
-        ["c", POSITION_COLOR],
-      ]),
-    );
-  });
-
-  it("mark notes and show the mark once the position moved on", () => {
-    const { markers, colors } = setup();
-    markers.position(["a"]);
-    markers.mark("a", "missing");
+    markers.mark("a", "correct");
     markers.mark("b", "wrong");
-    expect(colors.get("a")).toBe(POSITION_COLOR);
-    markers.position(["c"]);
-    const missing = colors.get("a");
-    const wrong = colors.get("b");
-    expect(missing).toBeDefined();
-    expect(wrong).toBeDefined();
-    expect(new Set([missing, wrong, POSITION_COLOR]).size).toBe(3);
+    markers.mark("c", "missing");
+    expect(new Set(colors.values()).size).toBe(3);
+    expect([...colors.values()]).not.toContain(undefined);
   });
 
-  it("keep position and marks for a new layout or display variant", () => {
+  it("let a later mark replace an earlier one", () => {
     const { markers, colors } = setup();
-    markers.position(["a"]);
+    markers.mark("b", "wrong");
+    const wrong = colors.get("b");
+    markers.mark("a", "correct");
+    markers.mark("a", "wrong");
+    expect(colors.get("a")).toBe(wrong);
+  });
+
+  it("keep marks for a new layout or display variant", () => {
+    const { markers, colors } = setup();
+    markers.mark("a", "correct");
     markers.mark("b", "wrong");
     const before = new Map(colors);
     colors.clear();
@@ -53,7 +39,7 @@ describe("markers", () => {
 
   it("clear everything on reset", () => {
     const { markers, colors } = setup();
-    markers.position(["a"]);
+    markers.mark("a", "correct");
     markers.mark("b", "wrong");
     markers.reset();
     expect([...colors.values()]).toEqual([undefined, undefined]);
@@ -63,9 +49,9 @@ describe("markers", () => {
     expect(COLOR_TRANSITION_MS).toBeGreaterThanOrEqual(150);
     expect(COLOR_TRANSITION_MS).toBeLessThanOrEqual(400);
     const element = { style: { fill: "", transition: "" } };
-    paint([element], POSITION_COLOR);
+    paint([element], "#c62828");
     expect(element.style).toEqual({
-      fill: POSITION_COLOR,
+      fill: "#c62828",
       transition: `fill ${COLOR_TRANSITION_MS}ms ease-in-out`,
     });
   });

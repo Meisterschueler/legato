@@ -2,7 +2,7 @@ import {
   OpenSheetMusicDisplay,
   type VexFlowGraphicalNote,
 } from "opensheetmusicdisplay";
-import { Markers, paint } from "./markers";
+import { COLOR_TRANSITION_MS, Markers, POSITION_COLOR, paint } from "./markers";
 import {
   type HostMessage,
   type ViewMessage,
@@ -56,6 +56,19 @@ const viewport: Viewport = {
 const scroller = new Scroller(viewport);
 let loaded = false;
 let renderedWidth = 0;
+
+// Position bar over all staves of the system, in page coordinates.
+const bar = document.createElement("div");
+Object.assign(bar.style, {
+  position: "absolute",
+  display: "none",
+  background: POSITION_COLOR,
+  pointerEvents: "none",
+});
+document.body.append(bar);
+let current: string[] = [];
+/** Top of the line with the bar; `undefined` while it is hidden. */
+let barTop: number | undefined;
 
 function send(message: ViewMessage): void {
   const json = JSON.stringify(message);
@@ -132,12 +145,47 @@ function render(): string[] {
     }
   });
   markers.repaint();
+  placeBar();
   return ids;
 }
 
+// Moves the bar to the current position like the OSMD cursor (3 units wide);
+// slides along a line, fades in on a new line or with reduced motion (FR-023).
+function placeBar(): VexFlowGraphicalNote | undefined {
+  const note = current.flatMap((id) => notes.get(id) ?? [])[0];
+  if (!note) {
+    bar.style.display = "none";
+    barTop = undefined;
+    return undefined;
+  }
+  const [top, bottom] = lineOf(note);
+  const unit = 10 * osmd.Zoom;
+  const x =
+    container!.getBoundingClientRect().left +
+    window.scrollX +
+    note.parentVoiceEntry.parentStaffEntry.PositionAndShape.AbsolutePosition.x *
+      unit;
+  const slide = barTop === top && !reducedMotion.matches;
+  barTop = top;
+  bar.style.transition = slide
+    ? `left ${COLOR_TRANSITION_MS}ms ease-in-out`
+    : "none";
+  Object.assign(bar.style, {
+    display: "block",
+    left: `${x - 1.5 * unit}px`,
+    top: `${top}px`,
+    width: `${3 * unit}px`,
+    height: `${bottom - top}px`,
+  });
+  if (!slide) {
+    bar.animate([{ opacity: 0 }, { opacity: 1 }], COLOR_TRANSITION_MS);
+  }
+  return note;
+}
+
 function position(noteIds: string[], driverTimeUs: number | undefined): void {
-  markers.position(noteIds);
-  const note = noteIds.flatMap((id) => notes.get(id) ?? [])[0];
+  current = noteIds;
+  const note = placeBar();
   if (note) scroller.scrollTo(centerOn(...lineOf(note), viewport));
   if (driverTimeUs !== undefined) {
     // The first callback runs before the paint, the second one after it.
@@ -168,6 +216,8 @@ function handle(message: HostMessage): void {
       break;
     case "reset":
       markers.reset();
+      current = [];
+      placeBar();
       break;
   }
 }
