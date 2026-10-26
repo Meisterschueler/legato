@@ -1,9 +1,10 @@
 import 'dart:io';
-import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:legato/spike/score_view_spike.dart';
+import 'package:legato/src/about/licenses.dart';
 import 'package:legato/src/engine/engine_client.dart';
 import 'package:legato/src/l10n/generated/app_localizations.dart';
 import 'package:legato/src/l10n/locale_resolution.dart';
@@ -16,6 +17,7 @@ const _spikeS2 = bool.fromEnvironment('SPIKE_S2');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(bundledLicenses);
   await RustLib.init();
   if (_spikeS2) {
     runApp(const LegatoApp(home: ScoreViewSpike()));

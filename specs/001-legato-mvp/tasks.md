@@ -238,7 +238,7 @@ description: "Aufgabenliste für die Umsetzung von 001-legato-mvp"
 
 - [ ] T096 [P] Latenzmessung in Entwicklungs-Builds: `driver_time_us` bis `frame_shown` protokollieren und auswerten in `app/lib/src/dev/latency_log.dart` und `score-view-web/src/latency.ts` (NFR-003: 95 % ≤ 50 ms, Maximum ≤ 100 ms)
 - [x] T097 [P] Prüfen, dass die App keine Benachrichtigungen anfordert oder versendet (SC-005, FR-026): keine Push-Berechtigungen in `app/ios/Runner/Info.plist` und `app/android/app/src/main/AndroidManifest.xml`; Test in `app/test/no_notifications_test.dart`
-- [ ] T098 [P] Lizenzen aller Abhängigkeiten zusammenstellen und in der App anzeigen (`app/lib/src/about/licenses_screen.dart`, inkl. `NOTICE`)
+- [x] T098 [P] Lizenzen aller Abhängigkeiten zusammenstellen und in der App anzeigen (`app/lib/src/about/licenses_screen.dart`, inkl. `NOTICE`)
 - [x] T099 Projektlizenz festlegen: „MIT OR Apache-2.0“ (`LICENSE-MIT`, `LICENSE-APACHE`; verträglich mit Apache-2.0 und BSD-3 der Abhängigkeiten)
 - [x] T100 [P] `README.md` um Aufbau des Repositories, Build und Tests ergänzen (Verweis auf [quickstart.md](quickstart.md))
 - [x] T104 [P] Offline-Fähigkeit prüfen (NFR-002): keine Netzwerkzugriffe in `core`, `engine` und `app/lib` (Review und Test `app/test/offline_test.dart`); im Release-Manifest `app/android/app/src/main/AndroidManifest.xml` keine `INTERNET`-Berechtigung; Abnahme im Flugmodus (quickstart.md Nr. 17)

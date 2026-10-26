@@ -55,5 +55,6 @@
   "displayComplete": "Komplett",
   "displayAbbreviated": "Erste und letzte zwei Takte (simile)",
   "displayFirstMeasures": "Erster Takt je Richtung",
-  "displayFirstMeasure": "Nur der erste Takt"
+  "displayFirstMeasure": "Nur der erste Takt",
+  "licenses": "Lizenzen"
 }

@@ -31,5 +31,7 @@ flutter:
   generate: true
   assets:
     - assets/pieces/
+    # NOTICE and the Rust crate licenses (cargo-about); updated by CI (generate job).
+    - assets/licenses/
     # Built by score-view-web (npm run build); in CI downloaded from the web job.
     - assets/score-view-web/

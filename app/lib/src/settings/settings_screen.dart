@@ -100,6 +100,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
+                  ListTile(
+                    title: Text(l10n.licenses),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showLicensePage(context: context),
+                  ),
                 ],
               ),
             ),

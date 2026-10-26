@@ -3,17 +3,17 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Dart and Rust sources below `dir` (relative to `app/`).
-Iterable<File> _sources(String dir, String extension) =>
-    Directory(dir)
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((f) => f.path.endsWith(extension));
+Iterable<File> _sources(String dir, String extension) => Directory(dir)
+    .listSync(recursive: true)
+    .whereType<File>()
+    .where((f) => f.path.endsWith(extension));
 
 /// NFR-002: everything works offline; nothing in the app goes to the network.
 void main() {
   test('release manifest without internet permission', () {
-    final android = File('android/app/src/main/AndroidManifest.xml')
-        .readAsStringSync();
+    final android = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
     expect(android, isNot(contains('android.permission.INTERNET')));
     expect(
       File('macos/Runner/Release.entitlements').readAsStringSync(),

@@ -1,0 +1,21 @@
+# cargo-about: licenses of the Rust crates shipped in the app (T098).
+# CI (generate job) writes them to app/assets/licenses/rust.txt with about.hbs.
+accepted = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "Zlib",
+    "ISC",
+    "MPL-2.0",
+    "Unicode-3.0",
+]
+targets = [
+    "aarch64-apple-ios",
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "aarch64-linux-android",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+]
+ignore-build-dependencies = true
+ignore-dev-dependencies = true

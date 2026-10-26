@@ -66,5 +66,6 @@
   "displayComplete": "Complete",
   "displayAbbreviated": "First and last two measures (simile)",
   "displayFirstMeasures": "First measure of each direction",
-  "displayFirstMeasure": "First measure only"
+  "displayFirstMeasure": "First measure only",
+  "licenses": "Licenses"
 }

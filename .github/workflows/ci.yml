@@ -42,7 +42,7 @@ jobs:
           node-version: 22
       - uses: taiki-e/install-action@v2
         with:
-          tool: flutter_rust_bridge_codegen@${{ env.FRB_VERSION }},cbindgen@0.29.4
+          tool: flutter_rust_bridge_codegen@${{ env.FRB_VERSION }},cbindgen@0.29.4,cargo-about
       - name: Flutter platform folders
         working-directory: app
         run: |
@@ -87,6 +87,10 @@ jobs:
           cargo metadata --format-version 1 > /dev/null
           (cd app && flutter pub get)
           (cd score-view-web && npm install --package-lock-only --ignore-scripts --no-audit --no-fund)
+      - name: Licenses for the app (T098)
+        run: |
+          cargo about generate --locked -m app/rust/Cargo.toml -o app/assets/licenses/rust.txt app/rust/about.hbs
+          cp NOTICE app/assets/licenses/NOTICE
       - name: Commit generated files
         id: commit
         run: |

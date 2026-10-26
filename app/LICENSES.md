@@ -2,6 +2,8 @@
 
 Jede Abhängigkeit wird vor der Aufnahme geprüft (Constitution, Abschnitt Lizenzen).
 
+Die App zeigt alle Lizenzen unter Einstellungen → Lizenzen (T098): Dart-Pakete sammelt Flutter selbst, die Rust-Crates erzeugt `cargo about` (`app/rust/about.toml`, im CI-Job `generate` nach `assets/licenses/`), die im Notenblatt gebündelten npm-Pakete Vite (`build.license`).
+
 | Paket | Lizenz | Zweck |
 |---|---|---|
 | Flutter SDK (`flutter`, `flutter_localizations`, `flutter_test`) | BSD-3-Clause | App-Hülle, Mehrsprachigkeit |

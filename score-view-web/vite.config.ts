@@ -8,23 +8,27 @@ function inlineScripts(): Plugin {
     name: "legato-inline-scripts",
     apply: "build",
     enforce: "post",
-    generateBundle(_options, bundle) {
-      const html = bundle["index.html"];
-      if (html?.type !== "asset" || typeof html.source !== "string") return;
-      let source = html.source;
-      for (const [fileName, chunk] of Object.entries(bundle)) {
-        if (chunk.type !== "chunk") continue;
-        const tag = new RegExp(
-          `<script type="module" crossorigin src="\\./${fileName}"></script>`,
-        );
-        const code = chunk.code.replaceAll("</script", "<\\/script");
-        source = source.replace(
-          tag,
-          () => `<script type="module">${code}</script>`,
-        );
-        delete bundle[fileName];
-      }
-      html.source = source;
+    // After vite:license, which reads the modules of the chunks removed here.
+    generateBundle: {
+      order: "post",
+      handler(_options, bundle) {
+        const html = bundle["index.html"];
+        if (html?.type !== "asset" || typeof html.source !== "string") return;
+        let source = html.source;
+        for (const [fileName, chunk] of Object.entries(bundle)) {
+          if (chunk.type !== "chunk") continue;
+          const tag = new RegExp(
+            `<script type="module" crossorigin src="\\./${fileName}"></script>`,
+          );
+          const code = chunk.code.replaceAll("</script", "<\\/script");
+          source = source.replace(
+            tag,
+            () => `<script type="module">${code}</script>`,
+          );
+          delete bundle[fileName];
+        }
+        html.source = source;
+      },
     },
   };
 }
@@ -36,6 +40,8 @@ export default defineConfig({
     outDir: "../app/assets/score-view-web",
     emptyOutDir: true,
     modulePreload: false,
+    // Shown in the app's license page (T098).
+    license: { fileName: "licenses.json" },
   },
   test: {
     passWithNoTests: true,
