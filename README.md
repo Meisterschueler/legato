@@ -24,6 +24,31 @@ Das Projekt wird nach Spec-Driven Development entwickelt: Constitution → Spec 
   - [Hanon](docs/werke/hanon.md)
   - [Brahms](docs/werke/brahms.md)
 
+## Aufbau
+
+| Verzeichnis | Inhalt |
+|---|---|
+| `core/` | Fachlogik in Rust (`legato-core`): MusicXML, Werkregeln, Erkennung, Folgeverfahren, Durchläufe |
+| `engine/` | Laufzeit um den Kern (`legato-engine`): Sitzung, Eingabe, Signale, Einstellungen, Repertoire, Desktop-MIDI, C-Schnittstelle |
+| `app/` | Flutter-App als dünne Hülle; Brücke zur Engine in `app/rust/` (`flutter_rust_bridge`) |
+| `score-view-web/` | Notenblatt im WebView (TypeScript, Vite) |
+| `native/` | MIDI-Schicht für Android (Kotlin) und Apple (Swift) |
+| `tools/` | Werkzeuge: MusicXML für Übungen erzeugen, Matchmaker-Referenz |
+| `testdata/` | Referenzdaten für die Tests |
+| `spikes/` | Messungen aus den Spikes |
+
+## Build und Tests
+
+Voraussetzungen und manuelle Abnahme: [quickstart.md](specs/001-legato-mvp/quickstart.md).
+
+```powershell
+cargo test --workspace                     # Kern und Engine
+npm --prefix score-view-web test           # Notenblatt
+npm --prefix score-view-web run build      # Bundle nach app/assets
+cd app; flutter test                       # Bildschirme, Adapter
+flutter run -d windows                     # bzw. macos, linux, android, ipad
+```
+
 ## Lizenz
 
 Lizenziert wahlweise unter der [MIT-Lizenz](LICENSE-MIT) oder der [Apache-Lizenz 2.0](LICENSE-APACHE) (`MIT OR Apache-2.0`). Herkunftshinweise für übernommenen Code stehen in `NOTICE`.
