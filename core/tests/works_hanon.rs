@@ -1,8 +1,9 @@
 use legato_core::score::model::{Hand, Metadata, Variation};
 use legato_core::score::musicxml_read::{InvalidReason, read};
+use legato_core::score::musicxml_write;
 use legato_core::works::detect::{detect, read_with_rules};
 use legato_core::works::hanon::HanonRules;
-use legato_core::works::{Range, WorkRules, hand_for};
+use legato_core::works::{DisplayVariant, Range, WorkRules, hand_for};
 
 fn hanon() -> Vec<u8> {
     std::fs::read(format!(
@@ -125,6 +126,52 @@ fn hand_from_position_and_restriction() {
         Some(Hand::Right)
     );
     assert_eq!(hand_for(&HanonRules, &score, 42, None), Some(Hand::Left));
+}
+
+#[test]
+fn display_variants_show_the_measures_of_docs_werke_hanon() {
+    let score = read(&hanon()).unwrap().score;
+    let shown = |variant| {
+        HanonRules.shown_measures(&score, variant).map(|s| {
+            s.iter()
+                .map(|s| (s.measure, s.simile, s.new_system))
+                .collect::<Vec<_>>()
+        })
+    };
+    assert_eq!(shown(DisplayVariant::Complete), None);
+    // Ascending 0–13, descending 14–28, "Ende" 29.
+    let plain = |m| (m, false, false);
+    let simile = |m| (m, true, false);
+    assert_eq!(
+        shown(DisplayVariant::Abbreviated),
+        Some(vec![
+            plain(0),
+            plain(1),
+            simile(12),
+            plain(13),
+            plain(14),
+            plain(15),
+            simile(27),
+            plain(28),
+            plain(29),
+        ])
+    );
+    assert_eq!(
+        shown(DisplayVariant::FirstMeasures),
+        Some(vec![plain(0), (14, false, true)])
+    );
+    assert_eq!(shown(DisplayVariant::FirstMeasure), Some(vec![plain(0)]));
+
+    let xml = musicxml_write::write(
+        &hanon(),
+        0,
+        HanonRules
+            .shown_measures(&score, DisplayVariant::FirstMeasures)
+            .as_deref(),
+    )
+    .unwrap();
+    assert_eq!(xml.matches("<measure ").count(), 2);
+    assert!(!xml.contains("<repeat"), "{xml}");
 }
 
 #[test]

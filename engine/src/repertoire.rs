@@ -130,7 +130,10 @@ impl Repertoire {
         if !piece.info.display_variants.contains(&display_variant) {
             return None;
         }
-        musicxml_write::write(piece.musicxml.as_bytes(), transposition).ok()
+        let source = piece.musicxml.as_bytes();
+        let (read, rules) = read_with_rules(source).ok()?;
+        let shown = rules.shown_measures(&read.score, display_variant);
+        musicxml_write::write(source, transposition, shown.as_deref()).ok()
     }
 
     /// Score and candidates of every piece for the recognition.

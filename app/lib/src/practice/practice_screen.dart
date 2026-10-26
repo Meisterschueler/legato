@@ -26,6 +26,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   /// Piece and transposition of the shown score.
   (String, int)? _shown;
+
+  /// Work, offered display variants and the shown one (FR-011).
+  String? _work;
+  List<String> _variants = const [];
+  String _variant = 'Complete';
   final _input = ValueNotifier<Map<String, dynamic>>({'state': 'Disconnected'});
   final _scoreMessages = StreamController<Map<String, dynamic>>.broadcast();
   StreamSubscription<Map<String, dynamic>>? _events;
@@ -70,14 +75,16 @@ class _PracticeScreenState extends State<PracticeScreen> {
         } else {
           _show(piece, transposition: transposition);
         }
-      case 'Position':
+      // Abbreviated variants are for advanced pianists: no marks.
+      case 'Position' when _variant == 'Complete':
         _scoreMessages.add({
           'type': 'position',
           'note_ids': event['note_ids'],
           'driver_time_us': event['driver_time_us'],
         });
       // Additions have no note to mark.
-      case 'DeviationDetected' when event['note_id'] != null:
+      case 'DeviationDetected'
+          when event['note_id'] != null && _variant == 'Complete':
         final missing = event['kind'] == 'Omission';
         _scoreMessages.add({
           'type': 'mark',
@@ -94,11 +101,42 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   Future<void> _show(String piece, {int transposition = 0}) async {
     _shown = (piece, transposition);
-    final musicxml = await widget.engine!.renderScore(
+    final engine = widget.engine!;
+    final pieces = await engine.repertoire();
+    final info = pieces.firstWhere((p) => p['id'] == piece);
+    final work = info['work'] as String;
+    final variants = (info['display_variants'] as List).cast<String>();
+    final settings = await engine.getSettings();
+    final chosen = (settings['display_variant'] as Map)[work];
+    final variant = variants.contains(chosen) ? chosen as String : 'Complete';
+    final musicxml = await engine.renderScore(
       piece,
       transposition: transposition,
+      displayVariant: variant,
     );
-    if (mounted) setState(() => _musicxml = musicxml);
+    if (mounted) {
+      setState(() {
+        _musicxml = musicxml;
+        _work = work;
+        _variants = variants;
+        _variant = variant;
+      });
+    }
+  }
+
+  /// Applies from now on; the setting is the same as in the settings screen.
+  Future<void> _setVariant(String variant) async {
+    final engine = widget.engine!;
+    final settings = await engine.getSettings();
+    await engine.setSettings({
+      ...settings,
+      'display_variant': {
+        ...settings['display_variant'] as Map<String, dynamic>,
+        _work!: variant,
+      },
+    });
+    final (piece, transposition) = _shown!;
+    await _show(piece, transposition: transposition);
   }
 
   Future<void> _openRepertoire() async {
@@ -134,6 +172,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
             icon: const Icon(Icons.library_music),
             onPressed: widget.engine == null ? null : _openRepertoire,
           ),
+          if (_variants.length > 1)
+            PopupMenuButton<String>(
+              tooltip: l10n.display,
+              icon: const Icon(Icons.view_day),
+              initialValue: _variant,
+              onSelected: _setVariant,
+              itemBuilder: (_) => [
+                for (final v in _variants)
+                  PopupMenuItem(
+                    value: v,
+                    child: Text(displayVariantName(l10n, v)),
+                  ),
+              ],
+            ),
           ValueListenableBuilder(
             valueListenable: _input,
             builder: (context, input, _) => InputSymbol(

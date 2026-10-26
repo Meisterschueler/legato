@@ -86,7 +86,7 @@ Ein Pianist verbindet sein Digitalpiano per MIDI und beginnt zu spielen. Die App
 15. **Angenommen** der Pianist hat in den Experteneinstellungen ein anderes Verfahren für die Zuordnung während des Spiels oder für die Erkennung gewählt, **wenn** der nächste Durchlauf beginnt, **dann** verwendet die App dieses Verfahren.
 16. **Angenommen** keine Onlineverbindung besteht, **wenn** der Pianist ein lokal verfügbares Stück spielt, **dann** funktionieren alle Schritte dieser Story uneingeschränkt.
 17. **Angenommen** der Pianist benutzt das Sustain-Pedal, **wenn** er spielt, **dann** wird das Pedal für Zuordnung und Abweichungen nicht ausgewertet. Zuordnung und Abweichungen beziehen sich nur auf die Tasten.
-18. **Angenommen** die Werkspezifikation legt mehrere Anzeigevarianten fest (z. B. Hanon), **wenn** der Pianist eine andere Variante wählt, **dann** zeigt das Notenblatt das Stück fließend in dieser Variante an, und die Positionsmarkierung folgt dem Spiel weiterhin.
+18. **Angenommen** die Werkspezifikation legt mehrere Anzeigevarianten fest (z. B. Hanon), **wenn** der Pianist eine andere Variante wählt, **dann** zeigt das Notenblatt das Stück fließend in dieser Variante an, und die Positionsmarkierung folgt dem Spiel weiterhin (in verkürzten Varianten ohne Positions- und Fehlermarkierung, siehe Werkspezifikation).
 
 ---
 

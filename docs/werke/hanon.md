@@ -62,3 +62,5 @@ Da die Noten zum Großteil die Wiederholung einer Figur sind, MUSS die App folge
 - nur jeweils die ersten und letzten beiden Takte aus „Aufwärts“ und aus „Abwärts“ zwischen Wiederholungszeichen sowie „Ende“. Die Lücken werden mit *simile* gekennzeichnet. Wie bei der kompletten Anzeige in durchgehenden Notensystemen.
 - nur der erste Takt aus „Aufwärts“ und aus „Abwärts“ in getrennten Notensystemen
 - nur der erste Takt aus „Aufwärts“
+
+Die verkürzten Varianten sind für Fortgeschrittene gedacht: Sie zeigen weder Positionsmarke noch Fehlermarkierung.

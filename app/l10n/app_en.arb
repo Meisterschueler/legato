@@ -61,5 +61,10 @@
   "signalVolume": "Volume",
   "expertSettings": "Expert settings",
   "scoreFollower": "Score following",
-  "recognitionMethod": "Recognition"
+  "recognitionMethod": "Recognition",
+  "display": "Display",
+  "displayComplete": "Complete",
+  "displayAbbreviated": "First and last two measures (simile)",
+  "displayFirstMeasures": "First measure of each direction",
+  "displayFirstMeasure": "First measure only"
 }

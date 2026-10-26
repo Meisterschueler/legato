@@ -50,5 +50,10 @@
   "signalVolume": "Lautstärke",
   "expertSettings": "Experteneinstellungen",
   "scoreFollower": "Folgeverfahren",
-  "recognitionMethod": "Verfahren für die Erkennung"
+  "recognitionMethod": "Verfahren für die Erkennung",
+  "display": "Anzeige",
+  "displayComplete": "Komplett",
+  "displayAbbreviated": "Erste und letzte zwei Takte (simile)",
+  "displayFirstMeasures": "Erster Takt je Richtung",
+  "displayFirstMeasure": "Nur der erste Takt"
 }

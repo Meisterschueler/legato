@@ -86,6 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ..._marking(controller, 'error_marking_after', l10n),
                   _Header(l10n.recognizeOnly),
                   _filter(controller, l10n),
+                  ..._display(controller, l10n),
                   _Header(l10n.signals),
                   SignalSettings(settings: controller),
                   const Divider(),
@@ -121,6 +122,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: Text(label),
           value: marking[field] as bool,
           onChanged: (on) => controller.set(key, {...marking, field: on}),
+        ),
+    ];
+  }
+
+  /// Display variant per work that offers more than one (FR-011).
+  List<Widget> _display(SettingsController controller, AppLocalizations l10n) {
+    final works = {
+      for (final p in _pieces)
+        if ((p['display_variants'] as List).length > 1) p['work'] as String: p,
+    };
+    if (works.isEmpty) return const [];
+    final chosen = controller.value['display_variant'] as Map<String, dynamic>;
+    return [
+      _Header(l10n.display),
+      for (final MapEntry(key: work, value: piece) in works.entries)
+        ListTile(
+          title: Text(piece['title'] as String),
+          subtitle: DropdownButton<String>(
+            isExpanded: true,
+            value: chosen[work] as String? ?? 'Complete',
+            items: [
+              for (final v in piece['display_variants'] as List)
+                DropdownMenuItem(
+                  value: v as String,
+                  child: Text(displayVariantName(l10n, v)),
+                ),
+            ],
+            onChanged: (v) =>
+                controller.set('display_variant', {...chosen, work: v}),
+          ),
         ),
     ];
   }
@@ -180,6 +211,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+}
+
+/// Name of a `DisplayVariant` (FR-011).
+String displayVariantName(AppLocalizations l10n, String variant) {
+  return switch (variant) {
+    'Abbreviated' => l10n.displayAbbreviated,
+    'FirstMeasures' => l10n.displayFirstMeasures,
+    'FirstMeasure' => l10n.displayFirstMeasure,
+    _ => l10n.displayComplete,
+  };
 }
 
 class _Header extends StatelessWidget {

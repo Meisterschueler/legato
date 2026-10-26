@@ -14,7 +14,18 @@ class _Engine implements EngineClient {
   Stream<Map<String, dynamic>> events() => engineEvents.stream;
 
   @override
-  Future<List<Map<String, dynamic>>> repertoire() async => [];
+  Future<List<Map<String, dynamic>>> repertoire() async => [
+    {
+      'id': 'h1',
+      'work': 'hanon',
+      'display_variants': ['Complete'],
+    },
+  ];
+
+  @override
+  Future<Map<String, dynamic>> getSettings() async => {
+    'display_variant': <String, dynamic>{},
+  };
 
   /// Never completes, so no WebView is created in the test.
   @override

@@ -7,14 +7,28 @@ import 'package:legato/src/practice/practice_screen.dart';
 
 /// Stands in for the Rust engine, which is not loaded in widget tests.
 class _Engine implements EngineClient {
+  _Engine({this.displayVariant = const {}});
+
+  final Map<String, dynamic> displayVariant;
   final engineEvents = StreamController<Map<String, dynamic>>.broadcast();
-  final rendered = <(String, int)>[];
+  final rendered = <(String, int, String)>[];
 
   @override
   Stream<Map<String, dynamic>> events() => engineEvents.stream;
 
   @override
-  Future<List<Map<String, dynamic>>> repertoire() async => [];
+  Future<List<Map<String, dynamic>>> repertoire() async => [
+    {
+      'id': 'h1',
+      'work': 'hanon',
+      'display_variants': ['Complete', 'Abbreviated'],
+    },
+  ];
+
+  @override
+  Future<Map<String, dynamic>> getSettings() async => {
+    'display_variant': displayVariant,
+  };
 
   /// Never completes, so no WebView is created in the test.
   @override
@@ -24,7 +38,7 @@ class _Engine implements EngineClient {
     String variation = 'BothHands',
     String displayVariant = 'Complete',
   }) {
-    rendered.add((piece, transposition));
+    rendered.add((piece, transposition, displayVariant));
     return Completer<String>().future;
   }
 
@@ -38,6 +52,7 @@ void main() {
   ) async {
     final engine = _Engine();
     await tester.pumpWidget(LegatoApp(home: PracticeScreen(engine: engine)));
+    await tester.pumpAndSettle();
     Map<String, dynamic> recognized(int transposition) => {
       'type': 'PerformanceRecognized',
       'piece': 'h1',
@@ -51,6 +66,19 @@ void main() {
     await tester.pump();
     engine.engineEvents.add(recognized(5));
     await tester.pump();
-    expect(engine.rendered, [('h1', 3), ('h1', 5)]);
+    expect(engine.rendered, [
+      ('h1', 0, 'Complete'),
+      ('h1', 3, 'Complete'),
+      ('h1', 5, 'Complete'),
+    ]);
+  });
+
+  testWidgets('the score shows the display variant chosen for the work', (
+    tester,
+  ) async {
+    final engine = _Engine(displayVariant: {'hanon': 'Abbreviated'});
+    await tester.pumpWidget(LegatoApp(home: PracticeScreen(engine: engine)));
+    await tester.pumpAndSettle();
+    expect(engine.rendered, [('h1', 0, 'Abbreviated')]);
   });
 }

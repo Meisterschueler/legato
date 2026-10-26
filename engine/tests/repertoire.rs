@@ -111,6 +111,17 @@ fn render_score_transposes_for_display() {
     assert!(rendered.contains("<fifths>-5</fifths>"), "{rendered}");
     assert!(rendered.contains("<step>D</step><alter>-1</alter><octave>4</octave>"));
 
+    let abbreviated = engine
+        .render_score(
+            &piece.id,
+            0,
+            Variation::BothHands,
+            DisplayVariant::Abbreviated,
+        )
+        .unwrap();
+    assert_eq!(abbreviated.matches("<measure ").count(), 9);
+    assert_eq!(abbreviated.matches("<words>simile</words>").count(), 2);
+
     std::fs::remove_dir_all(data_dir).unwrap();
 }
 

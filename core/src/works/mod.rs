@@ -5,6 +5,7 @@ pub mod generic;
 pub mod hanon;
 
 use crate::score::model::{Candidate, Hand, Score};
+use crate::score::musicxml_write::Shown;
 
 /// Display variants of the score (FR-011).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -46,6 +47,11 @@ pub trait WorkRules {
     fn performance_range(&self, score: &Score) -> Range;
 
     fn display_variants(&self) -> Vec<DisplayVariant>;
+
+    /// Measures of an abbreviated `variant`; `None` shows the whole score.
+    fn shown_measures(&self, _score: &Score, _variant: DisplayVariant) -> Option<Vec<Shown>> {
+        None
+    }
 
     /// Hand of one-handed playing, derived from the first played pitch; `None` if not unique.
     fn hand_from_position(&self, _score: &Score, _first_pitch: u8) -> Option<Hand> {

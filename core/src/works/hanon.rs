@@ -3,6 +3,7 @@
 use super::generic::VARIATIONS;
 use super::{DisplayVariant, Range, WorkRules};
 use crate::score::model::{Candidate, Hand, Score};
+use crate::score::musicxml_write::Shown;
 
 pub struct HanonRules;
 
@@ -85,6 +86,39 @@ impl WorkRules for HanonRules {
             DisplayVariant::FirstMeasures,
             DisplayVariant::FirstMeasure,
         ]
+    }
+
+    fn shown_measures(&self, score: &Score, variant: DisplayVariant) -> Option<Vec<Shown>> {
+        let measure = |index: u32| score.onsets[index as usize].notes[0].id.measure;
+        let [up, down] = self
+            .directions(score)
+            .map(|r| (measure(r.start), measure(r.end)));
+        let shown = |measure, simile, new_system| Shown {
+            measure,
+            simile,
+            new_system,
+        };
+        match variant {
+            DisplayVariant::Complete => None,
+            // First and last two measures of each direction, everything else as is.
+            DisplayVariant::Abbreviated => {
+                let keep = |m: u32| {
+                    [up, down]
+                        .iter()
+                        .all(|&(first, last)| m < first + 2 || m + 2 > last)
+                };
+                Some(
+                    (0..score.measures.len() as u32)
+                        .filter(|&m| keep(m))
+                        .map(|m| shown(m, m > 0 && !keep(m - 1), false))
+                        .collect(),
+                )
+            }
+            DisplayVariant::FirstMeasures => {
+                Some(vec![shown(up.0, false, false), shown(down.0, false, true)])
+            }
+            DisplayVariant::FirstMeasure => Some(vec![shown(up.0, false, false)]),
+        }
     }
 
     /// Both hands are transposed by the same 0–11 half tones and notated an octave apart,

@@ -16,6 +16,7 @@ class _Engine implements EngineClient {
     'rest_limit_ms': 10000,
     'score_follower': 'Pthmm',
     'recognition_method': 'EditDistance',
+    'display_variant': <String, dynamic>{},
     'error_marking_during': _noMarking,
     'error_marking_after': _noMarking,
     'connect_signal': 'On',
@@ -42,7 +43,18 @@ class _Engine implements EngineClient {
 
   @override
   Future<List<Map<String, dynamic>>> repertoire() async => [
-    {'id': 'h1', 'title': 'The Virtuoso Pianist', 'number': '1'},
+    {
+      'id': 'h1',
+      'work': 'hanon',
+      'title': 'The Virtuoso Pianist',
+      'number': '1',
+      'display_variants': [
+        'Complete',
+        'Abbreviated',
+        'FirstMeasures',
+        'FirstMeasure',
+      ],
+    },
   ];
 
   @override
@@ -80,6 +92,11 @@ void main() {
 
     await _tap(tester, find.widgetWithText(SwitchListTile, 'Abort signal'));
     expect(engine.settings['abort_signal'], 'Off');
+
+    await _tap(tester, find.text('Complete'));
+    await tester.tap(find.text('First measure only').last);
+    await tester.pumpAndSettle();
+    expect(engine.settings['display_variant'], {'hanon': 'FirstMeasure'});
   });
 
   testWidgets('expert settings choose the recognition method', (tester) async {
