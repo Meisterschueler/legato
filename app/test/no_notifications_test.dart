@@ -5,8 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// SC-005, FR-026: the app neither requests nor sends notifications.
 void main() {
   test('no notification permission or capability', () {
-    final android = File('android/app/src/main/AndroidManifest.xml')
-        .readAsStringSync();
+    final android = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
     expect(android, isNot(contains('POST_NOTIFICATIONS')));
     expect(android, isNot(contains('c2dm')));
 
