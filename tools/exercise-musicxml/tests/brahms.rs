@@ -101,6 +101,61 @@ fn exercise_1a_follows_the_description() {
     );
 }
 
+/// Quintuplets: five sixteenths in the time of four.
+#[test]
+fn exercise_1c_has_quintuplets() {
+    let score = score("1c");
+    assert_eq!(score.measures.len(), 28);
+    let right = hand(&score, Hand::Right, 0);
+    assert_eq!(
+        pitches(&right),
+        [54, 50, 45, 42, 38, 40, 42, 43, 45, 47, 49, 50, 52, 54]
+    );
+    let times: Vec<Fraction> = right.iter().map(|&(t, _)| t).collect();
+    let expected: Vec<Fraction> = [
+        (0, 1),
+        (1, 4),
+        (1, 2),
+        (3, 4),
+        (1, 1),
+        (6, 5),
+        (7, 5),
+        (8, 5),
+        (9, 5),
+        (2, 1),
+        (11, 5),
+        (12, 5),
+        (13, 5),
+        (14, 5),
+    ]
+    .iter()
+    .map(|&(n, d)| Fraction::new(n, d))
+    .collect();
+    assert_eq!(times, expected);
+}
+
+/// The left hand reaches down to F#1 or lower (four ledger lines) in measures 1–3 and 27–28 and is
+/// notated 8vb there.
+#[test]
+fn exercise_1c_is_ottava_bassa_in_the_lowest_measures() {
+    let book = book();
+    let exercise = book.exercise.iter().find(|e| e.number == "1c").unwrap();
+    let xml = generate(&book, exercise).unwrap();
+    let measure = |n: usize| {
+        xml.lines()
+            .find(|l| l.contains(&format!("<measure number=\"{n}\">")))
+            .unwrap()
+    };
+    assert_eq!(xml.matches("<octave-shift type=\"up\"").count(), 2);
+    assert_eq!(xml.matches("<octave-shift type=\"stop\"").count(), 2);
+    assert!(measure(1).contains(
+        "</backup><direction placement=\"below\"><direction-type><octave-shift type=\"up\""
+    ));
+    assert!(measure(3).contains("<octave-shift type=\"stop\""));
+    assert!(measure(27).contains("<octave-shift type=\"up\""));
+    assert!(measure(28).contains("<octave-shift type=\"stop\""));
+}
+
 /// The upper staff stays in the treble clef; the lower one changes to the treble clef in measure
 /// 11 and back to the bass clef in measure 20.
 #[test]

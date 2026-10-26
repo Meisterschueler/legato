@@ -11,10 +11,12 @@
 //!   exercises are not generated), sections `up` and `down`.
 //! - Section: `right`, `left` with `notes` (scientific pitch notation, C4 = MIDI 60, `#`/`b` as in
 //!   the key), `rhythm` (notes per quarter note: 1 quarter, 2 eighths, 3 triplet eighths,
-//!   4 sixteenths; its length gives the time signature) and optional `fingers`; `steps` (`from`,
+//!   4 sixteenths, 5 quintuplet sixteenths; its length gives the time signature) and optional `fingers`; `steps` (`from`,
 //!   `to`): the figure is played once per diatonic step from `from` to `to`.
 //! - Staff or clef changes where a measure needs fewer ledger lines, but not for a single measure.
 //!   The hand follows from the voice (right 1, left 5), not from the staff.
+//! - Measures in the bass clef that would need four or more ledger lines below the staff are
+//!   notated an octave higher with 8vb (the pitches in the file stay the sounding ones).
 
 use std::fmt::Write;
 
@@ -22,6 +24,8 @@ use serde::{Deserialize, Deserializer};
 
 const LETTERS: [char; 7] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 const OCTAVE: i32 = 7;
+/// Diatonic index of F1, four ledger lines below the bass clef; from there down 8vb.
+const OTTAVA_BASSA: i32 = OCTAVE + 3;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -181,7 +185,7 @@ fn figure(figure: &Figure, fifths: i32, beats: usize) -> Result<Vec<i32>, String
         .map(|n| natural(n, fifths))
         .collect::<Result<Vec<_>, _>>()?;
     if figure.rhythm.len() != beats
-        || figure.rhythm.iter().any(|n| !(1..=4).contains(n))
+        || figure.rhythm.iter().any(|n| !(1..=5).contains(n))
         || figure.rhythm.iter().sum::<usize>() != notes.len()
     {
         return Err(format!(
@@ -354,6 +358,18 @@ pub fn generate(book: &Book, exercise: &Exercise) -> Result<String, String> {
             ),
         };
 
+    // shortcut: only 8vb below the bass clef, add 8va once a figure needs it above the treble clef.
+    let ottava = |notes: &[Vec<i32>], staff: &[u8]| -> Vec<bool> {
+        (0..all.len())
+            .map(|i| {
+                let clef = if staff[i] == 1 { upper[i] } else { lower[i] };
+                clef == Clef::Bass && notes[i].iter().any(|&n| n <= OTTAVA_BASSA)
+            })
+            .collect()
+    };
+    let right_ottava = ottava(&right, &right_staff);
+    let left_ottava = ottava(&left, &left_staff);
+
     let mut xml = String::new();
     xml.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     xml.push_str("<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 4.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">\n");
@@ -397,6 +413,7 @@ pub fn generate(book: &Book, exercise: &Exercise) -> Result<String, String> {
             xml.push_str("</attributes>");
         }
         let time = (divisions, beats);
+        octave_shift(&mut xml, &right_ottava, i, right_staff[i], "up");
         voice(
             &mut xml,
             &measure.right,
@@ -405,7 +422,9 @@ pub fn generate(book: &Book, exercise: &Exercise) -> Result<String, String> {
             fifths,
             time,
         );
+        octave_shift(&mut xml, &right_ottava, i, right_staff[i], "stop");
         let _ = write!(xml, "<backup><duration>{duration}</duration></backup>");
+        octave_shift(&mut xml, &left_ottava, i, left_staff[i], "up");
         voice(
             &mut xml,
             &measure.left,
@@ -414,6 +433,7 @@ pub fn generate(book: &Book, exercise: &Exercise) -> Result<String, String> {
             fifths,
             time,
         );
+        octave_shift(&mut xml, &left_ottava, i, left_staff[i], "stop");
         if i + 1 == turn && book.double_bar {
             xml.push_str(
                 "<barline location=\"right\"><bar-style>light-light</bar-style></barline>",
@@ -430,6 +450,22 @@ pub fn generate(book: &Book, exercise: &Exercise) -> Result<String, String> {
     }
     xml.push_str("  </part>\n</score-partwise>\n");
     Ok(xml)
+}
+
+/// Start (`"up"`: displayed an octave above the pitch, 8vb) before the first and `"stop"` after the
+/// last measure of a run in `shifted`.
+fn octave_shift(xml: &mut String, shifted: &[bool], i: usize, staff: u8, kind: &str) {
+    let neighbour = if kind == "stop" {
+        shifted.get(i + 1)
+    } else {
+        i.checked_sub(1).and_then(|j| shifted.get(j))
+    };
+    if shifted[i] && neighbour != Some(&true) {
+        let _ = write!(
+            xml,
+            "<direction placement=\"below\"><direction-type><octave-shift type=\"{kind}\" size=\"8\"/></direction-type><staff>{staff}</staff></direction>"
+        );
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -487,8 +523,8 @@ fn voice(
         };
         for j in 0..count {
             let tuplet = match (count, j) {
-                (3, 0) => "<tuplet type=\"start\" bracket=\"no\"/>",
-                (3, 2) => "<tuplet type=\"stop\"/>",
+                (3 | 5, 0) => "<tuplet type=\"start\" bracket=\"no\"/>",
+                (3 | 5, j) if j + 1 == count => "<tuplet type=\"stop\"/>",
                 _ => "",
             };
             note(
@@ -506,6 +542,9 @@ fn voice(
                     if count == 3 {
                         xml.push_str("<time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification>");
                     }
+                    if count == 5 {
+                        xml.push_str("<time-modification><actual-notes>5</actual-notes><normal-notes>4</normal-notes></time-modification>");
+                    }
                     let _ = write!(xml, "<stem>{stem}</stem><staff>{staff}</staff>");
                     if count > 1 {
                         let beam = match j {
@@ -514,7 +553,7 @@ fn voice(
                             _ => "continue",
                         };
                         let _ = write!(xml, "<beam number=\"1\">{beam}</beam>");
-                        if count == 4 {
+                        if count >= 4 {
                             let _ = write!(xml, "<beam number=\"2\">{beam}</beam>");
                         }
                     }
