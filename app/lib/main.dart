@@ -38,9 +38,8 @@ Future<String> _bundledResources(String dataDir) async {
   await Directory('$dir/pieces').create(recursive: true);
   for (var n = 1; n <= 20; n++) {
     final name = 'pieces/hanon-${'$n'.padLeft(2, '0')}.musicxml';
-    await File(
-      '$dir/$name',
-    ).writeAsString(await rootBundle.loadString('assets/$name'));
+    await File('$dir/$name')
+        .writeAsString(await rootBundle.loadString('assets/$name'));
   }
   return dir;
 }
