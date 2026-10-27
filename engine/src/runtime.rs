@@ -11,7 +11,7 @@ use legato_core::performance::AbortReason;
 use legato_core::score::model::Variation;
 
 use crate::input::state::{Action, InputList, InputMachine, InputState, Status};
-use crate::session::{DeviationInfo, Outcome, PieceSetups, Session};
+use crate::session::{DeviationInfo, FollowedCandidate, Outcome, PieceSetups, Session};
 use crate::signals::{SignalPlanner, Trigger};
 use crate::storage::{Settings, Transport};
 use crate::warning::Speaker;
@@ -56,6 +56,18 @@ pub enum Event {
     },
     PracticeSessionChanged {
         active: bool,
+    },
+    /// State of the recognition after every observation while it runs (debug view).
+    RecognitionStatus {
+        /// Candidates in the repertoire.
+        candidates: usize,
+        /// Best first.
+        followed: Vec<FollowedCandidate>,
+        preselection_us: u64,
+        following_us: u64,
+        /// Followers started by the last observation; each replayed `observations - 1`.
+        started: usize,
+        observations: usize,
     },
 }
 

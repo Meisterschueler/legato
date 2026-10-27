@@ -35,6 +35,9 @@ class _DebugScreenState extends State<DebugScreen> {
   Map<String, dynamic>? _position;
   String? _ended;
 
+  /// Last state of the recognition; stays until the next one starts.
+  Map<String, dynamic>? _status;
+
   /// Driver time (s) and beat of the first position at the current onset.
   (double, double)? _last;
   final _velocities = <double>[];
@@ -48,7 +51,8 @@ class _DebugScreenState extends State<DebugScreen> {
       if (mounted) {
         setState(
           () => _titles = {
-            for (final p in pieces) p['id'] as String: p['title'] as String,
+            for (final p in pieces)
+              p['id'] as String: [p['title'], ?p['number']].join(' '),
           },
         );
       }
@@ -83,6 +87,8 @@ class _DebugScreenState extends State<DebugScreen> {
         _add(_velocities, (event['velocity'] as num).toDouble());
       case 'PerformanceEnded':
         _ended = [event['outcome'], ?event['reason']].join(' ');
+      case 'RecognitionStatus':
+        _status = event;
       default:
         return;
     }
@@ -99,7 +105,9 @@ class _DebugScreenState extends State<DebugScreen> {
     final l10n = AppLocalizations.of(context);
     final recognized = _recognized;
     final position = _position;
+    final status = _status;
     final keys = l10n.keyNames.split(',');
+    String key(int t) => '${keys[t % 12]} (+$t)';
     final transposition = recognized?['transposition'] as int?;
     final piece = recognized?['piece'] as String?;
     return Scaffold(
@@ -114,12 +122,7 @@ class _DebugScreenState extends State<DebugScreen> {
                 : '${_titles[piece] ?? piece} ($piece), '
                       '${recognized!['variation']}',
           ),
-          _Row(
-            l10n.debugKey,
-            transposition == null
-                ? '–'
-                : '${keys[transposition % 12]} (+$transposition)',
-          ),
+          _Row(l10n.debugKey, transposition == null ? '–' : key(transposition)),
           _Row(
             l10n.debugPosition,
             position == null
@@ -128,6 +131,23 @@ class _DebugScreenState extends State<DebugScreen> {
                       '${(position['note_ids'] as List).join(' ')}',
           ),
           if (_ended case final ended?) _Row('PerformanceEnded', ended),
+          if (status != null) ...[
+            const SizedBox(height: 16),
+            _Row(l10n.debugCandidates, '${status['candidates']}'),
+            _Row(l10n.debugPreselection, '${status['preselection_us']}'),
+            _Row(l10n.debugFollowing, '${status['following_us']}'),
+            _Row(
+              l10n.debugStarted,
+              '${status['started']} × ${status['observations']}',
+            ),
+            _Row(l10n.debugFollowed, ''),
+            for (final c in status['followed'] as List)
+              Text(
+                '${((c['posterior'] as num) * 100).toStringAsFixed(1)} %  '
+                '${_titles[c['piece']] ?? c['piece']}, ${c['variation']}, '
+                '${key(c['transposition'] as int)}',
+              ),
+          ],
           const SizedBox(height: 16),
           _Chart(l10n.debugVelocity, _velocities, min: 0, max: 127),
           const SizedBox(height: 16),

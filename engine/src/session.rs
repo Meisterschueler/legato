@@ -2,12 +2,14 @@
 //! events (FR-016, FR-020, FR-021, NFR-005).
 
 use std::collections::BTreeMap;
+use std::sync::OnceLock;
+use std::time::Instant;
 
 use legato_core::following::deviations::{Deviation, DeviationKind};
 use legato_core::performance::{AbortReason, Event as Performance, Limits, Performances, Setup};
 use legato_core::preprocessing::{EchoFilter, Grouping, Observation, Preprocessor, played_pitch};
 use legato_core::recognition::plays;
-use legato_core::score::model::{Candidate, Score};
+use legato_core::score::model::{Candidate, Score, Variation};
 use serde::Serialize;
 
 use crate::runtime::Event;
@@ -43,6 +45,20 @@ pub struct DeviationInfo {
     pub note_id: Option<String>,
     /// Played pitch; not for omissions.
     pub pitch: Option<u8>,
+}
+
+/// A candidate followed during the recognition, as the interface reports it.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct FollowedCandidate {
+    pub piece: String,
+    pub variation: Variation,
+    pub transposition: i8,
+    pub posterior: f64,
+}
+
+fn clock_us() -> u64 {
+    static START: OnceLock<Instant> = OnceLock::new();
+    START.get_or_init(Instant::now).elapsed().as_micros() as u64
 }
 
 pub(crate) struct Session {
@@ -99,7 +115,8 @@ impl Session {
                 recognition_length,
                 limits,
                 settings.recognition_method,
-            ),
+            )
+            .with_clock(clock_us),
             preprocessor: Preprocessor::new(WINDOW),
             echo: EchoFilter::default(),
             stopped: false,
@@ -205,9 +222,33 @@ impl Session {
 
     fn observe(&mut self, observation: &Observation) -> Vec<Event> {
         let performances = self.performances.observe(observation);
-        performances
+        let status = self
+            .performances
+            .take_status()
+            .map(|s| Event::RecognitionStatus {
+                candidates: s.candidates,
+                followed: s
+                    .followed
+                    .into_iter()
+                    .map(|(c, posterior)| FollowedCandidate {
+                        piece: c.piece,
+                        variation: c.variation,
+                        transposition: c.transposition,
+                        posterior,
+                    })
+                    .collect(),
+                preselection_us: s.preselection_us,
+                following_us: s.following_us,
+                started: s.started,
+                observations: s.observations,
+            });
+        status
             .into_iter()
-            .flat_map(|p| self.convert(p, observation.time))
+            .chain(
+                performances
+                    .into_iter()
+                    .flat_map(|p| self.convert(p, observation.time)),
+            )
             .collect()
     }
 

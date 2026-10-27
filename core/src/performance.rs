@@ -9,7 +9,9 @@ use crate::following::pthmm::PitchHmm;
 use crate::following::repeats::Repeats;
 use crate::following::{ReferenceNote, ScoreFollower};
 use crate::preprocessing::Observation;
-use crate::recognition::{Decision, Recognition, RecognitionMethod, Repertoire, hands, plays};
+use crate::recognition::{
+    Clock, Decision, Recognition, RecognitionMethod, Repertoire, Status, hands, plays,
+};
 use crate::score::model::{Candidate, Note, Score};
 use crate::works::Range;
 
@@ -157,6 +159,9 @@ pub struct Performances {
     last_tone: f64,
     /// A performance ended and no `Stopped` followed yet.
     stop_pending: bool,
+    clock: Option<Clock>,
+    /// Of the recognition after the last observation; taken by `take_status`.
+    status: Option<Status>,
 }
 
 impl Performances {
@@ -174,43 +179,63 @@ impl Performances {
             state: State::Idle,
             last_tone: 0.0,
             stop_pending: false,
+            clock: None,
+            status: None,
         }
+    }
+
+    /// Measures the recognition (debug view).
+    pub fn with_clock(mut self, clock: Clock) -> Self {
+        self.clock = Some(clock);
+        self
+    }
+
+    /// State of the recognition after the last observation, if one ran.
+    pub fn take_status(&mut self) -> Option<Status> {
+        self.status.take()
     }
 
     pub fn observe(&mut self, observation: &Observation) -> Vec<Event> {
         self.last_tone = observation.time;
         if matches!(self.state, State::Idle) {
-            self.state = State::Recognizing(Recognition::start(Arc::clone(&self.repertoire)));
+            self.state = State::Recognizing(
+                Recognition::start(Arc::clone(&self.repertoire)).with_clock(self.clock),
+            );
         }
         match &mut self.state {
             State::Idle => Vec::new(),
-            State::Recognizing(recognition) => match recognition.observe(observation) {
-                Decision::Pending => Vec::new(),
-                // shortcut: the tones so far are dropped; the next tone starts a new recognition.
-                Decision::NoPerformance => {
-                    self.state = State::Idle;
-                    Vec::new()
+            State::Recognizing(recognition) => {
+                let decision = recognition.observe(observation);
+                self.status = Some(recognition.status());
+                match decision {
+                    Decision::Pending => Vec::new(),
+                    // shortcut: the tones so far are dropped; the next tone starts a new
+                    // recognition.
+                    Decision::NoPerformance => {
+                        self.state = State::Idle;
+                        Vec::new()
+                    }
+                    Decision::Recognized(setup) => {
+                        let State::Recognizing(recognition) =
+                            std::mem::replace(&mut self.state, State::Idle)
+                        else {
+                            unreachable!()
+                        };
+                        let (candidate, follower) = recognition.into_follower(setup);
+                        self.state = State::Running {
+                            setup,
+                            follower,
+                            current: 0,
+                            recent: VecDeque::new(),
+                            deviations: Deviations::new(&self.setups[setup].onsets),
+                        };
+                        let mut events = vec![Event::Recognized(candidate)];
+                        // The deciding tones are judged at the first position.
+                        events.extend(self.follow(&observation.pitches));
+                        events
+                    }
                 }
-                Decision::Recognized(setup) => {
-                    let State::Recognizing(recognition) =
-                        std::mem::replace(&mut self.state, State::Idle)
-                    else {
-                        unreachable!()
-                    };
-                    let (candidate, follower) = recognition.into_follower(setup);
-                    self.state = State::Running {
-                        setup,
-                        follower,
-                        current: 0,
-                        recent: VecDeque::new(),
-                        deviations: Deviations::new(&self.setups[setup].onsets),
-                    };
-                    let mut events = vec![Event::Recognized(candidate)];
-                    // The deciding tones are judged at the first position.
-                    events.extend(self.follow(&observation.pitches));
-                    events
-                }
-            },
+            }
             State::Running { follower, .. } => {
                 follower.step(&observation.pitches, observation.time);
                 self.follow(&observation.pitches)

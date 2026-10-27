@@ -238,6 +238,24 @@ pub enum Decision {
     NoPerformance,
 }
 
+/// Clock in microseconds, passed in from outside; the core reads none (research.md R2).
+pub type Clock = fn() -> u64;
+
+/// State of a recognition after an observation (debug view).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Status {
+    /// Candidates in the repertoire.
+    pub candidates: usize,
+    /// The followed candidates with their posteriors, best first.
+    pub followed: Vec<(Candidate, f64)>,
+    /// Time of the last observation in the preselection and in the followers; 0 without clock.
+    pub preselection_us: u64,
+    pub following_us: u64,
+    /// Followers started in the last observation; each replayed all observations before.
+    pub started: usize,
+    pub observations: usize,
+}
+
 pub struct Recognition {
     repertoire: Arc<Repertoire>,
     preselector: Box<dyn Preselector>,
@@ -247,6 +265,9 @@ pub struct Recognition {
     /// The preselected candidates with their `pthmm`, in the order of the candidates.
     followers: Vec<(usize, PitchHmm)>,
     tones: usize,
+    clock: Option<Clock>,
+    /// Preselection and following time (µs) and started followers of the last observation.
+    load: (u64, u64, usize),
 }
 
 impl Recognition {
@@ -274,6 +295,33 @@ impl Recognition {
             onsets: Vec::new(),
             followers: Vec::new(),
             tones: 0,
+            clock: None,
+            load: (0, 0, 0),
+        }
+    }
+
+    /// Measures the time of preselection and following (debug view).
+    pub fn with_clock(mut self, clock: Option<Clock>) -> Self {
+        self.clock = clock;
+        self
+    }
+
+    pub fn status(&self) -> Status {
+        let posteriors = self.posteriors();
+        let mut followed: Vec<(Candidate, f64)> = self
+            .followers
+            .iter()
+            .map(|(c, _)| (self.repertoire.candidates[*c].clone(), posteriors[*c]))
+            .collect();
+        followed.sort_by(|a, b| b.1.total_cmp(&a.1));
+        let (preselection_us, following_us, started) = self.load;
+        Status {
+            candidates: self.repertoire.candidates.len(),
+            followed,
+            preselection_us,
+            following_us,
+            started,
+            observations: self.observations.len(),
         }
     }
 
@@ -287,9 +335,13 @@ impl Recognition {
     }
 
     pub fn observe(&mut self, observation: &Observation) -> Decision {
+        let clock = self.clock;
+        let now = || clock.map_or(0, |c| c());
+        let t0 = now();
         for (_, follower) in &mut self.followers {
             follower.step(&observation.pitches, observation.time);
         }
+        let t1 = now();
         self.observations.push(observation.clone());
         self.tones += observation.pitches.len();
         if self
@@ -307,12 +359,17 @@ impl Recognition {
         onset.pitches.sort_unstable();
         onset.pitches.dedup();
         self.preselector.observe(&self.onsets);
-        self.follow(self.preselector.preselection());
+        let preselection = self.preselector.preselection();
+        let t2 = now();
+        let started = self.follow(preselection);
+        let t3 = now();
+        self.load = (t2 - t1, t1 - t0 + t3 - t2, started);
         self.decide()
     }
 
     /// Followers for the preselected candidates only; new ones replay the observations so far.
-    fn follow(&mut self, preselection: Vec<usize>) {
+    /// Returns the number of new ones.
+    fn follow(&mut self, preselection: Vec<usize>) -> usize {
         let mut selected = vec![false; self.repertoire.candidates.len()];
         for &c in &preselection {
             selected[c] = true;
@@ -321,7 +378,8 @@ impl Recognition {
         for (c, _) in &self.followers {
             selected[*c] = false;
         }
-        for c in (0..selected.len()).filter(|&c| selected[c]) {
+        let new: Vec<usize> = (0..selected.len()).filter(|&c| selected[c]).collect();
+        for &c in &new {
             let mut follower = self.repertoire.follower(c);
             for o in &self.observations {
                 follower.step(&o.pitches, o.time);
@@ -329,6 +387,7 @@ impl Recognition {
             let at = self.followers.partition_point(|(f, _)| *f < c);
             self.followers.insert(at, (c, follower));
         }
+        new.len()
     }
 
     /// Posterior of every candidate under a uniform prior over the preselected ones; zero for

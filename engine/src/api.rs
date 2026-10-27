@@ -19,7 +19,7 @@ use crate::repertoire::Repertoire;
 pub use crate::runtime::{Event, MidiInput, MidiOutput};
 use crate::runtime::{Input, Runtime};
 use crate::session::Session;
-pub use crate::session::{DeviationInfo, Outcome};
+pub use crate::session::{DeviationInfo, FollowedCandidate, Outcome};
 use crate::signals::SignalPlanner;
 use crate::storage::Settings;
 use crate::warning::Speaker;

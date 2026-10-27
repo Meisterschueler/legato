@@ -39,6 +39,7 @@ Framework-neutrale Schnittstelle von `legato-engine` (`engine/src/api.rs`). Flut
 | `PerformanceEnded` | `{ outcome: Completed \| Aborted, reason?, deviations: [..] }` | FR-025, US 4 |
 | `BackgroundNotice` | `{ performance_discarded }` | US 1/8 |
 | `PracticeSessionChanged` | `{ active }` | NFR-005 (Bildschirmsperre) |
+| `RecognitionStatus` | `{ candidates, followed: [{ piece, variation, transposition, posterior }], preselection_us, following_us, started, observations }` nach jeder Beobachtung, solange die Erkennung läuft; `followed` bestes zuerst | Debug-Ansicht (Rechenlast) |
 
 ## Nachrichten an `score-view-web`
 

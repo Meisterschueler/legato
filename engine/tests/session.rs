@@ -19,7 +19,7 @@ fn assets() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../app/assets")
 }
 
-/// Engine with Hanon No. 1 and a connected piano.
+/// Engine with Hanon No. 1 as the only piece to recognize and a connected piano.
 fn start(name: &str) -> (Engine, Receiver<Event>, String) {
     let data_dir =
         std::env::temp_dir().join(format!("legato-session-{name}-{}", std::process::id()));
@@ -41,6 +41,10 @@ fn start(name: &str) -> (Engine, Receiver<Event>, String) {
     });
     engine.select_input(Some(1)).unwrap();
     let piece = engine.repertoire()[0].id.clone();
+    // Debug builds lag behind the played tones with all 720 candidates of Hanon 1–20.
+    let mut settings = engine.get_settings();
+    settings.recognition_filter.pieces = vec![piece.clone()];
+    engine.set_settings(settings).unwrap();
     (engine, events, piece)
 }
 
@@ -97,10 +101,34 @@ fn performance_is_recognized_followed_and_completed() {
         driver_time_us: 0,
     }));
     assert!(seen.contains(&Event::PerformanceRecognized {
-        piece,
+        piece: piece.clone(),
         variation: Variation::BothHands,
         transposition: 2,
     }));
+    // The status of the deciding observation; 3 variations × 12 keys.
+    let status = seen
+        .iter()
+        .take_while(|e| !matches!(e, Event::PerformanceRecognized { .. }))
+        .filter_map(|e| match e {
+            Event::RecognitionStatus {
+                candidates,
+                followed,
+                ..
+            } => Some((candidates, followed)),
+            _ => None,
+        })
+        .last();
+    let (candidates, followed) = status.expect("status during the recognition");
+    assert_eq!(*candidates, 36);
+    assert!(followed.len() <= 6);
+    assert_eq!(
+        (
+            &followed[0].piece,
+            followed[0].variation,
+            followed[0].transposition
+        ),
+        (&piece, Variation::BothHands, 2)
+    );
     let last_position = seen.iter().rev().find_map(|e| match e {
         Event::Position { note_ids, .. } => Some(note_ids.clone()),
         _ => None,
