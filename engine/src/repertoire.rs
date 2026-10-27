@@ -61,7 +61,7 @@ impl Repertoire {
         }
 
         // Last, so that it replaces copies of older app versions.
-        if let Some(bundled) = bundled_hanon(resource_dir) {
+        for bundled in bundled_hanon(resource_dir) {
             let _ = repertoire.load_piece(&bundled);
         }
 
@@ -209,9 +209,12 @@ impl Repertoire {
     }
 }
 
-fn bundled_hanon(resource_dir: &Path) -> Option<PathBuf> {
-    let path = resource_dir.join("pieces").join("hanon-01.musicxml");
-    path.is_file().then_some(path)
+/// Hanon No. 1–20.
+fn bundled_hanon(resource_dir: &Path) -> impl Iterator<Item = PathBuf> {
+    let pieces = resource_dir.join("pieces");
+    (1..=20)
+        .map(move |n| pieces.join(format!("hanon-{n:02}.musicxml")))
+        .filter(|path| path.is_file())
 }
 
 /// Sorts "2" before "10" and "1a" before "1b".

@@ -35,11 +35,13 @@ Future<void> main() async {
 /// The engine reads bundled pieces from files; assets are not files on every platform.
 Future<String> _bundledResources(String dataDir) async {
   final dir = '$dataDir/resources';
-  final hanon = File('$dir/pieces/hanon-01.musicxml');
-  await hanon.parent.create(recursive: true);
-  await hanon.writeAsString(
-    await rootBundle.loadString('assets/pieces/hanon-01.musicxml'),
-  );
+  await Directory('$dir/pieces').create(recursive: true);
+  for (var n = 1; n <= 20; n++) {
+    final name = 'pieces/hanon-${'$n'.padLeft(2, '0')}.musicxml';
+    await File(
+      '$dir/$name',
+    ).writeAsString(await rootBundle.loadString('assets/$name'));
+  }
   return dir;
 }
 

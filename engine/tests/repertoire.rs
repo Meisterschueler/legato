@@ -25,7 +25,7 @@ fn temp_dir(name: &str) -> PathBuf {
 }
 
 #[test]
-fn fresh_install_contains_bundled_hanon_only() {
+fn fresh_install_contains_bundled_hanon_1_to_20() {
     let data_dir = temp_dir("fresh");
     let engine = Engine::start(
         StartConfig {
@@ -38,9 +38,10 @@ fn fresh_install_contains_bundled_hanon_only() {
     .unwrap();
 
     let repertoire = engine.repertoire();
-    assert_eq!(repertoire.len(), 1);
-    assert!(repertoire[0].has_fingering);
-    assert_eq!(repertoire[0].number.as_deref(), Some("1"));
+    let numbers: Vec<_> = repertoire.iter().map(|p| p.number.clone()).collect();
+    let expected: Vec<_> = (1..=20).map(|n| Some(n.to_string())).collect();
+    assert_eq!(numbers, expected);
+    assert!(repertoire.iter().all(|p| p.has_fingering));
     assert!(repertoire[0].id.starts_with("0x") || !repertoire[0].id.is_empty());
 
     std::fs::remove_dir_all(data_dir).unwrap();
@@ -69,7 +70,7 @@ fn valid_and_invalid_files_are_loaded_and_rejected() {
     fs::write(&not_a_score, "<html><body>kein MusicXML</body></html>").unwrap();
     let invalid = engine.load_piece(not_a_score);
     assert!(invalid.is_err());
-    assert_eq!(engine.repertoire().len(), 1);
+    assert_eq!(engine.repertoire().len(), 20);
 
     let no_fingering = data_dir.join("no-fingering.musicxml");
     let xml = fs::read(resource_dir().join("pieces/hanon-01.musicxml")).unwrap();
@@ -81,7 +82,9 @@ fn valid_and_invalid_files_are_loaded_and_rejected() {
 
     let piece = engine.load_piece(no_fingering).unwrap();
     assert!(!piece.has_fingering);
-    assert_eq!(engine.repertoire(), vec![piece], "replaces the same piece");
+    let repertoire = engine.repertoire();
+    assert_eq!(repertoire.len(), 20, "replaces the same piece");
+    assert!(repertoire.contains(&piece));
 
     std::fs::remove_dir_all(data_dir).unwrap();
 }
@@ -110,7 +113,7 @@ fn bundled_piece_replaces_copy_of_older_app_version() {
     .unwrap();
 
     let repertoire = engine.repertoire();
-    assert_eq!(repertoire.len(), 1);
+    assert_eq!(repertoire.len(), 20);
     assert!(repertoire[0].has_fingering);
     assert_eq!(repertoire[0].composer.as_deref(), Some("Hanon"));
     assert!(!old.exists());
